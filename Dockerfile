@@ -1,16 +1,33 @@
-FROM docker.io/centos:7
+ARG PYTHON_VERSION=3.11.3
 
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+FROM docker.io/almalinux:9
+
+ARG PYTHON_VERSION
 
 RUN yum update -y
 RUN yum install -y epel-release
-RUN yum install -y python3 python3-devel httpd httpd-devel gcc gridsite less git psmisc wget logrotate
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-RUN yum install -y postgresql14
+RUN yum install -y httpd httpd-devel gcc gridsite git psmisc wget logrotate procps which \
+    openssl-devel bzip2-devel libffi-devel zlib-devel
+
+# install python
+RUN mkdir /tmp/python && cd /tmp/python && \
+    wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar -xzf Python-*.tgz && rm -f Python-*.tgz && \
+    cd Python-* && \
+    ./configure --enable-optimizations --enable-shared --with-lto && \
+    make altinstall && \
+    echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && ldconfig && \
+    cd / && rm -rf /tmp/pyton
+
+# install postgres
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+# temp until offifical PGP key is fixed
+RUN sed -i 's/repo_gpgcheck = 1/repo_gpgcheck = 0/g' /etc/yum.repos.d/pgdg-redhat-all.repo
+RUN yum install -y postgresql15
 RUN yum clean all && rm -rf /var/cache/yum
 
-RUN python3 -m venv /opt/panda
+# setup venv with pythonX.Y
+RUN python$(echo ${PYTHON_VERSION} | sed -E 's/\.[0-9]+$//') -m venv /opt/panda
 RUN /opt/panda/bin/pip install --no-cache-dir -U pip
 RUN /opt/panda/bin/pip install --no-cache-dir -U setuptools
 RUN adduser atlpan
@@ -77,6 +94,7 @@ RUN chmod -R 777 /var/run/panda
 RUN chmod -R 777 /var/lib/logrotate
 RUN chmod -R 777 /var/cric
 RUN chmod -R 777 /var/cache/pandaserver
+RUN chmod -R 777 /opt/panda
 
 ENV PANDA_LOCK_DIR /var/run/panda
 RUN mkdir -p ${PANDA_LOCK_DIR} && chmod 777 ${PANDA_LOCK_DIR}
