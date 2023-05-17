@@ -51,6 +51,7 @@ RUN mv /opt/panda/etc/panda/panda_server.sysconfig.rpmnew /etc/sysconfig/panda_s
 RUN mv /opt/panda/etc/panda/panda_server-httpd-FastCGI.conf.rpmnew /opt/panda/etc/panda/panda_server-httpd.conf
 
 # make a wrapper script to launch services and periodic jobs in non-root container
+RUN mkdir -p /etc/rc.d/init.d
 RUN echo $'#!/bin/bash \n\
 set -m \n\
 /data/panda/init-panda \n\
