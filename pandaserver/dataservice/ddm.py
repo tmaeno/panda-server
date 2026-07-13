@@ -438,7 +438,7 @@ class RucioAPI:
         # do again to confirm files are registered
         try:
             client.add_files_to_datasets(attachment_list, ignore_duplicate=False)
-        except (Duplicate, DuplicateContent):
+        except FileAlreadyExists:
             return True
         except Exception:
             raise
