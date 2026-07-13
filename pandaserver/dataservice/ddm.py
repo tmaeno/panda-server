@@ -435,7 +435,7 @@ class RucioAPI:
         # add files
         client = self._get_rucio_client()
         client.add_files_to_datasets(attachment_list, ignore_duplicate=True)
-        # do again to confirm files are registered
+        # add again to verify files are there
         try:
             client.add_files_to_datasets(attachment_list, ignore_duplicate=False)
         except FileAlreadyExists:
