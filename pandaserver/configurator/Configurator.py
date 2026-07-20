@@ -311,7 +311,7 @@ class Configurator(threading.Thread):
                     space_unavailable = self.rse_usage[ddm_endpoint_name]["unavailable"]["used"] / GB
                 except KeyError:
                     space_unavailable = 0
-                    self.log_stream.warning(f"process_site_dumps: no rse MIN_FREE usage information for {ddm_endpoint_name}")
+                    self.log_stream.warning(f"process_site_dumps: no rse UNAVAILABLE usage information for {ddm_endpoint_name}")
 
                 ddm_spacetoken_state = site_config["ddmendpoints"][ddm_endpoint_name]["state"]
                 if ddm_spacetoken_state == "ACTIVE":
