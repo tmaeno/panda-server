@@ -360,11 +360,7 @@ class AtlasProdTaskBrokerThread(WorkerThread):
                                     to_skip = True
                                     break
                                 # check space
-                                tmpSpaceSize = 0
-                                if tmpEP["space_free"]:
-                                    tmpSpaceSize += tmpEP["space_free"]
-                                if tmpEP["space_expired"]:
-                                    tmpSpaceSize += tmpEP["space_expired"]
+                                tmpSpaceSize = tmpEP["space_usable"]
                                 tmpSpaceToUse = 0
                                 if tmpNucleus in self.fullRW:
                                     # 0.25GB per cpuTime/corePower/day
