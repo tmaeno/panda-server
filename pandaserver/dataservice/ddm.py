@@ -388,7 +388,8 @@ class RucioAPI:
         Returns:
         bool: True if the operation is successful, False otherwise
         """
-        tmp_log = LogWrapper(_logger, "register_files_in_dataset")
+        function_name = f"register_files_in_dataset-{naive_utcnow().isoformat('/')}"
+        tmp_log = LogWrapper(_logger, function_name)
         # loop over all rse
         attachment_list = []
         for rse in id_map:
