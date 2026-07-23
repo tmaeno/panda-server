@@ -455,8 +455,9 @@ class RucioAPI:
             return True
         # add again to verify files are there
         try:
-            client.add_files_to_datasets(attachment_list, ignore_duplicate=False)
+            client.add_files_to_datasets(validation_list, ignore_duplicate=False)
         except FileAlreadyExists:
+            tmp_log.debug("FileAlreadyExists exception caught during validation, indicating files are already registered.")
             return True
         except Exception:
             raise
