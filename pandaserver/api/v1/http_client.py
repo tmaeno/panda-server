@@ -3,6 +3,7 @@ client methods
 """
 
 import os
+from typing import Any
 
 import requests
 from pandacommon.pandautils.net_utils import replace_hostname_in_url_randomly
@@ -73,7 +74,7 @@ class HttpClient:
 
     def _prepare_headers(self, accept_json=True, content_type_json=True, encoding=None):
         """Prepare headers based on authentication and JSON settings."""
-        headers = {}
+        headers: dict[str, Any] = {}
         if accept_json:
             headers["Accept"] = "application/json"
         if content_type_json:
@@ -133,7 +134,7 @@ class HttpClient:
         headers = self._prepare_headers(content_type_json=False, encoding=encoding)
         cert, verify = self._prepare_ssl(use_https)
 
-        files = {}
+        files: dict[str, Any] = {}
         try:
             for key, value in data.items():
                 if isinstance(data[key], str):

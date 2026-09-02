@@ -69,7 +69,7 @@ class AdderGen:
         self.lock_offset = lock_offset
         self.siteMapper = siteMapper
         self.dataset_map: dict[str, Any] = {}
-        self.extra_info = {
+        self.extra_info: dict[str, Any] = {
             "surl": {},
             "nevents": {},
             "lbnr": {},
@@ -736,7 +736,7 @@ class AdderGen:
         chksums = []
         surls = []
         full_lfn_map = {}
-        n_events_map = {}
+        n_events_map: dict[str, Any] = {}
         guid_map = {}
 
         try:

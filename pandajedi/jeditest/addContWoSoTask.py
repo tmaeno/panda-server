@@ -1,5 +1,6 @@
 import sys
 import uuid
+from typing import Any
 
 from userinterface import Client
 
@@ -7,7 +8,7 @@ inFileList = ["file1", "file2", "file3"]
 
 logDatasetName = f"panda.jeditest.log.{uuid.uuid4()}"
 
-taskParamMap = {}
+taskParamMap: dict[str, Any] = {}
 
 taskParamMap["nFilesPerJob"] = 1
 taskParamMap["nFiles"] = len(inFileList)

@@ -14,7 +14,7 @@ import sys
 import time
 import traceback
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -398,7 +398,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                         dis_files["fsizes"].append(tmp_file_size)
                         dis_files["chksums"].append(tmp_checksum)
 
-            metadata = {"hidden": True, "purge_replicas": 0}
+            metadata: dict[str, Any] = {"hidden": True, "purge_replicas": 0}
             if dispatch_data_block in ds_task_map and ds_task_map[dispatch_data_block] not in ["NULL", 0]:
                 metadata["task_id"] = str(ds_task_map[dispatch_data_block])
             tmp_logger.debug(f"register_dataset {dispatch_data_block} {str(metadata)}")
@@ -911,7 +911,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         lfn_map: dict[str, Any] = {}
         val_map = {}
         prod_error = {}
-        missing_datasets = {}
+        missing_datasets: dict[str, Any] = {}
         jobs_waiting = []
         jobs_failed = []
         jobs_processed = []
@@ -970,8 +970,10 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                             missing_datasets[dataset] = out
                     # issue getting the files in dataset
                     else:
-                        # make map (key: LFN w/o attemptNr, value: LFN with attemptNr)
-                        items = out
+                        # make map (key: LFN w/o attemptNr, value: LFN with attemptNr).
+                        # status == 0 here, so out is the file map rather than an error
+                        # message -- a link the type checker cannot make on its own
+                        items = cast(Dict[str, Any], out)
                         try:
                             # loop over all files
                             for tmp_lfn in items:
@@ -1209,14 +1211,19 @@ class SetupperAtlasPlugin(SetupperPluginBase):
             return
 
     # get list of files in dataset
-    def get_list_files_in_dataset(self, dataset: str, file_list: Optional[List[str]] = None, use_cache: bool = True) -> Tuple[int, List[str]]:
+    def get_list_files_in_dataset(
+        self, dataset: str, file_list: Optional[List[str]] = None, use_cache: bool = True
+    ) -> Tuple[Optional[int], Union[Dict[str, Any], str]]:
         """
         Get list files in dataset method for running the setup process.
 
         :param dataset: The dataset to get the list of files from.
         :param file_list: The list of files. Defaults to None.
         :param use_cache: Whether to use cache. Defaults to True.
-        :return: A tuple containing the status and the list of files.
+        :return: A tuple of the status and, when the status is 0, the lfn-keyed map that
+                 rucioAPI.list_files_in_dataset returns -- otherwise the error message.
+                 Callers must check the status before using the second element. The
+                 previous annotation, Tuple[int, List[str]], was wrong on both halves.
         """
 
         tmp_logger = LogWrapper(self.logger, "<get_list_files_in_dataset>")
@@ -1225,7 +1232,9 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         if use_cache and dataset in self.lfn_dataset_map:
             return 0, self.lfn_dataset_map[dataset]
         status = None
-        items = []
+        # rucioAPI.list_files_in_dataset returns an lfn-keyed map; the empty value here
+        # is only a placeholder for the paths that return an error message instead
+        items: Dict[str, Any] = {}
         for _ in range(3):
             try:
                 tmp_logger.debug(f"list_files_in_dataset {dataset}")
@@ -1295,7 +1304,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
             return 1, out
 
         # loop over all datasets
-        all_rep_map = {}
+        all_rep_map: dict[str, Any] = {}
         for dataset in datasets:
             tmp_logger.debug(f"listDatasetReplicas {dataset}")
             status, out = self.get_list_dataset_replicas(dataset)
@@ -1545,7 +1554,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                         i_loop += 1
                         max_attempt = 3
                         is_ok = False
-                        metadata = {"hidden": True, "purge_replicas": 0}
+                        metadata: dict[str, Any] = {"hidden": True, "purge_replicas": 0}
                         if tmp_val["taskID"] not in [None, "NULL"]:
                             metadata["task_id"] = str(tmp_val["taskID"])
 
@@ -1717,8 +1726,9 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                             failed_ds.add(tmp_file_spec.dataset)
                             tmp_logger.debug(f"failed to get files in {tmp_file_spec.dataset} with {tmp_map}")
                         else:
-                            # append
-                            datasets_lfns_map[tmp_file_spec.dataset] = tmp_map
+                            # append. tmp_stat == 0 here, so tmp_map is the file map
+                            # rather than an error message
+                            datasets_lfns_map[tmp_file_spec.dataset] = cast(Dict[str, Any], tmp_map)
                 # set failed if file lookup failed
                 if tmp_file_spec.dataset in failed_ds:
                     jumbo_job_spec.jobStatus = "failed"

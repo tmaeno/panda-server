@@ -502,7 +502,7 @@ class TaskRefinerBase(object):
             itemList += [taskParamMap["log_merge"]]
         # pseudo input
         if "noInput" in taskParamMap and taskParamMap["noInput"] is True:
-            tmpItem = {}
+            tmpItem: dict[str, Any] = {}
             tmpItem["type"] = "template"
             tmpItem["value"] = ""
             tmpItem["dataset"] = "pseudo_dataset"

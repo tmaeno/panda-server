@@ -1445,7 +1445,7 @@ class TaskEventModule(BaseModule):
             useJumbos = dict()
             for tableName in ["jobsActive4", "jobsDefined4"]:
                 self.conn.begin()
-                varMap = {}
+                varMap: dict[str, Any] = {}
                 varMap[":eventService"] = EventServiceUtils.coJumboJobFlagNumber
                 varMap[":timeLimit"] = timeLimit
                 varMap[":minPriority"] = minPriority

@@ -1934,7 +1934,7 @@ class MiscStandaloneModule(BaseModule):
             self.conn.begin()
             # select
             self.cur.arraysize = 10
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":prodSourceLabel"] = "user"
             varMap[":relocationFlag"] = 3
             varMap[":jobStatus"] = "throttled"
@@ -1996,7 +1996,7 @@ class MiscStandaloneModule(BaseModule):
             # begin transaction
             self.conn.begin()
             # get jediTaskID
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":type1"] = "log"
             varMap[":type2"] = "output"
             varMap[":name1"] = dataset_name
@@ -2719,7 +2719,7 @@ class MiscStandaloneModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, f"vo={vo} label={prodSourceLabel}")
         tmp_log.debug("start")
         # mapping for table and job status
-        tableStatMap = {"jobsDefined4": ["defined", "assigned"]}
+        tableStatMap: dict[str, Any] = {"jobsDefined4": ["defined", "assigned"]}
         if not onlyActive:
             tableStatMap["jobsActive4"] = None
             tableStatMap["jobsArchived4"] = None
@@ -3055,7 +3055,7 @@ class MiscStandaloneModule(BaseModule):
             self.conn.begin()
             # check
             if not force:
-                varMap = {}
+                varMap: dict[str, Any] = {}
                 varMap[":vo"] = vo
                 varMap[":prodSourceLabel"] = prodSourceLabel
                 varMap[":cloud"] = cloud
@@ -3125,7 +3125,7 @@ class MiscStandaloneModule(BaseModule):
             # start transaction
             self.conn.begin()
             # check
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":vo"] = vo
             varMap[":prodSourceLabel"] = prodSourceLabel
             varMap[":cloud"] = cloud
@@ -3172,7 +3172,7 @@ class MiscStandaloneModule(BaseModule):
             # start transaction
             self.conn.begin()
             # check
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":vo"] = vo
             varMap[":prodSourceLabel"] = prodSourceLabel
             varMap[":cloud"] = cloud

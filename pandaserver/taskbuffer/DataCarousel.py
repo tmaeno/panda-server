@@ -3042,7 +3042,7 @@ class DataCarouselInterface(object):
                 ret = False
         elif dc_req_spec.status == DataCarouselRequestStatus.staging:
             # unset source_replica_expression of DDM rule for staging request
-            set_map = {"source_replica_expression": None}
+            set_map: dict[str, Any] = {"source_replica_expression": None}
             if change_src_expr:
                 # change source_replica_expression by replacing old source with new one
                 if not rse_set:

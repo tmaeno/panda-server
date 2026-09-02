@@ -3,6 +3,7 @@ import os
 import re
 import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -152,7 +153,7 @@ class WorkflowModule(BaseModule):
         comment = " /* DBProxy.get_workflow_data_by_name */"
         tmp_log = self.create_tagged_logger(comment, f"name={name}, workflow_id={workflow_id}")
         sql = f"SELECT {WFDataSpec.columnNames()} " f"FROM {panda_config.schemaJEDI}.workflow_data " f"WHERE name=:name "
-        var_map = {":name": name}
+        var_map: dict[str, Any] = {":name": name}
         if workflow_id is not None:
             sql += "AND workflow_id=:workflow_id "
             var_map[":workflow_id"] = workflow_id

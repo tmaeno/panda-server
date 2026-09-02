@@ -536,7 +536,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             ######################################
             # selection for data availability
             hasDDS = False
-            dataWeight = {}
+            dataWeight: dict[str, Any] = {}
             remoteSourceList: dict[str, Any] = {}
             sites_in_nucleus = []
             for datasetSpec in inputChunk.getDatasets():

@@ -7,6 +7,7 @@ import os
 import socket
 import sys
 import tempfile
+from typing import Any
 
 import requests
 from pandacommon.pandautils.net_utils import replace_hostname_in_url_randomly
@@ -79,7 +80,7 @@ class HttpClient:
 
     def _prepare_headers(self):
         """Prepare headers based on authentication and JSON settings."""
-        headers = {}
+        headers: dict[str, Any] = {}
 
         if self.oidc:
             headers["Authorization"] = f"Bearer {self.id_token}"
@@ -141,7 +142,7 @@ class HttpClient:
         headers = self._prepare_headers()
         cert, verify = self._prepare_ssl(use_https)
 
-        files = {}
+        files: dict[str, Any] = {}
         try:
             for key, value in data.items():
                 if type(data[key]) == str:

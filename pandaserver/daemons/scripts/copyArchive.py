@@ -90,7 +90,7 @@ def main(argv=tuple(), tbuf=None, **kwargs):
             "WHERE f.PandaID=j.PandaID AND j.prodSourceLabel=:prodSourceLabel AND j.jobStatus=:jobStatus "
             "AND f.type=:type "
         )
-        var_map = {":jobStatus": "merging", ":prodSourceLabel": "user", ":type": "log"}
+        var_map: dict[str, Any] = {":jobStatus": "merging", ":prodSourceLabel": "user", ":type": "log"}
         status, res = taskBuffer.querySQLS(sql, var_map)
         destination_blocks = {}
         if res is not None:

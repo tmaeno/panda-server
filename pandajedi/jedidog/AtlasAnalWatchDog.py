@@ -466,7 +466,7 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
                             tmpLog.debug(f"too small number of jobs {numBoostedJobsSite} to be boosted at {computingSite}")
                             continue
                         # get the highest prio of activated jobs at the site
-                        varMap = {}
+                        varMap: dict[str, Any] = {}
                         varMap[":jobStatus"] = "activated"
                         varMap[":prodSourceLabel"] = self.prodSourceLabel
                         varMap[":pmerge"] = "pmerge"

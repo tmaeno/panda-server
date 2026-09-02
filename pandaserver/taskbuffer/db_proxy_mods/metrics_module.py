@@ -39,7 +39,7 @@ class MetricsModule(BaseModule):
         try:
             if panda_id is not None:
                 table_name = "Job_Metrics"
-                var_map = {":jediTaskID": jedi_task_id, ":PandaID": panda_id}
+                var_map: dict[str, Any] = {":jediTaskID": jedi_task_id, ":PandaID": panda_id}
             else:
                 table_name = "Task_Metrics"
                 var_map = {":jediTaskID": jedi_task_id}

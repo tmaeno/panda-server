@@ -649,7 +649,7 @@ def update_job(
         return generate_response(True, message=message, data=response.data)
 
     # generate the response with the result
-    data = {"StatusCode": Protocol.SC_Success}
+    data: dict[str, Any] = {"StatusCode": Protocol.SC_Success}
     result = timed_method.result
 
     # set the secrets

@@ -214,7 +214,7 @@ def submit_grep_request(
             tmp_logger.warning(msg)
 
     request_id = str(uuid.uuid4())
-    grep_parameters = {"pattern": pattern, "log_filename": log_filename}
+    grep_parameters: dict[str, Any] = {"pattern": pattern, "log_filename": log_filename}
     if max_matches is not None:
         grep_parameters["max_matches"] = int(max_matches)
     if tail_bytes is not None:

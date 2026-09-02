@@ -194,7 +194,7 @@ class TaskUtilsModule(BaseModule):
             sqlAJ += "AND tabT.site IS NULL AND tabT.status IN (:st1,:st2,:st3) "
             # get thresholds
             configMaxJumbo = "AES_MAX_NUM_JUMBO_TASKS"
-            varMap = dict()
+            varMap: dict[str, Any] = dict()
             varMap[":component"] = "taskrefiner"
             varMap[":app"] = "jedi"
             varMap[":key"] = configMaxJumbo
@@ -277,7 +277,7 @@ class TaskUtilsModule(BaseModule):
         comment = " /* JediDBProxy.getScoutJobData_JEDI */"
         tmpLog = self.create_tagged_logger(comment, f"jediTaskID={jediTaskID}")
         tmpLog.debug(f"start mergeScout={mergeScout}")
-        returnMap = {}
+        returnMap: dict[str, Any] = {}
         extraInfo = {}
 
         # get percentile rank and margin for memory
@@ -1648,7 +1648,7 @@ class TaskUtilsModule(BaseModule):
             sqlCT += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
             sqlCT += ") t "
             # sql to read file spec
-            defaultVales = {}
+            defaultVales: dict[str, Any] = {}
             defaultVales["status"] = "ready"
             defaultVales["PandaID"] = None
             defaultVales["attemptNr"] = 0

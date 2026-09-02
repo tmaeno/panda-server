@@ -592,7 +592,7 @@ class TaskStandaloneModule(BaseModule):
             self.cur.arraysize = 10000
             timeLimit = naive_utcnow() - datetime.timedelta(minutes=waitTime)
             # get orphaned tasks
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status1"] = "ready"
             varMap[":status2"] = "scouting"
             varMap[":status3"] = "running"
@@ -695,7 +695,7 @@ class TaskStandaloneModule(BaseModule):
         tmpLog.debug("start")
         try:
             timeToCheck = naive_utcnow() - datetime.timedelta(minutes=waitTime)
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":taskstatus1"] = "running"
             varMap[":taskstatus2"] = "scouting"
             varMap[":taskstatus3"] = "ready"
@@ -1117,7 +1117,7 @@ class TaskStandaloneModule(BaseModule):
             # sql to get jediTaskIDs to refine from the command table
             sqlC = f"SELECT taskid,parent_tid FROM {panda_config.schemaDEFT}.T_TASK "
             sqlC += "WHERE status=:status "
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status"] = "waiting"
             if vo not in [None, "any"]:
                 varMap[":vo"] = vo
@@ -2673,7 +2673,7 @@ class TaskStandaloneModule(BaseModule):
         retTasks = []
         try:
             # sql to get tasks to reassign
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status"] = "reassigning"
             varMap[":timeLimit"] = naive_utcnow() - datetime.timedelta(minutes=5)
             sqlSCF = f"SELECT {JediTaskSpec.columnNames('tabT')} "
@@ -3104,7 +3104,7 @@ class TaskStandaloneModule(BaseModule):
         tmpLog.debug("start")
         try:
             # sql to get tasks
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status"] = "throttled"
             sqlTL = "SELECT jediTaskID,userName,workingGroup,errorDialog,currentPriority "
             sqlTL += "FROM {0}.JEDI_Tasks tabT,{0}.JEDI_AUX_Status_MinTaskID tabA ".format(panda_config.schemaJEDI)
@@ -3235,7 +3235,7 @@ class TaskStandaloneModule(BaseModule):
         failedRet = None
         try:
             # sql
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status1"] = "running"
             varMap[":status2"] = "pending"
             sqlRT = "SELECT tabT.jediTaskID,tabT.status,tabT.goal,tabT.splitRule,parent_tid "
@@ -3408,7 +3408,7 @@ class TaskStandaloneModule(BaseModule):
         failed_ret = None
         try:
             # SQL to get tasks
-            var_map = {":status1": "running", ":status2": "pending"}
+            var_map: dict[str, Any] = {":status1": "running", ":status2": "pending"}
             sql_get_tasks = (
                 "SELECT tabT.jediTaskID, tabT.status "
                 f"FROM {panda_config.schemaJEDI}.JEDI_Tasks tabT,{panda_config.schemaJEDI}.JEDI_AUX_Status_MinTaskID tabA "
@@ -4307,7 +4307,7 @@ class TaskStandaloneModule(BaseModule):
             for i_loop in range(n_loop):
                 tmp_log.debug(f"loop count {i_loop+1}/{n_loop}")
                 self.conn.begin()
-                var_map = dict()
+                var_map: dict[str, Any] = dict()
                 var_map[":jediTaskID"] = jediTaskID
                 try:
                     self.cur.execute(sql_lock + comment, var_map)

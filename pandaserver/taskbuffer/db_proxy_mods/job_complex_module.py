@@ -4813,7 +4813,7 @@ class JobComplexModule(BaseModule):
             self.conn.begin()
             self.cur.arraysize = 100000
             # select
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":jobStatus"] = "failed"
             varMap[":prodUserName"] = prodUserName
             varMap[":jobDefinitionID"] = jobDefinitionID

@@ -1003,7 +1003,7 @@ class JobStandaloneModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment)
         tmp_log.debug(f"{timeNow} {rownum} {highPrio}")
         try:
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":jobStatus"] = "transferring"
             varMap[":currentPriority"] = 800
             varMap[":pLabel1"] = "managed"
@@ -2118,7 +2118,7 @@ class JobStandaloneModule(BaseModule):
         comment = " /* DBProxy.checkJobStatus */"
         tmp_log = self.create_tagged_logger(comment, f"PandaID={pandaID}")
         tmp_log.debug("start")
-        retVal = {"command": None, "status": None}
+        retVal: dict[str, Any] = {"command": None, "status": None}
         try:
             sqlC = (
                 "SELECT jobStatus,commandToPilot FROM ATLAS_PANDA.jobsActive4 "

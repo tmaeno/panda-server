@@ -430,7 +430,7 @@ class EntityModule(BaseModule):
             # update in shards of 100 task ids
             for shard in create_shards(jedi_task_ids, 100):
                 # Prepare the bindings
-                var_map = {}
+                var_map: dict[str, Any] = {}
                 shard_taskid_set = set()
                 i = 0
                 for _task_id in shard:
@@ -1646,7 +1646,7 @@ class EntityModule(BaseModule):
             timeNow = naive_utcnow()
             nHours = 1000 + timeNow.hour * 60 + timeNow.minute
             # delete old records
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":FLAG1"] = "max"
             varMap[":FLAG2"] = "snapshot"
             self.conn.begin()

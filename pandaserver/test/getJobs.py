@@ -5,13 +5,14 @@ import socket
 import sys
 import threading
 from http.client import HTTPSConnection
+from typing import Any
 from urllib.parse import parse_qs, urlencode
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
 from pandaserver.userinterface.Client import baseURLSSL
 
-node = {}
+node: dict[str, Any] = {}
 node["siteName"] = sys.argv[1]
 node["mem"] = 1000
 node["node"] = socket.getfqdn()

@@ -139,7 +139,7 @@ for file in job.Files:
 meta = meta[:-1]
 meta += """], "type": "aod" } ] }, "name": "Reco_tf", "reportVersion": "1.0.0", "resource": { "cpuUnit": "seconds", "externalsCpuTime": 24, "memUnit": "kB", "transformCpuTime": 50, "wallTime": 2782 } }"""
 
-node = {}
+node: dict[str, Any] = {}
 node["jobId"] = id
 node["state"] = "finished"
 # node['state']='failed'

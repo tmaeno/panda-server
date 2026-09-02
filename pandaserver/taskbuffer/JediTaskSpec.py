@@ -542,7 +542,7 @@ class JediTaskSpec(object):
                 # * rule for secondary
                 # 1 : must have same boundayID. cannot split
                 #
-                retMap = {}
+                retMap: dict[str, Any] = {}
                 if gbID in [1, 2]:
                     retMap["inSplit"] = 1
                 else:

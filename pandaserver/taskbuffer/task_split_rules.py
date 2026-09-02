@@ -1,3 +1,5 @@
+from typing import Any
+
 # split rules
 split_rule_dict = {
     "allowEmptyInput": "AE",
@@ -181,7 +183,7 @@ def extract_rule_values(split_rules: str, rule_names: list, is_sub_rule: bool = 
     """
     if split_rules is None:
         split_rules = ""
-    ret = {}
+    ret: dict[str, Any] = {}
     if is_sub_rule:
         rule_separator = "|"
         key_value_separator = ":"

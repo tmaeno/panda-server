@@ -261,7 +261,7 @@ class TaskComplexModule(BaseModule):
                 sqlPPC += "WHERE tabD.jediTaskID=tabC.jediTaskID AND tabD.datasetID=tabC.datasetID "
                 sqlPPC += "AND tabD.jediTaskID=:jediTaskID AND tabD.type IN (:type1,:type2) "
                 sqlPPC += "AND tabD.datasetName IN (:dsName,:didName) AND tabC.status=:fileStatus "
-                varMap = {}
+                varMap: dict[str, Any] = {}
                 varMap[":type1"] = "output"
                 varMap[":type2"] = "log"
                 varMap[":jediTaskID"] = parent_tid
@@ -1601,7 +1601,7 @@ class TaskComplexModule(BaseModule):
         failedRet = None
         try:
             # sql
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status1"] = "prepared"
             varMap[":status2"] = "scouted"
             varMap[":status3"] = "tobroken"
@@ -1765,7 +1765,7 @@ class TaskComplexModule(BaseModule):
         """
         # get tasks/datasets
         if not target_tasks:
-            var_map = {}
+            var_map: dict[str, Any] = {}
             var_map[":vo"] = vo
             if prod_source_label not in [None, "", "any"]:
                 var_map[":prodSourceLabel"] = prod_source_label
@@ -2070,7 +2070,7 @@ class TaskComplexModule(BaseModule):
         orig_task_spec = None
         try:
             # read task
-            var_map = {}
+            var_map: dict[str, Any] = {}
             var_map[":jediTaskID"] = jedi_task_id
             var_map[":statusInDB"] = task_status_map[jedi_task_id]
             if jedi_task_id not in locked_tasks:
@@ -2202,7 +2202,7 @@ class TaskComplexModule(BaseModule):
         num_hpo_workers = None
         # count the number of files for avalanche
         if not to_skip:
-            var_map = {}
+            var_map: dict[str, Any] = {}
             var_map[":jediTaskID"] = jedi_task_id
             var_map.update(INPUT_TYPES_var_map)
             tmp_log.debug(sql_avalanche + comment + str(var_map))
@@ -2398,7 +2398,7 @@ class TaskComplexModule(BaseModule):
         sql_update_dataset_status += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
         to_skip = False
         # See if there are different memory requirements that need to be mapped to different chunks
-        var_map = {}
+        var_map: dict[str, Any] = {}
         var_map[":jediTaskID"] = jedi_task_id
         var_map[":datasetID"] = dataset_id
         if not simulation_with_file_stat:
@@ -3502,7 +3502,7 @@ class TaskComplexModule(BaseModule):
         tmpLog.debug("start")
         try:
             # sql to get tasks to set scout job data
-            varMap = {}
+            varMap: dict[str, Any] = {}
             varMap[":status"] = "running"
             varMap[":minJobs"] = 5
             varMap[":timeLimit"] = naive_utcnow() - datetime.timedelta(hours=24)
@@ -3591,7 +3591,7 @@ class TaskComplexModule(BaseModule):
         try:
             # sql to get tasks/datasets
             if simTasks is None:
-                varMap = {}
+                varMap: dict[str, Any] = {}
                 varMap[":taskstatus1"] = "running"
                 varMap[":taskstatus2"] = "scouting"
                 varMap[":taskstatus3"] = "merging"
