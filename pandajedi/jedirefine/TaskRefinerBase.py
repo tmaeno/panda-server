@@ -30,6 +30,11 @@ class TaskRefinerBase(object):
     SC_FAILED: Interaction.StatusCode
     SC_FATAL: Interaction.StatusCode
 
+    # Set by extractCommon() before any of the methods that read it run, so it is
+    # declared non-Optional: nothing in this class guards it, and a refiner that
+    # reads the task spec before one is installed is a bug either way.
+    taskSpec: JediTaskSpec
+
     # constructor
     def __init__(self, taskBufferIF, ddmIF):
         self.ddmIF = ddmIF
@@ -43,7 +48,7 @@ class TaskRefinerBase(object):
 
     # initialize
     def initializeRefiner(self, tmpLog):
-        self.taskSpec = None
+        self.taskSpec = None  # type: ignore[assignment]
         self.inMasterDatasetSpec = []
         self.inSecDatasetSpecList = []
         self.outDatasetSpecList: List[JediDatasetSpec] = []

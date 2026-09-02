@@ -9,6 +9,7 @@ import re
 import sys
 import time
 import traceback
+from typing import TYPE_CHECKING
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -19,6 +20,9 @@ import pandaserver.taskbuffer.ErrorCode
 from pandaserver.config import panda_config
 from pandaserver.dataservice import closer
 from pandaserver.srvcore.CoreUtils import normalize_cpu_model
+
+if TYPE_CHECKING:
+    from pandaserver.taskbuffer.JobSpec import JobSpec
 from pandaserver.taskbuffer import EventServiceUtils, JobUtils, retryModule
 
 _logger = PandaLogger().getLogger("adder")
@@ -32,6 +36,11 @@ class AdderGen:
     """
 
     # constructor
+    # Fetched by run() and guarded once, at the top of process_job_report(), which is
+    # the only route to every method that reads it. Declared non-Optional so those
+    # methods do not each repeat a check the caller already made.
+    job: "JobSpec"
+
     def __init__(
         self,
         taskBuffer,
@@ -51,7 +60,7 @@ class AdderGen:
         :param job: The job object.
         :param params: Additional parameters.
         """
-        self.job = None
+        self.job = None  # type: ignore[assignment]
         self.job_id = job_id
         self.job_status = job_status
         self.taskBuffer = taskBuffer
