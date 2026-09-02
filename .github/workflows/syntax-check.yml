@@ -1,6 +1,8 @@
 name: Syntax Check
 
-on: [pull_request]
+on: 
+  pull_request:
+  workflow_dispatch:
 
 # a new push to the PR supersedes the previous check
 concurrency:
