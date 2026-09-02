@@ -45,11 +45,17 @@ class StatusCode(object):
             return True
 
 
+# status codes of this module. spelled out rather than installed with installSC below,
+# so that the names this module itself uses are visible to readers and linters
+SC_SUCCEEDED = StatusCode(0)
+SC_FAILED = StatusCode(1)
+SC_FATAL = StatusCode(2)
+
 # mapping to accessors
 statusCodeMap = {
-    "SC_SUCCEEDED": StatusCode(0),
-    "SC_FAILED": StatusCode(1),
-    "SC_FATAL": StatusCode(2),
+    "SC_SUCCEEDED": SC_SUCCEEDED,
+    "SC_FAILED": SC_FAILED,
+    "SC_FATAL": SC_FATAL,
 }
 
 
@@ -57,10 +63,6 @@ statusCodeMap = {
 def installSC(cls):
     for sc, val in statusCodeMap.items():
         setattr(cls, sc, val)
-
-
-# install SCs in this module
-installSC(sys.modules[__name__])
 
 
 ###########################################################

@@ -9,9 +9,16 @@ import re
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables
 
 from pandaserver.config import panda_config
+from pandaserver.taskbuffer.JediFileSpec import JediFileSpec
 
 
 class JediDatasetSpec(object):
+    # the file list this spec carries, created in __init__ with
+    # object.__setattr__. Declared here so that the element type is stated:
+    # JobSpec.Files holds FileSpec and this one holds JediFileSpec, and nothing
+    # but the class it belongs to tells the two apart
+    Files: list[JediFileSpec]
+
     def __str__(self):
         sb = []
         for key in self.__dict__:

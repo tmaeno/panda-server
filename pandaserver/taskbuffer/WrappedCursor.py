@@ -13,6 +13,14 @@ from pandaserver.config import panda_config
 
 warnings.filterwarnings("ignore")
 
+# oracledb is only installed with the oracle backend
+if panda_config.backend == "oracle":
+    import oracledb
+
+    varNUMBER = oracledb.NUMBER
+else:
+    varNUMBER = int
+
 _logger = PandaLogger().getLogger("WrappedCursor")
 
 
@@ -360,7 +368,7 @@ class WrappedCursor(object):
                 # assuming that we use RETURNING INTO only for PandaID or row_ID columns
                 if not dryRun:
                     for x in listInto:
-                        varDict[x] = cur.var(oracledb.NUMBER)
+                        varDict[x] = cur.var(varNUMBER)
                 result = f" RETURNING {valReturning} INTO {valInto} "
             except Exception:
                 pass
@@ -420,7 +428,7 @@ class WrappedCursor(object):
     # var
     def var(self, dataType, *args, **kwargs):
         if self.backend == "mysql":
-            return apply(dataType, [0])
+            return dataType(0)
         elif self.backend == "postgres":
             return None
         else:

@@ -21,6 +21,7 @@ from pandaserver.dataservice.ddm import rucioAPI
 from pandaserver.srvcore.exceptions import DatasetLocationError, FileRegistrationError, SubscriptionRegistrationError
 from pandaserver.srvcore.MailUtils import MailUtils
 from pandaserver.taskbuffer import EventServiceUtils, JobUtils
+from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
 
 
 class AdderAtlasPlugin(AdderPluginBase):
@@ -41,7 +42,7 @@ class AdderAtlasPlugin(AdderPluginBase):
         AdderPluginBase.__init__(self, job, params)
         self.job_id = self.job.PandaID
         self.job_status = self.job.jobStatus
-        self.dataset_map = {}
+        self.dataset_map: Dict[str, DatasetSpec] = {}
         self.add_to_top_only = False
         self.go_to_transferring = False
         self.log_transferring = False

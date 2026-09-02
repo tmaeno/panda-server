@@ -856,7 +856,7 @@ class WorkflowInterface(object):
         tmp_log: LogWrapper,
         step_spec: WFStepSpec,
         output_ids: dict,
-        data_spec_map: dict,
+        data_spec_map: Dict[str, WFDataSpec],
         now_time,
     ) -> None:
         """

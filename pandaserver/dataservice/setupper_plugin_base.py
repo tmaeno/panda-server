@@ -3,6 +3,7 @@ Base class for setupper plugins. It separates normal and jumbo jobs and sets par
 """
 from typing import List, Dict
 from pandaserver.taskbuffer import EventServiceUtils
+from pandaserver.taskbuffer.JobSpec import JobSpec
 
 
 class SetupperPluginBase(object):
@@ -10,7 +11,7 @@ class SetupperPluginBase(object):
     Base class for setupper plugins. It separates normal and jumbo jobs and sets parameters.
     """
 
-    def __init__(self, taskBuffer, jobs: List, logger, params: Dict, default_map: Dict) -> None:
+    def __init__(self, taskBuffer, jobs: List[JobSpec], logger, params: Dict, default_map: Dict) -> None:
         """
         Constructor for the SetupperPluginBase class.
 
@@ -20,8 +21,8 @@ class SetupperPluginBase(object):
         :param params: Additional parameters.
         :param default_map: Default parameters.
         """
-        self.jobs = []
-        self.jumbo_jobs = []
+        self.jobs: List[JobSpec] = []
+        self.jumbo_jobs: List[JobSpec] = []
         # separate normal and jumbo jobs
         for job in jobs:
             if EventServiceUtils.isJumboJob(job):
@@ -52,7 +53,7 @@ class SetupperPluginBase(object):
         pass
 
     # update failed jobs
-    def update_failed_jobs(self, jobs: List[object]) -> None:
+    def update_failed_jobs(self, jobs: List[JobSpec]) -> None:
         """
         Updates the status of failed jobs.
 

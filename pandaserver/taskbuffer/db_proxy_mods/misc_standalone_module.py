@@ -3768,7 +3768,7 @@ class MiscStandaloneModule(BaseModule):
             return False
 
     # insert dataset to the JEDI datasets table
-    def insertDataset_JEDI(self, datasetSpec):
+    def insertDataset_JEDI(self, datasetSpec: JediDatasetSpec):
         comment = " /* JediDBProxy.insertDataset_JEDI */"
         tmpLog = self.create_tagged_logger(comment)
         tmpLog.debug("start")

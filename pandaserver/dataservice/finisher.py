@@ -14,6 +14,8 @@ from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
+from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
+
 # logger
 _logger = PandaLogger().getLogger("finisher")
 
@@ -40,7 +42,7 @@ class Finisher(threading.Thread):
     """
 
     # constructor
-    def __init__(self, taskBuffer, dataset, job: str = None, site: str = None):
+    def __init__(self, taskBuffer, dataset: DatasetSpec, job: str = None, site: str = None):
         """
         Constructs all the necessary attributes for the Finisher object.
 
@@ -56,7 +58,7 @@ class Finisher(threading.Thread):
                 The site where the job is to be transferred (default is None)
         """
         threading.Thread.__init__(self)
-        self.dataset = dataset
+        self.dataset: DatasetSpec = dataset
         self.task_buffer = taskBuffer
         self.job = job
         self.site = site

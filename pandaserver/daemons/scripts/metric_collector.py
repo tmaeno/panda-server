@@ -189,7 +189,7 @@ class MetricsDB(object):
             try:
                 patch_value_json = json.dumps(entity_dict)
             except Exception:
-                tmp_log.error(traceback.format_exc() + " " + str(v))
+                tmp_log.error(traceback.format_exc() + " " + str(entity_dict))
                 return
             # initialize varMap
             varMap = varMap_template.copy()

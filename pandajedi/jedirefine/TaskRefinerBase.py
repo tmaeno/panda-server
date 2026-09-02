@@ -3,6 +3,7 @@ import datetime
 import re
 import sys
 import uuid
+from typing import List
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -40,7 +41,7 @@ class TaskRefinerBase(object):
         self.taskSpec = None
         self.inMasterDatasetSpec = []
         self.inSecDatasetSpecList = []
-        self.outDatasetSpecList = []
+        self.outDatasetSpecList: List[JediDatasetSpec] = []
         self.outputTemplateMap = {}
         self.jobParamsTemplate = None
         self.cloudName = None

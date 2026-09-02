@@ -144,6 +144,10 @@ class JobSpec(object):
         "cpu_architecture_level",
         "outputFileType",
     )
+    # the file list this spec carries. Declared here rather than only in __slots__
+    # below, since __slots__ is built from an expression and type checkers cannot
+    # see the names it adds
+    Files: list[FileSpec]
     # slots
     __slots__ = _attributes + ("Files", "_changedAttrs", "_reserveChangedState")
     # attributes which have 0 by default

@@ -9,6 +9,8 @@ from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
+from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
+
 # logger
 _logger = PandaLogger().getLogger("activator")
 
@@ -33,7 +35,7 @@ class Activator:
     """
 
     # constructor
-    def __init__(self, taskBuffer, dataset, enforce: bool = False):
+    def __init__(self, taskBuffer, dataset: DatasetSpec, enforce: bool = False):
         """
         Constructs all the necessary attributes for the Activator object.
 
@@ -46,7 +48,7 @@ class Activator:
             enforce : bool, optional
                 A flag to enforce activation (default is False).
         """
-        self.dataset = dataset
+        self.dataset: DatasetSpec = dataset
         self.task_buffer = taskBuffer
         self.enforce = enforce
 

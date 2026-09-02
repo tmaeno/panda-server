@@ -392,5 +392,5 @@ def is_fine_grained_job(job):
 
 
 # set fine-grained
-def set_fine_grained(job):
+def set_fine_grained(job: JobSpec):
     job.eventService = fineGrainedFlagNumber

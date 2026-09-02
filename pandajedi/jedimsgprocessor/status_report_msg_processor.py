@@ -80,7 +80,7 @@ class StatusReportMsgProcPlugin(BaseMsgProcPlugin):
         # sanity check
         try:
             msg_type = msg_dict["msg_type"]
-        except Exception as e:
+        except Exception as exc:
             err_str = f"failed to parse message object dict {msg_dict} , skipped. {exc.__class__.__name__} : {exc} ; {traceback.format_exc()}"
             tmp_log.error(err_str)
             raise

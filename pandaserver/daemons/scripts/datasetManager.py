@@ -1137,9 +1137,10 @@ def main(tbuf=None, **kwargs):
         if len(res) < 100:
             break
 
-    # release memory
-    del siteMapper
-    del deletedDisList
+    # release memory. drop the references rather than del them, since both names are
+    # read by the nested threads above and del empties the cell they share
+    siteMapper = None
+    deletedDisList = None
 
     _memoryCheck("end")
 

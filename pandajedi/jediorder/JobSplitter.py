@@ -123,6 +123,9 @@ class JobSplitter:
         strict_chunkSize = False
         tmp_ng_list = []
         change_site_for_dist_dataset = False
+        # carried between iterations, set by the first one that picks a site candidate
+        siteName = None
+        siteCandidate = None
         while True:
             # change site
             if iSubChunks % nSubChunks == 0 or subChunk == [] or change_site_for_dist_dataset:

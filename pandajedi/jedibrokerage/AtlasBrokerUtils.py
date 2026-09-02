@@ -446,7 +446,9 @@ def hasZeroShare(site_spec, task_spec, ignore_priority, tmp_log):
             # check priority
             if tmp_priority is not None and not ignore_priority:
                 try:
-                    exec(f"tmpStat = {task_spec.currentPriority}{tmp_priority}", globals())
+                    # eval to a local, since exec'ing into the module globals let concurrent
+                    # checks for other sites and tasks overwrite the result
+                    tmpStat = eval(f"{task_spec.currentPriority}{tmp_priority}")
                     tmp_log.debug(
                         f"Priority check for {site_spec.sitename}, {task_spec.currentPriority}): " f"{task_spec.currentPriority}{tmp_priority} = {tmpStat}"
                     )

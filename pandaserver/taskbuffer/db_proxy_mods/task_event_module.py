@@ -2936,7 +2936,7 @@ class TaskEventModule(BaseModule):
             self.dump_error_message(tmp_log)
             return None, "failed"
 
-    def create_pseudo_files_for_dyn_num_events(self, job_spec, tmp_log):
+    def create_pseudo_files_for_dyn_num_events(self, job_spec: JobSpec, tmp_log):
         """
         create pseudo files for dynamic number of events
         param job_spec: JobSpec

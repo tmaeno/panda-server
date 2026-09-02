@@ -15,6 +15,7 @@ from pandaserver.config import panda_config
 from pandaserver.dataservice import DataServiceUtils
 from pandaserver.dataservice.activator import Activator
 from pandaserver.taskbuffer import EventServiceUtils
+from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
 
 # logger
 _logger = PandaLogger().getLogger("closer")
@@ -30,7 +31,7 @@ class Closer:
     """
 
     # constructor
-    def __init__(self, taskBuffer, destination_data_blocks: List[str], job, dataset_map: Dict = None) -> None:
+    def __init__(self, taskBuffer, destination_data_blocks: List[str], job, dataset_map: Dict[str, DatasetSpec] = None) -> None:
         """
         Constructor
 
@@ -45,7 +46,7 @@ class Closer:
         self.job = job
         self.panda_id = job.PandaID
         self.site_mapper = None
-        self.dataset_map = dataset_map if dataset_map is not None else {}
+        self.dataset_map: Dict[str, DatasetSpec] = dataset_map if dataset_map is not None else {}
         self.all_subscription_finished = None
 
     def check_sub_datasets_in_jobset(self) -> bool:

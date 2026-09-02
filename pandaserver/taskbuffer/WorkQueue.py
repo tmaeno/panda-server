@@ -185,19 +185,12 @@ class WorkQueue(object):
         # only active queues are evaluated
         if self.isActive():
             # normal queue
-            # expand parameters to local namespace
-            for tmp_param_key, tmp_param_val in param_map.items():
-                if isinstance(tmp_param_val, str):
-                    # add quotes for string
-                    exec(f'{tmp_param_key}="{tmp_param_val}"', globals())
-                else:
-                    exec(f"{tmp_param_key}={tmp_param_val}", globals())
-            # add default parameters if missing
-            for tmp_param in self._paramsForSelection:
-                if tmp_param not in param_map:
-                    exec(f"{tmp_param}=None", globals())
-            # evaluate
-            exec(f"ret_var = {self.evalString}", globals())
+            # put the parameters in a namespace of this call. they used to be exec'ed into
+            # the module globals, where concurrent callers overwrote each other's values
+            eval_params = {tmp_param: None for tmp_param in self._paramsForSelection}
+            eval_params.update(param_map)
+            # evaluate. the globals supply re, which the LIKE criteria are rewritten to use
+            ret_var = eval(self.evalString, globals(), eval_params)
             return self, ret_var
 
         # return False
