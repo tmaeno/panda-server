@@ -3,6 +3,7 @@ file specification for JEDI
 
 """
 
+import datetime
 import re
 import types
 
@@ -42,6 +43,41 @@ class JediFileSpec(object):
         "proc_status",
         "constituent_id",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.JEDI_DATASET_CONTENTS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    jediTaskID: int | None
+    datasetID: int | None
+    fileID: int | None
+    creationDate: datetime.datetime | None
+    lastAttemptTime: datetime.datetime | None
+    lfn: str | None
+    GUID: str | None
+    type: str | None
+    status: str | None
+    fsize: int | None
+    checksum: str | None
+    scope: str | None
+    attemptNr: int | None
+    maxAttempt: int | None
+    nEvents: int | None
+    keepTrack: int | None
+    startEvent: int | None
+    endEvent: int | None
+    firstEvent: int | None
+    boundaryID: int | None
+    PandaID: int | None
+    failedAttempt: int | None
+    lumiBlockNr: int | None
+    outPandaID: int | None
+    maxFailure: int | None
+    ramCount: int | None
+    is_waiting: str | None
+    proc_status: str | None
+    constituent_id: int | None
     # attributes which have 0 by default
     _zeroAttrs = ("fsize", "attemptNr", "failedAttempt", "ramCount")
     # mapping between sequence and attr
@@ -103,6 +139,7 @@ class JediFileSpec(object):
             object.__setattr__(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls, useSeq=False, defaultVales=None, skipDefaultAttr=False):
         if defaultVales is None:
             defaultVales = {}
@@ -127,9 +164,8 @@ class JediFileSpec(object):
             ret += attr
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls, useSeq=True):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -140,8 +176,6 @@ class JediFileSpec(object):
         ret = ret[:-1]
         ret += ")"
         return ret
-
-    bindValuesExpression = classmethod(bindValuesExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):

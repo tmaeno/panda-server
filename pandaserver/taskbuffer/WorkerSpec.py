@@ -37,6 +37,39 @@ class WorkerSpec(object):
         "jobType",
         "minRamCount",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.HARVESTER_WORKERS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    harvesterID: str | None
+    workerID: int | None
+    batchID: str | None
+    queueName: str | None
+    status: str | None
+    computingSite: str | None
+    nCore: int | None
+    nodeID: str | None
+    submitTime: datetime.datetime | None
+    startTime: datetime.datetime | None
+    endTime: datetime.datetime | None
+    lastUpdate: datetime.datetime | None
+    stdOut: str | None
+    stdErr: str | None
+    batchLog: str | None
+    jdl: str | None
+    resourceType: str | None
+    nativeExitCode: int | None
+    nativeStatus: str | None
+    diagMessage: str | None
+    nJobs: int | None
+    computingElement: str | None
+    submissionHost: str | None
+    harvesterHost: str | None
+    errorCode: int | None
+    jobType: str | None
+    minRamCount: int | None
     # slots
     __slots__ = _attributes + ("_changedAttrs",)
     # attributes which have 0 by default
@@ -89,6 +122,7 @@ class WorkerSpec(object):
             object.__setattr__(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls, prefix=None):
         ret = ""
         for attr in cls._attributes:
@@ -98,9 +132,8 @@ class WorkerSpec(object):
         ret = ret[:-1]
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls):
         from pandaserver.config import panda_config
 
@@ -110,8 +143,6 @@ class WorkerSpec(object):
         ret = ret[:-1]
         ret += ")"
         return ret
-
-    bindValuesExpression = classmethod(bindValuesExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):

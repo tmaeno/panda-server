@@ -29,9 +29,16 @@ class TaskBuffer:
 
     """
 
+    # The proxy pool is installed by init() before any query runs. It is declared
+    # non-Optional on purpose, for the same reason as BaseModule.conn/cur: typing it
+    # as Optional would only push a None check onto each of the ~250 call sites
+    # without making any of them safer, since a query issued before init() is a bug
+    # either way.
+    proxyPool: DBProxyPool
+
     # constructor
     def __init__(self):
-        self.proxyPool = None
+        self.proxyPool = None  # type: ignore[assignment]
         self.lock = Lock()
         self.nDBConnection = None
 

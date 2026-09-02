@@ -47,7 +47,7 @@ jobs:
     - name: Check for undefined names
       run: ruff check --isolated --select F821 .
 
-    # Enforced against a baseline, not against zero. The tree still carries ~1060
+    # Enforced against a baseline, not against zero. The tree still carries ~2190
     # findings, most of them annotations too weak to say anything -- `dict` where
     # the value type matters, `object` where a real class does -- so mypy-baseline
     # filters out everything already recorded in mypy-baseline.txt and fails only

@@ -233,6 +233,7 @@ class Share(Node):
         return executing, queued, pledged
 
     # return column names
+    @classmethod
     def column_names(cls):
         ret = ""
         for attr in cls._attributes:
@@ -240,5 +241,3 @@ class Share(Node):
                 ret += ","
             ret += attr
         return ret
-
-    column_names = classmethod(column_names)

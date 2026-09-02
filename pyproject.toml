@@ -122,14 +122,24 @@ ignore = ['E501', 'U100']
 # flags below have to stay in sync with the baseline -- changing them, or the
 # pinned mypy version in .github/workflows/syntax-check.yml, changes the set of
 # errors mypy reports and invalidates the file. Regenerate it in the same commit:
-#   mypy pandaserver pandajedi | mypy-baseline sync
+#   mypy | mypy-baseline sync
 [tool.mypy]
 files = ["pandaserver", "pandajedi"]
 ignore_missing_imports = true
+# Without this, mypy skips the body of every function that has no annotations --
+# which is most of this tree, so the gate would only cover the code that needs it
+# least. New code goes through the gate whether or not its author annotates it.
+check_untyped_defs = true
 
 [tool.mypy-baseline]
 baseline_path = "mypy-baseline.txt"
 sort_baseline = true
+# Notes are the continuation lines of an error that is recorded anyway, so nothing
+# is lost by dropping them -- and keeping them makes the baseline depend on mypy's
+# cache. mypy prints an overload variant as `def list(self) -> list[_T]` with a warm
+# cache and `def __init__(self) -> list[_T]` with a cold one, so a baseline written
+# on a developer's machine would not match the cold run CI does.
+ignore_categories = ["note"]
 # only findings a change ADDS fail the gate. Without this, a PR that fixes an
 # existing finding also fails, until its author regenerates the baseline -- which
 # would punish exactly the cleanup this baseline exists to make room for. The

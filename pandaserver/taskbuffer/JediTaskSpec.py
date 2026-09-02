@@ -1,3 +1,4 @@
+import datetime
 import enum
 import json
 import math
@@ -99,6 +100,96 @@ class JediTaskSpec(object):
         "queuedTime",
         "actionTime",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.JEDI_TASKS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    jediTaskID: int | None
+    taskName: str | None
+    status: str | None
+    userName: str | None
+    creationDate: datetime.datetime | None
+    modificationTime: datetime.datetime | None
+    startTime: datetime.datetime | None
+    endTime: datetime.datetime | None
+    frozenTime: datetime.datetime | None
+    prodSourceLabel: str | None
+    workingGroup: str | None
+    vo: str | None
+    coreCount: int | None
+    taskType: str | None
+    processingType: str | None
+    taskPriority: int | None
+    currentPriority: int | None
+    architecture: str | None
+    transUses: str | None
+    transHome: str | None
+    transPath: str | None
+    lockedBy: str | None
+    lockedTime: datetime.datetime | None
+    termCondition: str | None
+    splitRule: str | None
+    walltime: int | None
+    walltimeUnit: str | None
+    outDiskCount: int | None
+    outDiskUnit: str | None
+    workDiskCount: int | None
+    workDiskUnit: str | None
+    ramCount: int | None
+    ramUnit: str | None
+    ioIntensity: int | None
+    ioIntensityUnit: str | None
+    workQueue_ID: int | None
+    progress: int | None
+    failureRate: int | None
+    errorDialog: str | None
+    reqID: int | None
+    oldStatus: str | None
+    cloud: str | None
+    site: str | None
+    countryGroup: str | None
+    parent_tid: int | None
+    eventService: int | None
+    ticketID: str | None
+    ticketSystemType: str | None
+    stateChangeTime: datetime.datetime | None
+    superStatus: str | None
+    campaign: str | None
+    mergeRamCount: int | None
+    mergeRamUnit: str | None
+    mergeWalltime: int | None
+    mergeWalltimeUnit: str | None
+    throttledTime: datetime.datetime | None
+    numThrottled: int | None
+    mergeCoreCount: int | None
+    goal: int | None
+    assessmentTime: datetime.datetime | None
+    cpuTime: int | None
+    cpuTimeUnit: str | None
+    cpuEfficiency: int | None
+    baseWalltime: int | None
+    nucleus: str | None
+    baseRamCount: int | None
+    ttcRequested: datetime.datetime | None
+    ttcPredicted: datetime.datetime | None
+    ttcPredictionDate: datetime.datetime | None
+    rescueTime: datetime.datetime | None
+    requestType: str | None
+    gshare: str | None
+    resource_type: str | None
+    useJumbo: str | None
+    diskIO: int | None
+    diskIOUnit: str | None
+    memory_leak_core: int | None
+    memory_leak_x2: float | None
+    attemptNr: int | None
+    container_name: str | None
+    framework: str | None
+    activatedTime: datetime.datetime | None
+    queuedTime: datetime.datetime | None
+    actionTime: datetime.datetime | None
     # attributes which have 0 by default
     _zeroAttrs = ()
     # attributes to force update
@@ -259,6 +350,7 @@ class JediTaskSpec(object):
             object.__setattr__(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls, prefix=None):
         ret = ""
         for attr in cls.attributes:
@@ -268,9 +360,8 @@ class JediTaskSpec(object):
         ret = ret[:-1]
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls, useSeq=True):
         ret = "VALUES("
         for attr in cls.attributes:
@@ -281,8 +372,6 @@ class JediTaskSpec(object):
         ret = ret[:-1]
         ret += ")"
         return ret
-
-    bindValuesExpression = classmethod(bindValuesExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):
@@ -490,14 +579,13 @@ class JediTaskSpec(object):
         return self.check_split_rule("noWaitParent")
 
     # check splitRule if not wait for completion of parent
+    @classmethod
     def noWaitParentSL(cls, splitRule):
         if splitRule is not None:
             tmpMatch = re.search(cls.splitRuleToken["noWaitParent"] + "=(\d+)", splitRule)
             if tmpMatch is not None:
                 return True
         return False
-
-    noWaitParentSL = classmethod(noWaitParentSL)
 
     # use only limited sites
     def useLimitedSites(self):
@@ -688,10 +776,9 @@ class JediTaskSpec(object):
         return False
 
     # return list of status to update contents
+    @classmethod
     def statusToUpdateContents(cls):
         return ["defined"]
-
-    statusToUpdateContents = classmethod(statusToUpdateContents)
 
     # set task status on hold
     def setOnHold(self):
@@ -701,42 +788,37 @@ class JediTaskSpec(object):
             self.status = "pending"
 
     # return list of status to reject external changes
+    @classmethod
     def statusToRejectExtChange(cls):
         return ["finished", "done", "prepared", "broken", "tobroken", "aborted", "toabort", "aborting", "failed", "passed"]
 
-    statusToRejectExtChange = classmethod(statusToRejectExtChange)
-
     # return list of status for retry
+    @classmethod
     def statusToRetry(cls):
         return ["finished", "failed", "aborted", "exhausted"]
 
-    statusToRetry = classmethod(statusToRetry)
-
     # return list of status for incexec
+    @classmethod
     def statusToIncexec(cls):
         return ["done"] + cls.statusToRetry()
 
-    statusToIncexec = classmethod(statusToIncexec)
-
     # return list of status for reassign
+    @classmethod
     def statusToReassign(cls):
         return ["registered", "defined", "ready", "running", "scouting", "scouted", "pending", "assigning", "exhausted"]
 
-    statusToReassign = classmethod(statusToReassign)
-
     # return list of status for Job Generator
+    @classmethod
     def statusForJobGenerator(cls):
         return ["ready", "running", "scouting", "topreprocess", "preprocessing"]
 
-    statusForJobGenerator = classmethod(statusForJobGenerator)
-
     # return list of status to not pause
+    @classmethod
     def statusNotToPause(cls):
         return ["finished", "failed", "done", "aborted", "broken", "paused"]
 
-    statusNotToPause = classmethod(statusNotToPause)
-
     # return mapping of command and status
+    @classmethod
     def commandStatusMap(cls):
         return {
             "kill": {"doing": "aborting", "done": "toabort"},
@@ -750,9 +832,8 @@ class JediTaskSpec(object):
             "release": {"doing": "dummy", "done": "dummy"},
         }
 
-    commandStatusMap = classmethod(commandStatusMap)
-
     # qualifiers for retry command
+    @classmethod
     def get_retry_command_qualifiers(
         cls,
         no_child_retry: bool = False,
@@ -782,8 +863,6 @@ class JediTaskSpec(object):
         if ignore_hard_exhausted:
             qualifiers.append("transcend")
         return qualifiers
-
-    get_retry_command_qualifiers = classmethod(get_retry_command_qualifiers)
 
     # set error dialog
     def setErrDiag(self, diag, append=False, prepend=False):
@@ -993,7 +1072,7 @@ class JediTaskSpec(object):
             if tmpMatch is not None and tmpMatch.group(1) == self.enum_moveDS:
                 return True
         return False
-    
+
     # datasets were registered
     def registeredDatasets(self):
         self.setSplitRule("registerDatasets", self.enum_registeredDS)

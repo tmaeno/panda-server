@@ -34,6 +34,38 @@ class FileSpec(object):
         "fileID",
         "attemptNr",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.FILESTABLE4 (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value: this
+    # class uses __slots__ built from an expression, and a value here would raise at
+    # import time.
+    #
+    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read genuinely yields either the column type
+    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
+    row_ID: int | str
+    PandaID: int | str
+    GUID: str
+    lfn: str
+    type: str
+    dataset: str
+    status: str
+    prodDBlock: str
+    prodDBlockToken: str
+    dispatchDBlock: str
+    dispatchDBlockToken: str
+    destinationDBlock: str
+    destinationDBlockToken: str
+    destinationSE: str
+    fsize: int | str
+    md5sum: str
+    checksum: str
+    scope: str
+    jediTaskID: int | str
+    datasetID: int | str
+    fileID: int | str
+    attemptNr: int | str
     # slots
     __slots__ = _attributes + (
         "_owner",
@@ -160,6 +192,7 @@ class FileSpec(object):
             object.__setattr__(self, "_changedAttrs", {})
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls, withMod=False):
         ret = ""
         for attr in cls._attributes:
@@ -171,9 +204,8 @@ class FileSpec(object):
             ret += ",modificationTime"
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of values for INSERT
+    @classmethod
     def valuesExpression(cls):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -183,9 +215,8 @@ class FileSpec(object):
         ret += ")"
         return ret
 
-    valuesExpression = classmethod(valuesExpression)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls, useSeq=False, withMod=False):
         from pandaserver.config import panda_config
 
@@ -207,9 +238,8 @@ class FileSpec(object):
         ret += ")"
         return ret
 
-    bindValuesExpression = classmethod(bindValuesExpression)
-
     # return an expression for UPDATE
+    @classmethod
     def updateExpression(cls):
         ret = ""
         for attr in cls._attributes:
@@ -218,9 +248,8 @@ class FileSpec(object):
                 ret += ","
         return ret
 
-    updateExpression = classmethod(updateExpression)
-
     # return an expression of bind variables for UPDATE
+    @classmethod
     def bindUpdateExpression(cls):
         ret = ""
         for attr in cls._attributes:
@@ -228,8 +257,6 @@ class FileSpec(object):
         ret = ret[:-1]
         ret += " "
         return ret
-
-    bindUpdateExpression = classmethod(bindUpdateExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):

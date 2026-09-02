@@ -3,6 +3,8 @@ dataset specification
 
 """
 
+import datetime
+
 
 class DatasetSpec(object):
     # attributes
@@ -20,6 +22,27 @@ class DatasetSpec(object):
         "transferStatus",
         "subType",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.DATASETS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, so
+    # nothing is created at class level.
+    #
+    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read genuinely yields either the column type
+    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
+    vuid: str
+    name: str
+    version: str
+    type: str
+    status: str
+    numberfiles: int | str
+    currentfiles: int | str
+    creationdate: datetime.datetime | str
+    modificationdate: datetime.datetime | str
+    MoverID: int | str
+    transferStatus: int | str
+    subType: str
 
     # attributes which have 0 by default
     _zeroAttrs = ("MoverID", "transferStatus")
@@ -66,6 +89,7 @@ class DatasetSpec(object):
             setattr(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls):
         ret = ""
         for attr in cls._attributes:
@@ -74,9 +98,8 @@ class DatasetSpec(object):
             ret += attr
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of values for INSERT
+    @classmethod
     def valuesExpression(cls):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -86,9 +109,8 @@ class DatasetSpec(object):
         ret += ")"
         return ret
 
-    valuesExpression = classmethod(valuesExpression)
-
     # return expression of bind values for INSERT
+    @classmethod
     def bindValuesExpression(cls):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -97,9 +119,8 @@ class DatasetSpec(object):
         ret += ")"
         return ret
 
-    bindValuesExpression = classmethod(bindValuesExpression)
-
     # return an expression for UPDATE
+    @classmethod
     def updateExpression(cls):
         ret = ""
         for attr in cls._attributes:
@@ -108,17 +129,14 @@ class DatasetSpec(object):
                 ret += ","
         return ret
 
-    updateExpression = classmethod(updateExpression)
-
     # return an expression of bind variables for UPDATE
+    @classmethod
     def bindUpdateExpression(cls):
         ret = ""
         for attr in cls._attributes:
             ret += f"{attr}=:{attr},"
         ret = ret[:-1]
         return ret
-
-    bindUpdateExpression = classmethod(bindUpdateExpression)
 
     # return state values to be pickled
     def __getstate__(self):

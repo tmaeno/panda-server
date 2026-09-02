@@ -144,6 +144,142 @@ class JobSpec(object):
         "cpu_architecture_level",
         "outputFileType",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.JOBSACTIVE4 (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value: this
+    # class uses __slots__ built from an expression, and a value here would raise at
+    # import time.
+    #
+    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read genuinely yields either the column type
+    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
+    PandaID: int | str
+    jobDefinitionID: int | str
+    schedulerID: str
+    pilotID: str
+    creationTime: datetime.datetime | str
+    creationHost: str
+    modificationTime: datetime.datetime | str
+    modificationHost: str
+    AtlasRelease: str
+    transformation: str
+    homepackage: str
+    prodSeriesLabel: str
+    prodSourceLabel: str
+    prodUserID: str
+    assignedPriority: int | str
+    currentPriority: int | str
+    attemptNr: int | str
+    maxAttempt: int | str
+    jobStatus: str
+    jobName: str
+    maxCpuCount: int | str
+    maxCpuUnit: str
+    maxDiskCount: int | str
+    maxDiskUnit: str
+    ipConnectivity: str
+    minRamCount: int | str
+    minRamUnit: str
+    startTime: datetime.datetime | str
+    endTime: datetime.datetime | str
+    cpuConsumptionTime: int | str
+    cpuConsumptionUnit: str
+    commandToPilot: str
+    transExitCode: str
+    pilotErrorCode: int | str
+    pilotErrorDiag: str
+    exeErrorCode: int | str
+    exeErrorDiag: str
+    supErrorCode: int | str
+    supErrorDiag: str
+    ddmErrorCode: int | str
+    ddmErrorDiag: str
+    brokerageErrorCode: int | str
+    brokerageErrorDiag: str
+    jobDispatcherErrorCode: int | str
+    jobDispatcherErrorDiag: str
+    taskBufferErrorCode: int | str
+    taskBufferErrorDiag: str
+    computingSite: str
+    computingElement: str
+    jobParameters: str
+    metadata: str
+    prodDBlock: str
+    dispatchDBlock: str
+    destinationDBlock: str
+    destinationSE: str
+    nEvents: int | str
+    grid: str
+    cloud: str
+    cpuConversion: float | str
+    sourceSite: str
+    destinationSite: str
+    transferType: str
+    taskID: int | str
+    cmtConfig: str
+    stateChangeTime: datetime.datetime | str
+    prodDBUpdateTime: datetime.datetime | str
+    lockedby: str
+    relocationFlag: int | str
+    jobExecutionID: int | str
+    VO: str
+    pilotTiming: str
+    workingGroup: str
+    processingType: str
+    prodUserName: str
+    nInputFiles: int | str
+    countryGroup: str
+    batchID: str
+    parentID: int | str
+    specialHandling: str
+    jobsetID: int | str
+    coreCount: int | str
+    nInputDataFiles: int | str
+    inputFileType: str
+    inputFileProject: str
+    inputFileBytes: int | str
+    nOutputDataFiles: int | str
+    outputFileBytes: int | str
+    jobMetrics: str
+    workQueue_ID: int | str
+    jediTaskID: int | str
+    jobSubStatus: str
+    actualCoreCount: int | str
+    reqID: int | str
+    maxRSS: int | str
+    maxVMEM: int | str
+    maxSWAP: int | str
+    maxPSS: int | str
+    avgRSS: int | str
+    avgVMEM: int | str
+    avgSWAP: int | str
+    avgPSS: int | str
+    maxWalltime: int | str
+    nucleus: str
+    eventService: int | str
+    failedAttempt: int | str
+    hs06sec: int | str
+    gshare: str
+    hs06: int | str
+    totRCHAR: int | str
+    totWCHAR: int | str
+    totRBYTES: int | str
+    totWBYTES: int | str
+    rateRCHAR: int | str
+    rateWCHAR: int | str
+    rateRBYTES: int | str
+    rateWBYTES: int | str
+    resource_type: str
+    diskIO: int | str
+    memory_leak: int | str
+    memory_leak_x2: float | str
+    container_name: str
+    job_label: str
+    gco2_regional: float | str
+    gco2_global: float | str
+    cpu_architecture_level: str
+    outputFileType: str
     # the file list this spec carries. Declared here rather than only in __slots__
     # below, since __slots__ is built from an expression and type checkers cannot
     # see the names it adds
@@ -343,6 +479,7 @@ class JobSpec(object):
             object.__setattr__(self, "_changedAttrs", {})
 
     # return column names for INSERT or full SELECT
+    @classmethod
     def columnNames(cls):
         ret = ""
         for attr in cls._attributes:
@@ -351,9 +488,8 @@ class JobSpec(object):
             ret += attr
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of values for INSERT
+    @classmethod
     def valuesExpression(cls):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -363,9 +499,8 @@ class JobSpec(object):
         ret += ")"
         return ret
 
-    valuesExpression = classmethod(valuesExpression)
-
     # return expression of bind values for INSERT
+    @classmethod
     def bindValuesExpression(cls, useSeq=False):
         from pandaserver.config import panda_config
 
@@ -384,9 +519,8 @@ class JobSpec(object):
         ret += ")"
         return ret
 
-    bindValuesExpression = classmethod(bindValuesExpression)
-
     # return an expression for UPDATE
+    @classmethod
     def updateExpression(cls):
         ret = ""
         for attr in cls._attributes:
@@ -395,9 +529,8 @@ class JobSpec(object):
                 ret += ","
         return ret
 
-    updateExpression = classmethod(updateExpression)
-
     # return an expression of bind variables for UPDATE
+    @classmethod
     def bindUpdateExpression(cls):
         ret = ""
         for attr in cls._attributes:
@@ -406,9 +539,8 @@ class JobSpec(object):
         ret += " "
         return ret
 
-    bindUpdateExpression = classmethod(bindUpdateExpression)
-
     # comparison function for sort
+    @classmethod
     def compFunc(cls, a, b):
         iPandaID = list(cls._attributes).index("PandaID")
         iPriority = list(cls._attributes).index("currentPriority")
@@ -423,8 +555,6 @@ class JobSpec(object):
                 return -1
             else:
                 return 0
-
-    compFunc = classmethod(compFunc)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):
@@ -444,14 +574,13 @@ class JobSpec(object):
         return False
 
     # truncate string attribute
+    @classmethod
     def truncateStringAttr(cls, attr, val):
         if attr not in cls._limitLength:
             return val
         if val is None:
             return val
         return val[: cls._limitLength[attr]]
-
-    truncateStringAttr = classmethod(truncateStringAttr)
 
     # set DDM backend
     def setDdmBackEnd(self, backEnd):

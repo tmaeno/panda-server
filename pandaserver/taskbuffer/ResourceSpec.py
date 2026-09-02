@@ -62,6 +62,17 @@ class ResourceSpec(object):
         "maxrampercore",
     )
 
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.RESOURCE_TYPES (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    resource_name: str | None
+    mincore: int | None
+    maxcore: int | None
+    minrampercore: int | None
+    maxrampercore: int | None
+
     def __init__(self, resource_name, mincore, maxcore, minrampercore, maxrampercore):
         object.__setattr__(self, "resource_name", resource_name)
         object.__setattr__(self, "mincore", mincore)
@@ -160,6 +171,7 @@ class ResourceSpec(object):
         if self.mincore is not None and self.mincore > 1:
             return True
 
+    @classmethod
     def column_names(cls, prefix=None):
         """
         return column names for DB interactions
@@ -171,5 +183,3 @@ class ResourceSpec(object):
             ret += f"{attr},"
         ret = ret[:-1]
         return ret
-
-    column_names = classmethod(column_names)

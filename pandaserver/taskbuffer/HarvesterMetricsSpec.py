@@ -9,6 +9,16 @@ import datetime
 class HarvesterMetricsSpec(object):
     # attributes
     _attributes = ("harvester_ID", "creation_time", "harvester_host", "metrics")
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.HARVESTER_METRICS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    harvester_ID: str | None
+    creation_time: datetime.datetime | None
+    harvester_host: str | None
+    metrics: str | None
     # slots
     __slots__ = _attributes + ("_changedAttrs",)
     # attributes which have 0 by default
@@ -59,6 +69,7 @@ class HarvesterMetricsSpec(object):
             object.__setattr__(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls):
         ret = ""
         for attr in cls._attributes:
@@ -66,9 +77,8 @@ class HarvesterMetricsSpec(object):
         ret = ret[:-1]
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls):
         from pandaserver.config import panda_config
 
@@ -78,8 +88,6 @@ class HarvesterMetricsSpec(object):
         ret = ret[:-1]
         ret += ")"
         return ret
-
-    bindValuesExpression = classmethod(bindValuesExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):

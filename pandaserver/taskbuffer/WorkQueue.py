@@ -28,6 +28,24 @@ class WorkQueue(object):
         "queue_function",
     )
 
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.JEDI_WORK_QUEUE (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    queue_id: int | None
+    queue_name: str | None
+    queue_type: str | None
+    VO: str | None
+    queue_share: int | None
+    queue_order: int | None
+    criteria: str | None
+    variables: str | None
+    partitionID: int | None
+    stretchable: int | None
+    status: str | None
+    queue_function: str | None
+
     # parameters for selection criteria
     _paramsForSelection = ("prodSourceLabel", "workingGroup", "processingType", "coreCount", "site", "eventService", "splitRule", "campaign")
 
@@ -209,6 +227,7 @@ class WorkQueue(object):
         return False
 
     # return column names for INSERT
+    @classmethod
     def column_names(cls):
         ret = ""
         for attr in cls._attributes:
@@ -216,5 +235,3 @@ class WorkQueue(object):
                 ret += ","
             ret += attr
         return ret
-
-    column_names = classmethod(column_names)

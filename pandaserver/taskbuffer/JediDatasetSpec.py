@@ -3,6 +3,7 @@ dataset specification for JEDI
 
 """
 
+import datetime
 import math
 import re
 
@@ -69,6 +70,47 @@ class JediDatasetSpec(object):
         "nFilesWaiting",
         "nFilesMissing",
     )
+
+    # Column types, taken from the Oracle schema of ATLAS_PANDA.JEDI_DATASETS (panda-database
+    # repo, schema/oracle). The columns are installed by __init__ via setattr, so a type
+    # checker sees none of them without these declarations. They carry no value, which
+    # both keeps them out of the class dict and keeps __slots__ classes importable.
+    # Unset columns really are None here -- this class has no "NULL" sentinel.
+    jediTaskID: int | None
+    datasetID: int | None
+    datasetName: str | None
+    containerName: str | None
+    type: str | None
+    creationTime: datetime.datetime | None
+    modificationTime: datetime.datetime | None
+    vo: str | None
+    cloud: str | None
+    site: str | None
+    masterID: int | None
+    provenanceID: int | None
+    status: str | None
+    state: str | None
+    stateCheckTime: datetime.datetime | None
+    stateCheckExpiration: datetime.datetime | None
+    frozenTime: datetime.datetime | None
+    nFiles: int | None
+    nFilesToBeUsed: int | None
+    nFilesUsed: int | None
+    nFilesFinished: int | None
+    nFilesFailed: int | None
+    nFilesOnHold: int | None
+    nEvents: int | None
+    nEventsToBeUsed: int | None
+    nEventsUsed: int | None
+    lockedBy: str | None
+    lockedTime: datetime.datetime | None
+    attributes: str | None
+    streamName: str | None
+    storageToken: str | None
+    destination: str | None
+    templateID: int | None
+    nFilesWaiting: int | None
+    nFilesMissing: int | None
     # attributes which have 0 by default
     _zeroAttrs = ()
     # attributes to force update
@@ -157,6 +199,7 @@ class JediDatasetSpec(object):
             object.__setattr__(self, attr, val)
 
     # return column names for INSERT
+    @classmethod
     def columnNames(cls, prefix=None):
         ret = ""
         for attr in cls._attributes:
@@ -166,9 +209,8 @@ class JediDatasetSpec(object):
         ret = ret[:-1]
         return ret
 
-    columnNames = classmethod(columnNames)
-
     # return expression of bind variables for INSERT
+    @classmethod
     def bindValuesExpression(cls, useSeq=True):
         ret = "VALUES("
         for attr in cls._attributes:
@@ -179,8 +221,6 @@ class JediDatasetSpec(object):
         ret = ret[:-1]
         ret += ")"
         return ret
-
-    bindValuesExpression = classmethod(bindValuesExpression)
 
     # return an expression of bind variables for UPDATE to update only changed attributes
     def bindUpdateChangesExpression(self):
@@ -212,40 +252,34 @@ class JediDatasetSpec(object):
         self.attributes += attr
 
     # return list of status to update contents
+    @classmethod
     def statusToUpdateContents(cls):
         return ["defined", "toupdate"]
 
-    statusToUpdateContents = classmethod(statusToUpdateContents)
-
     # return list of types for input
+    @classmethod
     def getInputTypes(cls):
         return ["input", "pseudo_input"]
 
-    getInputTypes = classmethod(getInputTypes)
-
     # return list of types to generate jobs
+    @classmethod
     def getProcessTypes(cls):
         return cls.getInputTypes() + ["pp_input"] + cls.getMergeProcessTypes()
 
-    getProcessTypes = classmethod(getProcessTypes)
-
     # return list of types for merging
+    @classmethod
     def getMergeProcessTypes(cls):
         return ["trn_log", "trn_output"]
 
-    getMergeProcessTypes = classmethod(getMergeProcessTypes)
-
     # get type of unknown input
+    @classmethod
     def getUnknownInputType(cls):
         return "trn_unknown"
 
-    getUnknownInputType = classmethod(getUnknownInputType)
-
     # get type of constituent input
+    @classmethod
     def get_constituent_input_type(cls):
         return "in_constituent"
-
-    get_constituent_input_type = classmethod(get_constituent_input_type)
 
     # check if JEDI needs to keep track of file usage
     def toKeepTrack(self):
