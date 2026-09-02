@@ -10,6 +10,7 @@ import socket
 import time
 import traceback
 from collections import namedtuple
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
@@ -263,7 +264,7 @@ class WorkflowInterface(object):
     # --- Context managers for locking -------------------------
 
     @contextmanager
-    def workflow_lock(self, workflow_id: int, lock_expiration_sec: int = 120):
+    def workflow_lock(self, workflow_id: int, lock_expiration_sec: int = 120) -> Iterator[WorkflowSpec | None]:
         """
         Context manager to lock a workflow
 
@@ -287,7 +288,7 @@ class WorkflowInterface(object):
             yield None
 
     @contextmanager
-    def workflow_step_lock(self, step_id: int, lock_expiration_sec: int = 120):
+    def workflow_step_lock(self, step_id: int, lock_expiration_sec: int = 120) -> Iterator[WFStepSpec | None]:
         """
         Context manager to lock a workflow step
 
@@ -311,7 +312,7 @@ class WorkflowInterface(object):
             yield None
 
     @contextmanager
-    def workflow_data_lock(self, data_id: int, lock_expiration_sec: int = 120):
+    def workflow_data_lock(self, data_id: int, lock_expiration_sec: int = 120) -> Iterator[WFDataSpec | None]:
         """
         Context manager to lock workflow data
 
