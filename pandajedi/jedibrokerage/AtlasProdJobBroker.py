@@ -1,6 +1,7 @@
 import copy
 import datetime
 import re
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -1541,11 +1542,11 @@ class AtlasProdJobBroker(JobBrokerBase):
 
         ######################################
         # get available files
-        siteSizeMap = {}
-        siteSizeMapWT = {}
+        siteSizeMap: dict[str, Any] = {}
+        siteSizeMapWT: dict[str, Any] = {}
         availableFileMap = {}
-        siteFilesMap = {}
-        siteFilesMapWT = {}
+        siteFilesMap: dict[str, Any] = {}
+        siteFilesMapWT: dict[str, Any] = {}
         for datasetSpec in inputChunk.getDatasets():
             try:
                 # mapping between sites and input storage endpoints
@@ -1730,9 +1731,9 @@ class AtlasProdJobBroker(JobBrokerBase):
             cutOffValue = 20
         else:
             tmpLog.info(f"using {cutoffName}={cutOffValue} as lower limit for nQueued")
-        weightMapPrimary = {}
-        weightMapSecondary = {}
-        weightMapJumbo = {}
+        weightMapPrimary: dict[Any, Any] = {}
+        weightMapSecondary: dict[Any, Any] = {}
+        weightMapJumbo: dict[Any, Any] = {}
         largestNumRun = None
         for tmpPseudoSiteName in scanSiteList:
             tmpSiteSpec = self.siteMapper.getSite(tmpPseudoSiteName)

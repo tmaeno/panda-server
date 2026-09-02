@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -79,7 +80,7 @@ class AtlasTaskWithholderWatchDog(WatchDogBase):
 
     # get busy sites
     def get_busy_sites(self, gshare, cutoff):
-        busy_sites_list = []
+        busy_sites_list: list[Any] = []
         # get global share
         tmpSt, jobStatPrioMap = self.taskBufferIF.getJobStatisticsByGlobalShare(self.vo)
         if not tmpSt:

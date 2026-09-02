@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import traceback
+from typing import Any
 
 import requests
 from pandacommon.pandalogger.LogWrapper import LogWrapper
@@ -537,8 +538,8 @@ def main(argv=tuple(), tbuf=None, **kwargs):
             "(SELECT pandaqueuename FROM ATLAS_PANDA.HARVESTER_Slots) GROUP BY COMPUTINGSITE,JOBSTATUS,GSHARE "
         )
 
-        statsPerShare = {}
-        statsPerPQ = {}
+        statsPerShare: dict[str, Any] = {}
+        statsPerPQ: dict[str, Any] = {}
         for table in ["JOBS_SHARE_STATS", "JOBSDEFINED_SHARE_STATS"]:
             status, res = taskBuffer.querySQLS(sql.format(table), {})
             for computingSite, jobStatus, gshare, nJobs in res:
@@ -912,7 +913,7 @@ def main(argv=tuple(), tbuf=None, **kwargs):
     sql = "SELECT PandaID,computingSite FROM ATLAS_PANDA.jobsDefined4 WHERE jobStatus=:jobStatus AND creationTime<:creationTime "
     sql += "AND eventService=:esMerge ORDER BY jediTaskID "
     status, res = taskBuffer.querySQLS(sql, var_map)
-    jobsMap = {}
+    jobsMap: dict[str, Any] = {}
     if res is not None:
         for id, site in res:
             if site not in jobsMap:

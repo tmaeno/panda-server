@@ -3,6 +3,7 @@ import json
 import random
 import re
 import time
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -1248,7 +1249,7 @@ class JobStandaloneModule(BaseModule):
         # sql template for statistics table (materialized view)
         sql_mv_template = sql_template.replace("COUNT(*)", "SUM(num_of_jobs)")
         sql_mv_template = sql_mv_template.replace("SELECT ", "SELECT /*+ RESULT_CACHE */ ")
-        ret = {}
+        ret: dict[str, Any] = {}
         max_retries = 3
 
         for retry in range(max_retries):
@@ -1256,7 +1257,7 @@ class JobStandaloneModule(BaseModule):
                 for table in tables:
                     # start transaction
                     self.conn.begin()
-                    var_map = {}
+                    var_map: dict[str, Any] = {}
                     self.cur.arraysize = 10000
 
                     # for active jobs we will query the summarized materialized view
@@ -1320,7 +1321,7 @@ class JobStandaloneModule(BaseModule):
         # sql template for statistics table (materialized view)
         sql_mv_template = sql_template.replace("COUNT(*)", "SUM(num_of_jobs)")
         sql_mv_template = sql_mv_template.replace("SELECT ", "SELECT /*+ RESULT_CACHE */ ")
-        ret = {}
+        ret: dict[str, Any] = {}
         max_retries = 3
 
         for retry in range(max_retries):
@@ -1328,7 +1329,7 @@ class JobStandaloneModule(BaseModule):
                 for table in tables:
                     # start transaction
                     self.conn.begin()
-                    var_map = {}
+                    var_map: dict[str, Any] = {}
                     self.cur.arraysize = 10000
 
                     # for active jobs we will query the summarized materialized view
@@ -1396,7 +1397,7 @@ class JobStandaloneModule(BaseModule):
         sql_mv = re.sub("COUNT\(\*\)", "SUM(njobs)", sql)
         sql_mv = re.sub("SELECT ", "SELECT /*+ RESULT_CACHE */ ", sql_mv)
 
-        ret = dict()
+        ret: dict[str, Any] = dict()
         try:
             # calculate the time floor based on the window specified by the caller
             if time_window is None:
@@ -1540,7 +1541,7 @@ class JobStandaloneModule(BaseModule):
         sql_active_mv = re.sub("COUNT\(\*\)", "SUM(num_of_jobs)", sql)
         sql_active_mv = re.sub("SELECT ", "SELECT /*+ RESULT_CACHE */ ", sql_active_mv)
 
-        ret = {}
+        ret: dict[str, Any] = {}
 
         tables = ["ATLAS_PANDA.jobsActive4", "ATLAS_PANDA.jobsArchived4", "ATLAS_PANDA.jobsDefined4"]
         try:
@@ -1634,7 +1635,7 @@ class JobStandaloneModule(BaseModule):
         sql_active_mv = re.sub("COUNT\(\*\)", "SUM(num_of_jobs)", sql_active)
         sql_active_mv = re.sub("SELECT ", "SELECT /*+ RESULT_CACHE */ ", sql_active_mv)
 
-        ret = {}
+        ret: dict[str, Any] = {}
         try:
             for table in tables:
                 # start transaction
@@ -2060,7 +2061,7 @@ class JobStandaloneModule(BaseModule):
                 self.cur.execute(sqlF + comment, varMap)
                 resF = self.cur.fetchall()
                 firstDatasetID = None
-                fileIDsMap = {}
+                fileIDsMap: dict[str, Any] = {}
                 for datasetID, fileID in resF:
                     if datasetID not in fileIDsMap:
                         fileIDsMap[datasetID] = set()
@@ -2367,7 +2368,7 @@ class JobStandaloneModule(BaseModule):
         tmp_log.debug("start")
         # try to lock
         try:
-            retVal = []
+            retVal: list[Any] = []
             # sql to get lock
             sqlGL = (
                 "SELECT PandaID,attemptNr "
@@ -2434,7 +2435,7 @@ class JobStandaloneModule(BaseModule):
         tmp_log.debug("start")
         # try to lock
         try:
-            retVal = []
+            retVal: list[Any] = []
             # sql to get lock
             sqlGL = (
                 "SELECT PandaID,attemptNr "

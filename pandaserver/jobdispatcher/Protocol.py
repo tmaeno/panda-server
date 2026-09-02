@@ -1,6 +1,7 @@
 import base64
 import json
 import re
+from typing import Any
 from urllib.parse import urlencode
 
 from pandaserver.dataservice import DataServiceUtils
@@ -99,7 +100,7 @@ class Response:
         ddmEndPointOut = []
         noOutput = []
         siteSpec = None
-        inDsLfnMap = {}
+        inDsLfnMap: dict[str, Any] = {}
         inLFNset = set()
         if siteMapperCache is not None:
             siteMapper = siteMapperCache.get_object()

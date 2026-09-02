@@ -1512,7 +1512,7 @@ class DataCarouselInterface(object):
             polars.DataFrame|None : dataframe of current Data Carousel requests table if successful, or None if failed
         """
         sql = f"SELECT {','.join(DataCarouselRequestSpec.attributes)} " f"FROM {panda_config.schemaJEDI}.data_carousel_requests " f"ORDER BY request_id "
-        var_map = {}
+        var_map: dict[str, Any] = {}
         res = self.taskBufferIF.querySQL(sql, var_map, arraySize=99999)
         if res is not None:
             dc_req_df = pl.DataFrame(res, schema=DataCarouselRequestSpec.attributes_with_types, orient="row")
@@ -1720,7 +1720,7 @@ class DataCarouselInterface(object):
             list[tuple[DataCarouselRequestSpec, dict]] : list of requests to stage and dict of extra parameters to set before to stage
         """
         tmp_log = LogWrapper(logger, "get_requests_to_stage")
-        ret_list = []
+        ret_list: list[Any] = []
         queued_requests = self.taskBufferIF.get_data_carousel_queued_requests_JEDI()
         if queued_requests is None or not queued_requests:
             tmp_log.debug(f"no requests to stage or to pin ; skipped")
@@ -2824,7 +2824,7 @@ class DataCarouselInterface(object):
             status_filter_list=["pending"]
         )
         # create inverse relation map: request_id -> list of task_id
-        pending_tasked_inverse_relation_map = dict()
+        pending_tasked_inverse_relation_map: dict[str, Any] = dict()
         for task_id, request_id_list in pending_tasked_relation_map.items():
             for request_id in request_id_list:
                 pending_tasked_inverse_relation_map.setdefault(request_id, [])

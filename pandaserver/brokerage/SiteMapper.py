@@ -1,6 +1,7 @@
 import copy
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -33,9 +34,9 @@ class SiteMapper:
     def __init__(self, taskBuffer, verbose=False):
         _logger.debug("__init__ SiteMapper")
         try:
-            self.siteSpecList = {}
-            self.cloudSpec = {}  # in reality this is a dictionary of clouds, not a "spec" object
-            self.worldCloudSpec = {}
+            self.siteSpecList: dict[str, Any] = {}
+            self.cloudSpec: dict[str, Any] = {}  # in reality this is a dictionary of clouds, not a "spec" object
+            self.worldCloudSpec: dict[str, Any] = {}
             self.nuclei = {}
             self.satellites = {}
             self.endpoint_to_sites_map = {"input": {}, "output": {}}

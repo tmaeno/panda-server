@@ -2,6 +2,7 @@ import sys
 import threading
 import traceback
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -189,7 +190,7 @@ class Configurator(threading.Thread):
         """
         Puts the relevant information from endpoint_dump into a more usable format
         """
-        endpoint_token_dict = {}
+        endpoint_token_dict: dict[str, Any] = {}
         for endpoint, endpoint_config in self.endpoint_dump.items():
             # Filter out testing and inactive endpoints
             if endpoint_config["state"] == "ACTIVE":  # and endpoint['type'] != 'TEST'
@@ -391,7 +392,7 @@ class Configurator(threading.Thread):
         for long_panda_site_name in self.schedconfig_dump:
             panda_site_name = self.schedconfig_dump[long_panda_site_name]["panda_resource"]
             cpu_site_name = self.schedconfig_dump[long_panda_site_name]["atlas_site"]
-            dict_ddm_endpoint = {}
+            dict_ddm_endpoint: dict[str, Any] = {}
 
             # get the astorages field
             if self.schedconfig_dump[long_panda_site_name]["astorages"]:

@@ -8,7 +8,7 @@ import re
 import sys
 import time
 import uuid
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -135,16 +135,16 @@ class DynDataDistributer:
                    site-related lists and values as values.
         """
         all_site_map = self.get_all_sites()
-        return_map = {}
+        return_map: dict[str, Any] = {}
         cloud = "WORLD"
         for tmp_ds, tmp_rep_map in tmp_rep_maps.items():
             cand_sites = []
             sites_com_ds = []
-            sites_comp_pd2p = []
+            sites_comp_pd2p: list[Any] = []
             t1_has_replica = False
             t1_has_primary = False
             n_sec_replicas = 0
-            cand_for_mou = []
+            cand_for_mou: list[Any] = []
             n_user_sub = 0
             for tmp_site_spec in all_site_map:
                 tmp_scope_input, tmp_scope_output = select_scope(tmp_site_spec, prod_source_label, job_label)
@@ -409,7 +409,7 @@ class DynDataDistributer:
             tmp_logger.debug(f"parsed DN={owner}")
 
         # sort by locations
-        files_map = {}
+        files_map: dict[Any, Any] = {}
         for tmp_file in files:
             tmp_locations = sorted(replica_map[tmp_file["dataset"]])
             new_locations = []

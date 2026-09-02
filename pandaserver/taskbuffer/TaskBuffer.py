@@ -6,6 +6,7 @@ import time
 import traceback
 from contextlib import contextmanager
 from threading import Lock
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -1049,7 +1050,7 @@ class TaskBuffer:
                     retJobMap[jobID] = res
 
         # sort
-        retJobs = []
+        retJobs: list[Any] = []
         for jobID in jobIDs:
             if use_json:
                 if retJobMap[jobID] is None:

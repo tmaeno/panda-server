@@ -8,7 +8,7 @@ import time
 import typing
 from functools import wraps
 from types import ModuleType, UnionType
-from typing import Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 
@@ -209,7 +209,7 @@ def is_authorized_to_read(req, req_row) -> tuple[bool, str]:
 
 def extract_production_working_groups(fqans):
     # Extract working groups with production role from FQANs
-    wg_prod_roles = []
+    wg_prod_roles: list[Any] = []
     for fqan in fqans:
         # Match FQANs with 'Role=production' and extract the working group
         match = re.search(r"/atlas/([^/]+)/Role=production", fqan)

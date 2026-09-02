@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 from pandajedi.jedicore import Interaction
 from pandajedi.jedicore.JediTaskBufferInterface import JediTaskBufferInterface
@@ -70,7 +71,7 @@ taskSetupper.initializeMods(tbIF, ddmIF)
 resource_types = tbIF.load_resource_types()
 
 for dummyID, tmpList in tmpListList:
-    task_common = {}
+    task_common: dict[str, Any] = {}
     for taskSpec, cloudName, inputChunk in tmpList:
         jobBroker = JobBroker(taskSpec.vo, taskSpec.prodSourceLabel)
         tmpStat = jobBroker.initializeMods(ddmIF.getInterface(vo), tbIF)

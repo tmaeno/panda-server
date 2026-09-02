@@ -4,6 +4,7 @@ import re
 import socket
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -167,7 +168,7 @@ class DataLocalityUpdaterThread(WorkerThread):
                     is_distributed_ds = self.ddmIF.isDistributedDataset(dataset_name)
                     # get rules when using data carousel
                     rule_rse_list = []
-                    rule_rse_types = []
+                    rule_rse_types: list[Any] = []
                     if task_spec.inputPreStaging():
                         # collect rse expressions from rules
                         _, tmp_rules = self.ddmIF.get_rules_state(dataset_name)

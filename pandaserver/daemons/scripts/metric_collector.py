@@ -6,6 +6,7 @@ import os
 import socket
 import sys
 import traceback
+from typing import Any
 from zlib import adler32
 
 import numpy as np
@@ -102,7 +103,7 @@ def get_site_strr_stats(tbuf, time_window=21600, cutoff=300):
         "ATLAS_PANDA.jobsArchived4",
     ]
     # get
-    return_map = {}
+    return_map: dict[str, Any] = {}
     try:
         for table in tables:
             sql_exe = (sql_jt) % table
@@ -348,7 +349,7 @@ class FetchData(object):
         )
         try:
             # initialize
-            tmp_site_dict = dict()
+            tmp_site_dict: dict[str, Any] = dict()
             # now time
             now_time = naive_utcnow()
             # get user jobs
@@ -390,7 +391,7 @@ class FetchData(object):
                 cc += 1
             tmp_log.debug(f"queried {cc} jobs")
             # evaluate stats
-            site_dict = dict()
+            site_dict: dict[str, Any] = dict()
             for site, data_dict in tmp_site_dict.items():
                 site_dict.setdefault(site, {})
                 n_jobs = len(data_dict["wait_time"])
@@ -504,8 +505,8 @@ class FetchData(object):
                 }
                 tmp_log.debug("rank={rank}, gshare={gshare}, usage={usage_perc:.3%}, queue={queue_perc:.3%} ".format(**gshare_dict[gshare]))
             # add L1 share
-            tmp_L1_leaves_map = {}
-            l1_share_dict = {}
+            tmp_L1_leaves_map: dict[str, Any] = {}
+            l1_share_dict: dict[str, Any] = {}
             for l1_share, val in share_name_tree_dict.items():
                 tmp_L1_leaves_map.setdefault(l1_share, [])
                 fill_leaf_shares(l1_share, val, tmp_L1_leaves_map[l1_share])
@@ -574,7 +575,7 @@ class FetchData(object):
         tmp_log = logger_utils.make_logger(main_logger, "FetchData")
         try:
             # initialize
-            site_dict = dict()
+            site_dict: dict[str, Any] = dict()
             class_A_set = set()
             class_B_set = set()
             class_C_set = set()
@@ -691,7 +692,7 @@ class FetchData(object):
             # initialize
             site_gshare_dict = dict()
             # get users jobs stats
-            jobsStatsPerUser = {}
+            jobsStatsPerUser: dict[str, Any] = {}
             varMap = {}
             varMap[":prodSourceLabel"] = prod_source_label
             varMap[":pmerge"] = "pmerge"
@@ -783,7 +784,7 @@ class FetchData(object):
         tmp_log = logger_utils.make_logger(main_logger, "FetchData")
         try:
             # initialize
-            user_dict = dict()
+            user_dict: dict[str, Any] = dict()
             # MetricsDB
             mdb = MetricsDB(self.tbuf)
             # get analysis site classification evalutation

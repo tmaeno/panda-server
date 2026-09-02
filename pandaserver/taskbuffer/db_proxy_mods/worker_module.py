@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import sys
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -115,7 +116,7 @@ class WorkerModule(BaseModule):
             }
             self.cur.execute(sql_get_stats + comment, var_map)
             res_active = self.cur.fetchall()
-            result_map = {}
+            result_map: dict[str, Any] = {}
             for cnt, computingSite, harvesterID, jobType, resourceType, status in res_active:
                 result_map.setdefault(computingSite, {})
                 result_map[computingSite].setdefault(harvesterID, {})
@@ -380,7 +381,7 @@ class WorkerModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, queue)
         tmp_log.debug("start")
         n_cores_running = 0
-        workers_queued = {}
+        workers_queued: dict[str, Any] = {}
         n_cores_queued = 0
         harvester_ids_temp = list(worker_stats)
 
@@ -579,7 +580,7 @@ class WorkerModule(BaseModule):
 
         tmp_log.debug(f"workers_queued: {workers_queued}")
 
-        new_workers = {}
+        new_workers: dict[str, Any] = {}
         for job_type in workers_queued:
             new_workers.setdefault(job_type, {})
             for resource_type in workers_queued[job_type]:
@@ -691,7 +692,7 @@ class WorkerModule(BaseModule):
             self.cur.execute(sql_get_locks + comment, var_map)
             rows = self.cur.fetchall()
             # lock commands
-            result_map = dict()
+            result_map: dict[str, Any] = dict()
             for computing_site, resource_type in rows:
                 var_map = {
                     ":harvester_ID": harvester_ID,
@@ -1385,7 +1386,7 @@ class WorkerModule(BaseModule):
             tmp_log.debug(f"Got {len(results)} entries from MV_WORKER_NODE_SUMMARY")
 
             # Build a queue dictionary with the results
-            architecture_map = {}
+            architecture_map: dict[str, Any] = {}
             for result in results:
                 panda_queue, cpu_architecture_level, total_logical_cpus, pct_within_queue = result
                 architecture_map.setdefault(panda_queue, {})
@@ -1416,7 +1417,7 @@ class WorkerModule(BaseModule):
 
             tmp_log.debug(f"Got {len(results)} entries from MV_WORKER_NODE_GPU_SUMMARY")
 
-            gpu_map = {}
+            gpu_map: dict[str, Any] = {}
             for panda_queue, vendor, model, vram, architecture, framework_version, driver_version, gpus_per_host in results:
                 gpu_map.setdefault(panda_queue, []).append(
                     {
@@ -1510,7 +1511,7 @@ class WorkerModule(BaseModule):
             db_workers = self.cur.fetchall()
 
             # prepare workers and separate by harvester instance and site
-            workers_to_sync = {}
+            workers_to_sync: dict[str, Any] = {}
             var_maps = []
             for harvester_id, worker_id, pilot_status in db_workers:
                 workers_to_sync.setdefault(harvester_id, {})
@@ -1926,7 +1927,7 @@ class WorkerModule(BaseModule):
 
         self.cur.execute(sql + comment, var_map)
         worker_stats_rows = self.cur.fetchall()
-        worker_stats_dict = {}
+        worker_stats_dict: dict[str, Any] = {}
         for (
             computing_site,
             harvester_id,

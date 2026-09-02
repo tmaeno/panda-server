@@ -3,6 +3,7 @@ import enum
 import json
 import math
 import re
+from typing import Any
 
 from pandaserver.taskbuffer import task_split_rules
 
@@ -195,7 +196,7 @@ class JediTaskSpec(object):
     # attributes to force update
     _forceUpdateAttrs = ("lockedBy", "lockedTime")
     # mapping between sequence and attr
-    _seqAttrMap = {}
+    _seqAttrMap: dict[str, Any] = {}
     # limit length
     _limitLength = {"errorDialog": 510}
     # attribute length

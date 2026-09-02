@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -723,7 +724,7 @@ def main(tbuf=None, **kwargs):
                             job.jobStatus = "failed"
                             job.taskBufferErrorCode = pandaserver.taskbuffer.ErrorCode.EC_Transfer
                             job.taskBufferErrorDiag = f"transfer timeout for {strMiss}"
-                            guidMap = {}
+                            guidMap: dict[str, Any] = {}
                             for file in job.Files:
                                 # set file status
                                 if file.status == "transferring" or file.type in [

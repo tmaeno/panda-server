@@ -1,3 +1,5 @@
+from typing import Any
+
 # Definitions
 EXECUTING = "executing"
 QUEUED = "queued"
@@ -154,7 +156,7 @@ class Share(Node):
             return sorted_shares
 
         # If the node has leaves, sort the children
-        children_sorted = []
+        children_sorted: list[Any] = []
         for child1 in self.children:
             loop_index = 0
             insert_index = len(children_sorted)  # insert at the end, if not deemed otherwise

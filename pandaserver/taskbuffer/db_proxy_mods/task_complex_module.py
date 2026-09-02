@@ -7,6 +7,7 @@ import random
 import re
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import (
@@ -125,8 +126,8 @@ class TaskComplexModule(BaseModule):
             if not self._commit():
                 raise RuntimeError("Commit error")
             resList = self.cur.fetchall()
-            returnMap = {}
-            taskDatasetMap = {}
+            returnMap: dict[Any, Any] = {}
+            taskDatasetMap: dict[Any, Any] = {}
             nDS = 0
             for res in resList:
                 datasetSpec = JediDatasetSpec()
@@ -418,7 +419,7 @@ class TaskComplexModule(BaseModule):
             uniqueFileKeyList = []
             nRemEvents = nEventsPerJob
             totalEventNumber = firstEventNumber
-            uniqueLfnList = {}
+            uniqueLfnList: dict[Any, Any] = {}
             totalNumEventsF = 0
             lumiBlockNr = None
             for tmpIdx, tmpLFN in enumerate(lfnList):
@@ -583,7 +584,7 @@ class TaskComplexModule(BaseModule):
                         diagMap["errMsg"] = f"Too many file record >{maxFileRecords}"
                     tmpLog.error(diagMap["errMsg"])
                     return failedRet
-            missingFileList = []
+            missingFileList: list[Any] = []
             tmpLog.debug(f"{len(missingFileList)} files missing while {len(uniqueFileKeyList)} unique files")
             # sql to check if task is locked
             sqlTL = f"SELECT status,lockedBy FROM {panda_config.schemaJEDI}.JEDI_Tasks WHERE jediTaskID=:jediTaskID FOR UPDATE NOWAIT "
@@ -770,7 +771,7 @@ class TaskComplexModule(BaseModule):
                         tmpRes = self.cur.fetchall()
                         tmpLog.debug(f"{len(tmpRes)} file records in DB")
                         existingFiles = {}
-                        statusMap = {}
+                        statusMap: dict[str, Any] = {}
                         for (
                             fileID,
                             lfn,
@@ -925,7 +926,7 @@ class TaskComplexModule(BaseModule):
                         num_pending_files_in_first_bunch = None
                         num_available_files_in_an_input = 0
                         if datasetSpec.isMaster() and taskSpec.respectSplitRule() and (useScout or isMutableDataset or datasetSpec.state == "mutable"):
-                            tmpDatasetSpecMap = {}
+                            tmpDatasetSpecMap: dict[Any, Any] = {}
                             # read files
                             sqlFR = f"SELECT {JediFileSpec.columnNames()} "
                             sqlFR += f"FROM {panda_config.schemaJEDI}.JEDI_Dataset_Contents WHERE "
@@ -1887,15 +1888,15 @@ class TaskComplexModule(BaseModule):
         :return: Various dictionaries of tasks and datasets for later processing.
         """
         # make return
-        task_dataset_map = {}
+        task_dataset_map: dict[str, Any] = {}
         task_status_map = {}
         jedi_task_id_list = []
-        task_user_prio_map = {}
+        task_user_prio_map: dict[str, Any] = {}
         task_prio_map = {}
         task_with_jumbo_map = {}
         task_group_by_attr_map = {}
         express_attr = "express_group_by"
-        task_merge_map = {}
+        task_merge_map: dict[str, Any] = {}
         for (
             jedi_task_id,
             dataset_id,
@@ -1953,7 +1954,7 @@ class TaskComplexModule(BaseModule):
             if dataset_type not in JediDatasetSpec.getMergeProcessTypes():
                 task_merge_map[jedi_task_id] = False
         # sort tasks by priority per group
-        sorted_tasks_per_group = {}
+        sorted_tasks_per_group: dict[str, Any] = {}
         for group_by_name in task_user_prio_map.keys():
             # use high priority tasks first
             priority_list = sorted(task_user_prio_map[group_by_name].keys())
@@ -2663,7 +2664,7 @@ class TaskComplexModule(BaseModule):
             ":type": JediDatasetSpec.get_constituent_input_type(),
         }
         self.cur.execute(sql_constituent_rses + comment, var_map_constituent_rses)
-        constituent_rses_map = {}  # datasetID -> set of RSEs
+        constituent_rses_map: dict[str, Any] = {}  # datasetID -> set of RSEs
         for tmp_const_id, tmp_rse in self.cur.fetchall():
             constituent_rses_map.setdefault(tmp_const_id, set()).add(tmp_rse)
         if constituent_rses_map:
@@ -2800,8 +2801,8 @@ class TaskComplexModule(BaseModule):
             read_block = True
 
         # read files
-        total_already_read_files_map = {}
-        total_events_map = {}
+        total_already_read_files_map: dict[str, Any] = {}
+        total_events_map: dict[str, Any] = {}
         max_secondary_files_to_read_with_event_ratio = 10000
         # loop over all input chunks
         for input_chunk in input_chunk_list:
@@ -2815,7 +2816,7 @@ class TaskComplexModule(BaseModule):
                         break
             # loop over all dataset IDs
             panda_ids_used_by_master = set()
-            panda_ids_used_by_master_list = []
+            panda_ids_used_by_master_list: list[Any] = []
             for dataset_id in dataset_id_list:
                 total_already_read_files_map.setdefault(dataset_id, 0)
                 total_events_map.setdefault(dataset_id, [])
@@ -3242,10 +3243,10 @@ class TaskComplexModule(BaseModule):
 
             # loop over all tasks to make return
             i_tasks = 0
-            locked_tasks_list = []
-            locked_tasks_by_another_list = []
+            locked_tasks_list: list[Any] = []
+            locked_tasks_by_another_list: list[Any] = []
             memory_exceed = False
-            return_map = {}
+            return_map: dict[str, Any] = {}
             for tmpIdxTask, jediTaskID in enumerate(jedi_task_id_list):
                 # process only merging if enough jobs are already generated
                 dataset_with_fake_co_jumbo = set()
@@ -4811,7 +4812,7 @@ class TaskComplexModule(BaseModule):
             f"start command={commStr} retry_child={retryChildTasks} discard_events={discardEvents} release_unstaged={release_unstaged} keep_share_priority={keep_share_priority} ignore_hard_exhausted={ignore_hard_exhausted}"
         )
         newTaskStatus = None
-        retried_tasks = []
+        retried_tasks: list[Any] = []
         # check command
         if commStr not in ["retry", "incexec"]:
             tmpLog.debug(f"unknown command={commStr}")
@@ -5027,7 +5028,7 @@ class TaskComplexModule(BaseModule):
                         self.cur.execute(sqlDS + comment, varMap)
                         resDS = self.cur.fetchall()
                         changedMasterList = []
-                        secMap = {}
+                        secMap: dict[str, Any] = {}
                         for (
                             datasetID,
                             masterID,
@@ -6036,7 +6037,7 @@ class TaskComplexModule(BaseModule):
                 varMap[":provenanceID"] = provenanceID
             self.cur.execute(sqlD + comment, varMap)
             resList = self.cur.fetchall()
-            tmpl_RelationMap = {}
+            tmpl_RelationMap: dict[str, Any] = {}
             mstr_RelationMap = {}
             varMapsForInsert = []
             varMapsForSN = []
@@ -6165,7 +6166,7 @@ class TaskComplexModule(BaseModule):
                     # loop over all filename templates
                     for fileNameTemplate, streamName in fileNameTemplateList:
                         firstFileID = None
-                        first_file_id_for_bulk_fetch = {}
+                        first_file_id_for_bulk_fetch: dict[Any, Any] = {}
                         for fileDatasetID in fileDatasetIDs:
                             for iFileLoop in range(nFileLoop):
                                 fileSpec = JediFileSpec()

@@ -6,9 +6,11 @@ import re
 import sys
 import uuid
 from http.client import HTTPSConnection
+from typing import Any
 from urllib.parse import urlencode
 
 from pandacommon.pandautils.thread_utils import GenericThread
+
 from pandaserver.brokerage.SiteMapper import SiteMapper
 from pandaserver.config import panda_config
 from pandaserver.dataservice import DataServiceUtils
@@ -52,7 +54,7 @@ with open("/cvmfs/atlas.cern.ch/repo/sw/local/etc/cric_ddmendpoints.json") as f:
 hash = hashlib.md5()
 
 iOut = 0
-outFileName = []
+outFileName: list[Any] = []
 fileDict = {}
 for tmpFile in job.Files:
     if tmpFile.type in ["output"]:

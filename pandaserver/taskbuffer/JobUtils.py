@@ -1,5 +1,6 @@
 import json
 import re
+from typing import Any
 
 from pandaserver.srvcore.CoreUtils import NonJsonObjectEncoder, as_python_object
 from pandaserver.taskbuffer.JobSpec import JobSpec
@@ -140,7 +141,7 @@ def get_job_co2(start_time, end_time, core_count, energy_emissions, watts_per_co
 
 # parse string for number of standby jobs
 def parseNumStandby(catchall):
-    retMap = {}
+    retMap: dict[str, Any] = {}
     if catchall is not None:
         for tmpItem in catchall.split(","):
             tmpMatch = re.search("^nStandby=(.+)", tmpItem)

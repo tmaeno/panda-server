@@ -91,7 +91,7 @@ def _get_flavor_plugin_class_map() -> Dict[str, Dict[str, Any]]:
     if _flavor_plugin_class_map_cache is not None:
         return _flavor_plugin_class_map_cache
     logger.debug("Initializing workflow plugin class map")
-    flavor_plugin_class_map = {}
+    flavor_plugin_class_map: dict[str, Any] = {}
     for plugin_type, plugins in PLUGIN_RAW_MAP.items():
         flavor_plugin_class_map[plugin_type] = {}
         for flavor, (module_name, class_name) in plugins.items():
@@ -2304,7 +2304,7 @@ class WorkflowInterface(object):
                 data_specs.append(data_spec)
             # collect IDs of all nodes that are sub-nodes of workflow-type nodes; they are
             # registered as part of the child workflow, not as direct steps of this workflow
-            sub_node_ids = set()
+            sub_node_ids: set[Any] = set()
             for node in workflow_definition["nodes"]:
                 if node.get("type") == "workflow":
                     sub_node_ids.update(node.get("sub_nodes") or [])
@@ -2336,7 +2336,7 @@ class WorkflowInterface(object):
                     step_definition["user_name"] = workflow_spec.username
                     step_definition["user_dn"] = workflow_definition.get("user_dn")
                     # resolve inputs and outputs
-                    input_data_dict = dict()
+                    input_data_dict: dict[str, Any] = dict()
                     output_data_dict = dict()
                     for input_target in step_definition.get("inputs", {}).values():
                         if not input_target.get("source"):

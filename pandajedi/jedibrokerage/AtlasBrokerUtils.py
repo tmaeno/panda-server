@@ -15,10 +15,7 @@ from pandajedi.jediddm.DDMInterface import DDMInterface
 from pandaserver.brokerage.SiteMapper import SiteMapper
 from pandaserver.dataservice import DataServiceUtils
 from pandaserver.dataservice.DataServiceUtils import select_scope
-from pandaserver.srvcore.hardware_matching import (
-    compare_version_string,
-    match_gpu_spec,
-)
+from pandaserver.srvcore.hardware_matching import compare_version_string, match_gpu_spec
 from pandaserver.taskbuffer import JobUtils, ProcessGroups, SiteSpec
 from pandaserver.taskbuffer.DdmSpec import DOWNTIME_STATUSES
 
@@ -213,7 +210,7 @@ def get_sites_with_data(
     complete_tape = False
     can_be_local_source = False
     can_be_remote_source = False
-    return_map = {}
+    return_map: dict[str, Any] = {}
     if not site_list:
         # make sure at least one loop to set the flags
         site_list = [None]
@@ -563,7 +560,7 @@ def getSiteInputStorageEndpointMap(site_list, site_mapper, prod_source_label, jo
 
 
 # get to-running rate of sites from various resources
-CACHE_SiteToRunRateStats = {}
+CACHE_SiteToRunRateStats: dict[Any, Any] = {}
 
 
 def getSiteToRunRateStats(tbIF, vo, time_window=21600, cutoff=300, cache_lifetime=600):
@@ -664,7 +661,7 @@ def getSiteToRunRateStats(tbIF, vo, time_window=21600, cutoff=300, cache_lifetim
 
 
 # get users jobs stats from various resources
-CACHE_UsersJobsStats = {}
+CACHE_UsersJobsStats: dict[str, Any] = {}
 
 
 def getUsersJobsStats(tbIF, vo, prod_source_label, cache_lifetime=60):
@@ -797,7 +794,7 @@ def getGShareUsage(tbIF, gshare, fresher_than_minutes_ago=15):
 def getUserEval(tbIF, user, fresher_than_minutes_ago=20):
     # initialize
     ret_val = False
-    ret_map = {}
+    ret_map: dict[str, Any] | None = {}
     # timestamps
     current_time = naive_utcnow()
     # try some times
@@ -838,7 +835,7 @@ def getUserEval(tbIF, user, fresher_than_minutes_ago=20):
 def getUserTaskEval(tbIF, taskID, fresher_than_minutes_ago=15):
     # initialize
     ret_val = False
-    ret_map = {}
+    ret_map: dict[str, Any] | None = {}
     # timestamps
     current_time = naive_utcnow()
     # try some times

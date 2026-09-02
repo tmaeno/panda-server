@@ -6,6 +6,7 @@ dataset specification for JEDI
 import datetime
 import math
 import re
+from typing import Any
 
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables
 
@@ -530,7 +531,7 @@ class JediDatasetSpec(object):
     # allow no output
     def allowNoOutput(self):
         if self.attributes in [None, ""]:
-            items = []
+            items: list[Any] = []
         else:
             items = self.attributes.split(",")
         if self.attrToken["allowNoOutput"] not in items:
@@ -582,7 +583,7 @@ class JediDatasetSpec(object):
     # set pseudo
     def setPseudo(self):
         if self.attributes in [None, ""]:
-            items = []
+            items: list[Any] = []
         else:
             items = self.attributes.split(",")
         if self.attrToken["pseudo"] not in items:

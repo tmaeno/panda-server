@@ -6,6 +6,7 @@ job specification
 import datetime
 import json
 import re
+from typing import Any
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -726,7 +727,7 @@ class JobSpec(object):
     # sort files
     def sortFiles(self):
         try:
-            lfnMap = {}
+            lfnMap: dict[str, Any] = {}
             for tmpFile in self.Files:
                 if tmpFile.lfn not in lfnMap:
                     lfnMap[tmpFile.lfn] = []

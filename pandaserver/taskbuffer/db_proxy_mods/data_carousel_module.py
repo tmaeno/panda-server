@@ -1,4 +1,5 @@
 import datetime
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -274,7 +275,7 @@ class DataCarouselModule(BaseModule):
         try:
             # initialize
             ret_requests_map = {}
-            ret_relation_map = {}
+            ret_relation_map: dict[str, Any] = {}
             # start transaction
             self.conn.begin()
             # sql to query queued requests with gshare and priority info from related tasks
@@ -731,7 +732,7 @@ class DataCarouselModule(BaseModule):
                 "WHERE tabD.jediTaskID=:jediTaskID AND tabD.type IN (:type1, :type2) ".format(panda_config.schemaJEDI)
             )
             # initialize
-            ret_tasks_dict = {}
+            ret_tasks_dict: dict[str, Any] = {}
             # start transaction
             self.conn.begin()
             # get pending tasks

@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -85,8 +86,8 @@ def main(argv=tuple(), tbuf=None, **kwargs):
             # tmp name
             tmp_logName = f"{dispLogName}.tmp-{naive_utcnow().strftime('%Y-%m-%d-%H-%M-%S')}"
             # loop over all files
-            pilotCounts = {}
-            pilotCountsS = {}
+            pilotCounts: dict[str, Any] = {}
+            pilotCountsS: dict[str, Any] = {}
             for tmpDispLogName in dispLogNameList:
                 # expand or copy
                 if tmpDispLogName.endswith(".gz"):

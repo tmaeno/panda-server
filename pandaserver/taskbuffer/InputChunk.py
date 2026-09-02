@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -492,7 +493,7 @@ class InputChunk:
         fileSize = 0
         firstLoop = True
         firstMaster = True
-        inputFileMap = {}
+        inputFileMap: dict[str, Any] = {}
         expWalltime = 0
         nextStartEvent = None
         boundaryID = None
@@ -502,11 +503,11 @@ class InputChunk:
         nSecEventsMap = {}
         numMaster = 0
         masterSize = 0
-        outSizeMap = {}
+        outSizeMap: dict[str, Any] = {}
         lumiBlockNr = None
         newLumiBlockNr = False
         siteAvailable = True
-        inputFileSet = set()
+        inputFileSet: set[Any] = set()
         fieldStr = None
         diskSize = 0
         totalNumFiles = 0
@@ -858,7 +859,7 @@ class InputChunk:
                     newBoundaryIDs.add(tmpFileSpec.boundaryID)
             # check secondaries
             firstSecondary = True
-            newSecMap = {}
+            newSecMap: dict[str, Any] = {}
             for datasetSpec in self.secondaryDatasetList:
                 if datasetSpec.datasetID not in newOutSizeMap:
                     newOutSizeMap[datasetSpec.datasetID] = 0

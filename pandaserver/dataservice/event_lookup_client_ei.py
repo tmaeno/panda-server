@@ -5,7 +5,7 @@ EventLookupClientEI is a class for looking up events in the EventIndex.
 import os
 import subprocess
 import tempfile
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 
 class EventLookupClientEI:
@@ -50,7 +50,7 @@ class EventLookupClientEI:
             command += "-c plain "
             with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True) as execute_process:
                 tmp_output, tmp_error = execute_process.communicate()
-            guids = {}
+            guids: dict[Any, Any] = {}
             if tokens == "":
                 tokens = None
             try:

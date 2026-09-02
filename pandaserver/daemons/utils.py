@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import Any
 
 import psutil
 from pandacommon.pandalogger import logger_utils
@@ -739,7 +740,7 @@ class DaemonMaster(object):
                 self.logger.debug(f"launched worker_pid={worker.pid}")
         self.logger.debug("daemon master launched all worker processes")
         # initialize old worker pid set
-        worker_pid_list_old = []
+        worker_pid_list_old: list[Any] = []
         # loop of scheduler
         while not self.to_stop_scheduler:
             with self._worker_lock:

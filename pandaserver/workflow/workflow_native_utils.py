@@ -3,6 +3,7 @@ import json
 import re
 import shlex
 import tempfile
+from typing import Any
 
 from pandaclient import PhpoScript, PrunScript
 
@@ -570,6 +571,12 @@ class Node(object):
         else:
             is_list_in_ds = False
         if "opt_inDsType" not in dict_inputs or not dict_inputs["opt_inDsType"]:
+            # A list when several input datasets are given, otherwise the single suffix
+            # string, and None until a parent supplies one. is_list_in_ds decides which,
+            # and every use below is guarded by that same flag -- an invariant the type
+            # system cannot express, hence Any rather than a union mypy would reject at
+            # each use.
+            in_ds_suffix: Any
             if is_list_in_ds:
                 in_ds_suffix = []
                 in_ds_list = dict_inputs["opt_inDS"]
@@ -719,8 +726,8 @@ def resolve_nodes(node_list, root_inputs, data, serial_id, parent_ids, out_ds_na
         kk = k.split("#")[-1]
         if kk in data:
             root_inputs[k] = data[kk]
-    tmp_to_real_id_map = {}
-    resolved_map = {}
+    tmp_to_real_id_map: dict[str, Any] = {}
+    resolved_map: dict[str, Any] = {}
     # map of object identity to original temporary node ID used in resolved_map keys
     node_key_map = {}
     all_nodes = []
@@ -955,7 +962,7 @@ def parse_workflow_data(data, log_stream, _id_counter=None):
     steps = workflow_data.get("steps", {})
     node_list = []
     node_name_map = {}
-    all_child_nodes = []  # child nodes from inline sub-workflows, to be merged at the end
+    all_child_nodes: list[Any] = []  # child nodes from inline sub-workflows, to be merged at the end
 
     # first pass: create all nodes
     for step_name, step_spec in steps.items():

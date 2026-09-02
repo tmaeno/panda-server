@@ -3,6 +3,7 @@ import functools
 import time
 import traceback
 import uuid
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -55,7 +56,7 @@ def schedule(jobs, siteMapper):
         max_files = 20
 
         iJob = 0
-        fileList = []
+        fileList: list[Any] = []
         chosen_panda_queue = None
         prodDBlock = None
         computingSite = None
@@ -81,7 +82,7 @@ def schedule(jobs, siteMapper):
                 continue
 
             # list of sites for special brokerage
-            specialBrokerageSiteList = []
+            specialBrokerageSiteList: list[Any] = []
 
             # manually set site
             if job and job.computingSite != "NULL" and job.prodSourceLabel in ("test", "managed") and specialBrokerageSiteList == []:

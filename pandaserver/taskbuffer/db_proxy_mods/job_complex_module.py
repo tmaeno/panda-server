@@ -5,6 +5,7 @@ import re
 import time
 import traceback
 import uuid
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -760,7 +761,7 @@ class JobComplexModule(BaseModule):
             if not self._commit():
                 raise RuntimeError("Commit error")
             # get ID mapping
-            idMap = {}
+            idMap: dict[str, Any] = {}
             for pandaID, tmpJediTaskID, jobStatus in resF:
                 if jobStatus in ["transferring", "running", "holding"]:
                     continue
@@ -1283,7 +1284,7 @@ class JobComplexModule(BaseModule):
                     if not self._commit():
                         raise RuntimeError("Commit error")
                 # delete downstream jobs first
-                ddmIDs = []
+                ddmIDs: list[Any] = []
                 newJob = None
                 ddmAttempt = 0
                 if job.prodSourceLabel == "panda" and job.jobStatus == "failed":
@@ -1292,7 +1293,7 @@ class JobComplexModule(BaseModule):
                     for file in job.Files:
                         if file.type == "output":
                             upOutputs.append(file.lfn)
-                    toBeClosedSubList = {}
+                    toBeClosedSubList: dict[Any, Any] = {}
                     topUserDsList = []
                     # look for downstream jobs
                     sqlD = "SELECT PandaID FROM ATLAS_PANDA.filesTable4 WHERE type=:type AND lfn=:lfn GROUP BY PandaID"
@@ -2310,7 +2311,7 @@ class JobComplexModule(BaseModule):
         # task IDs excluded since the worker node doesn't satisfy their hardware requirements, and the
         # verdicts to avoid looking up the same task twice. They are local to this request and are reused
         # over the iterations to get multiple jobs
-        excluded_task_ids = set()
+        excluded_task_ids: set[Any] = set()
         task_match_verdict = {}
 
         # generate the WHERE clause based on the requirements for the job
@@ -2612,11 +2613,11 @@ class JobComplexModule(BaseModule):
                 self.cur.arraysize = 10000
                 self.cur.execute(sqlFile + comment, varMap)
                 resFs = self.cur.fetchall()
-                eventRangeIDs = {}
-                esDonePandaIDs = []
-                esOutputZipMap = {}
+                eventRangeIDs: dict[Any, Any] = {}
+                esDonePandaIDs: list[Any] = []
+                esOutputZipMap: dict[str, Any] = {}
                 esZipRow_IDs = set()
-                esOutputFileMap = {}
+                esOutputFileMap: dict[str, Any] = {}
                 # use new file format for ES
                 useNewFileFormatForES = False
                 if job.AtlasRelease is not None:
@@ -2758,7 +2759,7 @@ class JobComplexModule(BaseModule):
                                             }
                                         )
                 # make input for event service output merging
-                mergeInputOutputMap = {}
+                mergeInputOutputMap: dict[str, Any] = {}
                 mergeInputFiles = []
                 mergeFileObjStoreMap = {}
                 mergeZipPandaIDs = []
@@ -2853,8 +2854,10 @@ class JobComplexModule(BaseModule):
                         job.transformation = tmpMatch.group(1)
                     except Exception:
                         pass
-                    # pass in/out map for merging via metadata
-                    job.metadata = [mergeInputOutputMap, mergeFileObjStoreMap]
+                    # pass in/out map for merging via metadata. the column is a CLOB,
+                    # but this borrows the attribute as an in-memory carrier for the
+                    # merge job and never reaches the database in this form
+                    job.metadata = [mergeInputOutputMap, mergeFileObjStoreMap]  # type: ignore[assignment]
 
                 # read task parameters
                 if job.lockedby == "jedi":
@@ -3158,7 +3161,7 @@ class JobComplexModule(BaseModule):
             sqlFileW = f"INSERT INTO ATLAS_PANDA.filesTable4 ({FileSpec.columnNames()}) "
             sqlFileW += FileSpec.bindValuesExpression(useSeq=False)
             dynNumEvents = EventServiceUtils.isDynNumEventsSH(job.specialHandling)
-            dynFileMap = {}
+            dynFileMap: dict[str, Any] = {}
             dynLfnIdMap = {}
             totalInputEvents = 0
             indexFileID = 0
@@ -3605,10 +3608,10 @@ class JobComplexModule(BaseModule):
             sql_key_list = ["job", "event", "file", "dynamic", "t_task", "meta", "jobparams", "retry_history", "state_change", "jedi_input"]
             self.conn.begin()
             return_list = []
-            extracted_sqls = {}
+            extracted_sqls: dict[str, Any] = {}
             es_jobset_map = {}
             for args, kwargs, extra_params in arg_list:
-                tmp_extracted_sqls = {}
+                tmp_extracted_sqls: dict[str, Any] = {}
                 new_kwargs = {
                     "no_late_bulk_exec": False,
                     "extracted_sqls": tmp_extracted_sqls,
@@ -3643,7 +3646,7 @@ class JobComplexModule(BaseModule):
             if "t_task" in extracted_sqls:
                 for sql in extracted_sqls["t_task"]["sqls"]:
                     old_vars = extracted_sqls["t_task"]["vars"][sql]
-                    n_jobs_map = {}
+                    n_jobs_map: dict[str, Any] = {}
                     for var in old_vars:
                         n_jobs_map.setdefault(var[":jediTaskID"], 0)
                         n_jobs_map[var[":jediTaskID"]] += var[":nJobs"]
@@ -4947,7 +4950,7 @@ class JobComplexModule(BaseModule):
             "GROUP BY computingSite, jobStatus, gshare, resource_type"
         )
 
-        ret = dict()
+        ret: dict[str, Any] = dict()
         try:
             if time_window is None:
                 time_floor = naive_utcnow() - datetime.timedelta(hours=12)
@@ -5406,7 +5409,7 @@ class JobComplexModule(BaseModule):
                 sqlUWD = f"UPDATE {panda_config.schemaJEDI}.JEDI_Datasets "
                 sqlUWD += "SET nFilesUsed=nFilesUsed+:nDiff,nFilesWaiting=nFilesWaiting-:nDiff "
                 sqlUWD += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
-                nFilesUsedMap = {}
+                nFilesUsedMap: dict[str, Any] = {}
                 for fileSpec in job.Files:
                     if fileSpec.type not in ["input", "pseudo_input"]:
                         continue

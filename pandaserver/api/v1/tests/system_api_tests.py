@@ -1,5 +1,6 @@
 # Description: Unit tests for the System API methods
 import unittest
+from typing import Any
 
 from pandaserver.api.v1.http_client import HttpClient, api_url_ssl
 
@@ -22,7 +23,7 @@ class TestSystemAPI(unittest.TestCase):
     def test_get_user_attributes(self):
         url = f"{api_url_ssl}/system/get_user_attributes"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status
@@ -33,7 +34,7 @@ class TestSystemAPI(unittest.TestCase):
     def test_get_voms_attributes(self):
         url = f"{api_url_ssl}/system/get_voms_attributes"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status
@@ -44,7 +45,7 @@ class TestSystemAPI(unittest.TestCase):
     def test_is_alive(self):
         url = f"{api_url_ssl}/system/is_alive"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status

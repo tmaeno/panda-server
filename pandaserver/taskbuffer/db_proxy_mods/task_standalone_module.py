@@ -4,6 +4,7 @@ import random
 import re
 import socket
 import sys
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -739,7 +740,7 @@ class TaskStandaloneModule(BaseModule):
             # commit
             if not self._commit():
                 raise RuntimeError("Commit error")
-            taskDsMap = dict()
+            taskDsMap: dict[str, Any] = dict()
             for jediTaskID, datasetID in resTaskList:
                 if jediTaskID not in taskDsMap:
                     taskDsMap[jediTaskID] = []
@@ -3120,7 +3121,7 @@ class TaskStandaloneModule(BaseModule):
             self.cur.execute(sqlTL + comment, varMap)
             resTL = self.cur.fetchall()
             # loop over all tasks
-            userTaskMap = {}
+            userTaskMap: dict[str, Any] = {}
             for jediTaskID, userName, workingGroup, errorDialog, currentPriority in resTL:
                 uid = workingGroup if workingGroup is not None else userName
                 userTaskMap.setdefault(uid, {})
@@ -3687,7 +3688,7 @@ class TaskStandaloneModule(BaseModule):
             if not self._commit():
                 raise RuntimeError("Commit error")
             # make dict
-            retMap = {}
+            retMap: dict[str, Any] = {}
             for cnt, computingSite, jobStatus in resList:
                 if computingSite not in retMap:
                     retMap[computingSite] = {}
@@ -3782,7 +3783,7 @@ class TaskStandaloneModule(BaseModule):
             if not self._commit():
                 raise RuntimeError("Commit error")
             # make dict
-            retMap = {}
+            retMap: dict[str, Any] = {}
             for nJobs, nCores, jobStatus, uid, is_user in resList:
                 retMap.setdefault(uid, {"nQueuedJobs": 0, "nQueuedCores": 0, "nRunJobs": 0, "nRunCores": 0, "is_user": is_user})
                 if jobStatus in ["defined", "assigned", "activated", "starting", "throttled"]:
@@ -3991,7 +3992,7 @@ class TaskStandaloneModule(BaseModule):
             # start transaction
             self.conn.begin()
             # get files
-            lfnMap = {}
+            lfnMap: dict[str, Any] = {}
             for datasetID in datasetIDs:
                 if datasetID not in lfnMap:
                     lfnMap[datasetID] = {}
@@ -4109,7 +4110,7 @@ class TaskStandaloneModule(BaseModule):
             self.cur.execute(sqlTL + comment, varMap)
             resTL = self.cur.fetchall()
             # loop over all tasks
-            retMap = {}
+            retMap: dict[str, Any] = {}
             for (jediTaskID,) in resTL:
                 retMap[jediTaskID] = set()
                 # lock task
@@ -4187,8 +4188,8 @@ class TaskStandaloneModule(BaseModule):
         tmpLog = self.create_tagged_logger(comment)
         tmpLog.debug("start")
         try:
-            retMapStatic = dict()
-            retMapDynamic = dict()
+            retMapStatic: dict[str, Any] = dict()
+            retMapDynamic: dict[str, Any] = dict()
             # get num of done jobs
             varMap = dict()
             varMap[":status"] = "standby"
@@ -4405,8 +4406,8 @@ class TaskStandaloneModule(BaseModule):
         tmpLog.debug("start")
         try:
             # get usage breakdown
-            usageBreakDownPerUser = {}
-            usageBreakDownPerSite = {}
+            usageBreakDownPerUser: dict[str, Any] = {}
+            usageBreakDownPerSite: dict[str, Any] = {}
             for table in ["jobsActive4", "jobsArchived4"]:
                 varMap = {}
                 varMap[":prodSourceLabel"] = prod_source_label
@@ -4477,7 +4478,7 @@ class TaskStandaloneModule(BaseModule):
         tmpLog.debug("start")
         try:
             # get users jobs stats
-            jobsStatsPerUser = {}
+            jobsStatsPerUser: dict[str, Any] = {}
             varMap = {}
             varMap[":prodSourceLabel"] = prod_source_label
             varMap[":pmerge"] = "pmerge"
@@ -4643,7 +4644,7 @@ class TaskStandaloneModule(BaseModule):
         # job tables
         tables = [f"{panda_config.schemaPANDA}.jobsActive4", f"{panda_config.schemaPANDA}.jobsDefined4"]
         # get
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             for table in tables:
                 self.cur.arraysize = 10000

@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -44,7 +45,7 @@ threadPool = ThreadPool()
 # typicalNumFilesMap = tbIF.getTypicalNumInput_JEDI(vo,prodSourceLabel,workQueue,
 #                                                  useResultCache=600)
 
-typicalNumFilesMap = {}
+typicalNumFilesMap: dict[str, Any] = {}
 
 tmpListList = tbIF.getTasksToBeProcessed_JEDI(
     None,

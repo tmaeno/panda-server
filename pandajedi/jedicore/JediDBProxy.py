@@ -1,5 +1,6 @@
 import atexit
 import logging
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -24,7 +25,7 @@ def get_mb_proxy_dict():
         # delay import to open logger file inside python daemon
         from pandajedi.jediorder.JediMsgProcessor import MsgProcAgent
 
-        in_q_list = []
+        in_q_list: list[Any] = []
         out_q_list = ["jedi_jobtaskstatus", "jedi_contents_feeder", "jedi_job_generator"]
         mq_agent = MsgProcAgent(config_file=jedi_config.mq.configFile)
         mb_proxy_dict = mq_agent.start_passive_mode(in_q_list=in_q_list, out_q_list=out_q_list)

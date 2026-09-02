@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 import uuid
+from typing import Any
 
 from pandajedi.jediconfig import jedi_config
 from pandajedi.jedicore import Interaction
@@ -131,7 +132,7 @@ class ContentsFeederThread(WorkerThread):
                 self.logger.debug(f"failed to get taskSpec for jediTaskID={jediTaskID}")
                 continue
             # get constituent datasets grouped by their master input datasetID
-            constituent_by_master = {}
+            constituent_by_master: dict[str, Any] = {}
             _, c_datasets = self.taskBufferIF.getDatasetsWithJediTaskID_JEDI(jediTaskID, [JediDatasetSpec.get_constituent_input_type()])
             if c_datasets:
                 for c_ds in c_datasets:

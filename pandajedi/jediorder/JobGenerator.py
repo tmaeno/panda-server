@@ -578,7 +578,7 @@ class JobGeneratorThread(WorkerThread):
                     # loop over all inputs
                     nBrokergeFailed = 0
                     nSubmitSucceeded = 0
-                    task_common_dict = {}
+                    task_common_dict: dict[str, Any] = {}
                     for idxInputList, tmpInputItem in enumerate(inputList):
                         taskSpec, cloudName, inputChunk = tmpInputItem
                         # reset error dialog
@@ -808,8 +808,8 @@ class JobGeneratorThread(WorkerThread):
                             iJobs = 0
                             nJobsInBunch = 500
                             resSubmit = []
-                            esJobsetMap = {}
-                            unprocessedMap = {}
+                            esJobsetMap: dict[str, Any] = {}
+                            unprocessedMap: dict[str, Any] = {}
                             while iJobs < len(pandaJobs):
                                 tmpResSubmit, esJobsetMap, unprocessedMap = self.taskBufferIF.storeJobs(
                                     pandaJobs[iJobs : iJobs + nJobsInBunch],
@@ -972,10 +972,10 @@ class JobGeneratorThread(WorkerThread):
             jobSpecList = []
             outDsMap = {}
             datasetToRegister = []
-            oldPandaIDs = []
-            siteDsMap = {}
+            oldPandaIDs: list[Any] = []
+            siteDsMap: dict[str, Any] = {}
             esIndex = 0
-            parallelOutMap = {}
+            parallelOutMap: dict[str, Any] = {}
             dddMap = {}
             fileIDPool = []
             if inputChunk.isMerging:
@@ -985,7 +985,7 @@ class JobGeneratorThread(WorkerThread):
                 merge_max_walltime = None
             # count expected number of jobs
             totalNormalJobs = 0
-            n_jobs_per_site = {}
+            n_jobs_per_site: dict[str, Any] = {}
             for tmpInChunk in inSubChunkList:
                 totalNormalJobs += len(tmpInChunk["subChunks"])
                 site_name = tmpInChunk["siteName"]
@@ -1840,7 +1840,7 @@ class JobGeneratorThread(WorkerThread):
         failedRet = Interaction.SC_FAILED, None, None, None
         periodToUselibTgz = 7
         try:
-            datasetToRegister = []
+            datasetToRegister: list[Any] = []
             # get sites which share DDM endpoint
             associated_sites = DataServiceUtils.getSitesShareDDM(
                 self.siteMapper, siteName, taskSpec.prodSourceLabel, JobUtils.translate_tasktype_to_jobtype(taskSpec.taskType), True
@@ -2414,7 +2414,7 @@ class JobGeneratorThread(WorkerThread):
         if self.time_profile_level >= TIME_PROFILE_DEEP:
             tmp_log.debug(stop_watch.get_elapsed_time("transient files"))
         replaceStrMap = {}
-        emptyStreamMap = {}
+        emptyStreamMap: dict[str, Any] = {}
         for streamName, transientStreamMap in transientStreamCombo.items():
             # remove serial number
             streamNameBase = re.sub("\d+$", "", streamName)
@@ -2652,7 +2652,7 @@ class JobGeneratorThread(WorkerThread):
 
     # make jumbo jobs
     def makeJumboJobs(self, pandaJobs, taskSpec, inputChunk, simul, outDsMap, tmpLog):
-        jumboJobs = []
+        jumboJobs: list[Any] = []
         # no original
         if len(pandaJobs) == 0:
             return jumboJobs
@@ -2666,7 +2666,7 @@ class JobGeneratorThread(WorkerThread):
         if numNewJumboJobs <= 0:
             return jumboJobs
         # sites which already have jumbo jobs
-        sitesWithJumbo = dict()
+        sitesWithJumbo: dict[str, Any] = dict()
         for tmpPandaID, activeJumboJob in activeJumboJobs.items():
             sitesWithJumbo.setdefault(activeJumboJob["site"], [])
             if activeJumboJob["status"] not in ["transferring", "holding"]:
@@ -2716,8 +2716,8 @@ class JobGeneratorThread(WorkerThread):
 
     # sort parallel jobs by site
     def sortParallelJobsBySite(self, pandaJobs, oldPandaIDs):
-        tmpMap = {}
-        oldMap = {}
+        tmpMap: dict[str, Any] = {}
+        oldMap: dict[str, Any] = {}
         for pandaJob, oldPandaID in zip(pandaJobs, oldPandaIDs):
             if pandaJob.computingSite not in tmpMap:
                 tmpMap[pandaJob.computingSite] = []

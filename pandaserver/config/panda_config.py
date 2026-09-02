@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import sys
+from typing import Any
 
 from pandacommon.liveconfigparser.LiveConfigParser import (
     LiveConfigParser,
@@ -217,7 +218,7 @@ tmpSelf.__dict__["auth_vo_dict"] = {}
 try:
     data_dict = {}
     vo_data_dict = {}
-    policy_dict = {}
+    policy_dict: dict[str, Any] = {}
     for name in glob.glob(os.path.join(tmpSelf.__dict__["auth_config"], "*_auth_config.json")):
         with open(name) as f:
             data = json.load(f)
@@ -274,7 +275,7 @@ if "disable_file_dispatch" not in tmpSelf.__dict__:
 
 
 # dict for plugins
-g_pluginMap = {}
+g_pluginMap: dict[str, Any] = {}
 
 
 # parser for plugin setup

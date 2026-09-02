@@ -7,7 +7,7 @@ import random
 import re
 import sys
 import time
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -1148,7 +1148,7 @@ class MiscStandaloneModule(BaseModule):
             sql1 += f"{DatasetSpec.columnNames()} FROM ATLAS_PANDA.Datasets tab"
         else:
             sql1 = f"SELECT {DatasetSpec.columnNames()} FROM ATLAS_PANDA.Datasets"
-        varMap = {}
+        varMap: dict[Any, Any] = {}
         for key in map:
             if len(varMap) == 0:
                 sql1 += f" WHERE {key}=:{key}"
@@ -1320,7 +1320,7 @@ class MiscStandaloneModule(BaseModule):
         comment = " /* DBProxy.countFilesWithMap */"
         tmp_log = self.create_tagged_logger(comment)
         sql1 = "SELECT /*+ index(tab FILESTABLE4_DESTDBLOCK_IDX) */ COUNT(*) FROM ATLAS_PANDA.filesTable4 tab"
-        varMap = {}
+        varMap: dict[Any, Any] = {}
         for key in map:
             if len(varMap) == 0:
                 sql1 += f" WHERE {key}=:{key}"
@@ -1483,7 +1483,7 @@ class MiscStandaloneModule(BaseModule):
                 retS = self.cur.execute(sql0 + comment, varMap)
                 resS = self.cur.fetchall()
                 # update
-                retList = []
+                retList: list[Any] = []
                 retU = self.cur.execute(sql1 + comment, varMap)
                 # commit
                 if not self._commit():
@@ -1614,12 +1614,12 @@ class MiscStandaloneModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment)
         tmp_log.debug("start")
         try:
-            return_map = {}
+            return_map: dict[str, Any] = {}
             # set autocommit on
             self.conn.begin()
             self.cur.arraysize = 100000
             # get token keys
-            token_keys = {}
+            token_keys: dict[str, Any] = {}
             sql = f"SELECT dn, credname FROM {panda_config.schemaMETA}.proxykey WHERE expires>:limit ORDER BY expires DESC "
             var_map = {":limit": naive_utcnow()}
             self.cur.execute(sql + comment, var_map)
@@ -1986,7 +1986,7 @@ class MiscStandaloneModule(BaseModule):
         error_message = None
         try:
             # list of lost input files
-            lostInputFiles = {}
+            lostInputFiles: dict[str, Any] = {}
             # get compact DN
             compactDN = CoreUtils.clean_user_id(dn)
             if compactDN in ["", "NULL", None]:
@@ -2054,7 +2054,7 @@ class MiscStandaloneModule(BaseModule):
                 sqlCE += "AND status IN (:esFinished,:esDone,:esMerged) "
                 # get affected PandaIDs
                 lostPandaIDs = set([])
-                nDiff = {}
+                nDiff: dict[str, Any] = {}
                 for lostFile in lost_files:
                     varMap = {}
                     varMap[":jediTaskID"] = jediTaskID
@@ -2233,11 +2233,11 @@ class MiscStandaloneModule(BaseModule):
                 sqlUDI += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID AND status=:status) "
                 sqlUDI += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
                 for tmpDatasetID in datasetCountMap:
-                    nDiff = datasetCountMap[tmpDatasetID]
+                    n_diff = datasetCountMap[tmpDatasetID]
                     varMap = {}
                     varMap[":jediTaskID"] = jediTaskID
                     varMap[":datasetID"] = tmpDatasetID
-                    varMap[":nDiff"] = nDiff
+                    varMap[":nDiff"] = n_diff
                     varMap[":status"] = "finished"
                     tmp_log.debug(sqlUDI + comment + str(varMap))
                     if not simul:
@@ -2370,7 +2370,7 @@ class MiscStandaloneModule(BaseModule):
 
         # tmp_log.debug("definitions %s"%(definitions))
 
-        retrial_rules = {}
+        retrial_rules: dict[str, Any] = {}
         for definition in definitions:
             (
                 retryerror_id,
@@ -2724,7 +2724,7 @@ class MiscStandaloneModule(BaseModule):
             tableStatMap["jobsActive4"] = None
             tableStatMap["jobsArchived4"] = None
         try:
-            userDispMap = {}
+            userDispMap: dict[str, Any] = {}
             for tableName in tableStatMap:
                 statusList = tableStatMap[tableName]
                 # make sql to get dispatch datasets
@@ -2965,7 +2965,7 @@ class MiscStandaloneModule(BaseModule):
             self.conn.begin()
             self.cur.execute(sqlC + comment, varMap)
             resCs = self.cur.fetchall()
-            retMap = dict()
+            retMap: dict[str, Any] = dict()
             nDS = 0
             for jediTaskID, datasetName, status in resCs:
                 retMap.setdefault(jediTaskID, {"status": status, "datasets": []})
@@ -3906,7 +3906,7 @@ class MiscStandaloneModule(BaseModule):
         tmpLog = self.create_tagged_logger(comment, f"jediTaskID={jediTaskID} datasetID={datasetID}")
         tmpLog.debug("start")
         # return value for failure
-        failedRet = {}
+        failedRet: dict[str, Any] = {}
         try:
             # sql for get attributes
             sql = "SELECT "
@@ -3947,7 +3947,7 @@ class MiscStandaloneModule(BaseModule):
         tmpLog = self.create_tagged_logger(comment, f"jediTaskID={jediTaskID} criteria={str(criteria)}")
         tmpLog.debug("start")
         # return value for failure
-        failedRet = {}
+        failedRet: dict[str, Any] = {}
         try:
             varMap = {}
             varMap[":jediTaskID"] = jediTaskID

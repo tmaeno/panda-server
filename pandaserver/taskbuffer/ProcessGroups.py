@@ -1,3 +1,5 @@
+from typing import Any
+
 from pandaserver.taskbuffer import JobUtils
 
 processGroups = [
@@ -57,7 +59,7 @@ def converCPTforEPG(cloud, processingType, coreCount, workingGroup=None):
 
 # count the number of jobs per group
 def countJobsPerGroup(valMap):
-    ret = {}
+    ret: dict[str, Any] = {}
     # loop over all clouds
     for cloud in valMap:
         cloudVal = valMap[cloud]
@@ -87,7 +89,7 @@ def countJobsPerGroup(valMap):
 
 # count the number of jobs per group for analysis
 def countJobsPerGroupForAnal(valMap):
-    ret = {}
+    ret: dict[str, Any] = {}
     # loop over all sites
     for site in valMap:
         siteVal = valMap[site]

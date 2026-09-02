@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+from typing import Any
 
 from snakeparser import Parser
 
@@ -28,7 +29,7 @@ def verify_node(node):
 def main():
     try:
         workflow_file = sys.argv[1]
-        data = dict()
+        data: dict[str, Any] = dict()
         logging.info(f"{os.path.basename(__file__)}: workflow_file = {workflow_file}")
         parser = Parser(workflow_file, level=logging.DEBUG)
         nodes, root_in = parser.parse_nodes()

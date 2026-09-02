@@ -5,6 +5,7 @@ import os
 import socket
 import sys
 import traceback
+from typing import Any
 from zlib import adler32
 
 from pandacommon.pandalogger import logger_utils
@@ -227,7 +228,7 @@ class FetchData(object):
             # get user evaluation
             ue_dict = mdb.get_metrics("analy_user_eval", "neither", fresher_than_minutes_ago=20)
             # get active tasks
-            varMap = {}
+            varMap: dict[str, Any] = {}
             active_tasks_list = self.tbuf.querySQL(sql_get_active_tasks, varMap)
             taskID_list = [task[0] for task in active_tasks_list]
             n_tot_tasks = len(active_tasks_list)

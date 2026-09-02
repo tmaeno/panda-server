@@ -12,6 +12,7 @@ import traceback
 from argparse import ArgumentParser
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.thread_utils import GenericThread
@@ -201,7 +202,7 @@ class cacheSchedConfig:
         if queueArray is None:
             queueArray = self.queueData
         output = open(file, "w")
-        dumpMe = {}
+        dumpMe: dict[str, Any] = {}
         for queueDict in queueArray:
             dumpMe[queueDict["nickname"]] = {}
             for k in queueDict:
@@ -213,7 +214,7 @@ class cacheSchedConfig:
 
     def dump_pilot_gdp_config(self, dest="/tmp"):
         app = "pilot"
-        dump_me = {}
+        dump_me: dict[str, Any] = {}
         sql = f"SELECT key, component, vo from {panda_config.schemaPANDA}.config where app=:app"
         r = self.tbuf.querySQL(sql, {":app": app})
         for key, component, vo in r:

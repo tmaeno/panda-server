@@ -2,6 +2,7 @@
 
 import sys
 import xml.dom.minidom
+from typing import Any
 from urllib.parse import quote
 
 
@@ -16,7 +17,7 @@ class dom_job:
     def __init__(s, domjob=None, primaryds=None, defaultcmd=None, defaultout=[]):
         """Loads <job></job> from xml file.
         If primaryds is set, makes sure it is present in job spec"""
-        s.infiles = {}
+        s.infiles: dict[str, Any] = {}
         s.outfiles = []
         s.command = defaultcmd
         s.prepend = []

@@ -6,6 +6,7 @@ import re
 import time
 import traceback
 import uuid
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -79,7 +80,7 @@ class EntityModule(BaseModule):
         hs_distribution_raw = self.cur.fetchall()
 
         # get the hs distribution data into a dictionary structure
-        hs_distribution_dict = {}
+        hs_distribution_dict: dict[str, Any] = {}
         hs_queued_total = 0
         hs_executing_total = 0
         hs_ignore_total = 0
@@ -1771,7 +1772,7 @@ class EntityModule(BaseModule):
             sqlSL = "SELECT pandaQueueName, gshare, resourcetype, numslots FROM ATLAS_PANDA.Harvester_Slots "
             sqlSL += "WHERE (expirationTime IS NULL OR expirationTime>CURRENT_DATE) "
 
-            num_slots_by_site = {}
+            num_slots_by_site: dict[str, Any] = {}
             self.cur.execute(sqlSL + comment)
             resSL = self.cur.fetchall()
 
@@ -2026,7 +2027,7 @@ class EntityModule(BaseModule):
 
         # save the endpoints into a dictionary
         endpoint_dict = {}
-        detailed_status_summary = {}
+        detailed_status_summary: dict[str, Any] = {}
         for ddm_endpoint_row in results_ddm:
             tmp_endpoint = {}
             # unzip the ddm_endpoint row into a dictionary
@@ -2050,8 +2051,12 @@ class EntityModule(BaseModule):
                 tmp_endpoint["detailed_status"] = {}
 
             # add usable space info
-            tmp_endpoint["space_usable"] = (tmp_endpoint.get("space_free") or 0) + (tmp_endpoint.get("space_expired") or 0) \
-                - (tmp_endpoint.get("space_min_free") or 0) - (tmp_endpoint.get("space_unavailable") or 0)
+            tmp_endpoint["space_usable"] = (
+                (tmp_endpoint.get("space_free") or 0)
+                + (tmp_endpoint.get("space_expired") or 0)
+                - (tmp_endpoint.get("space_min_free") or 0)
+                - (tmp_endpoint.get("space_unavailable") or 0)
+            )
 
             endpoint_dict[ddm_endpoint_name] = tmp_endpoint
 
@@ -2077,7 +2082,7 @@ class EntityModule(BaseModule):
         column_names = [i[0].lower() for i in self.cur.description]
 
         # save the panda ddm relations into a dictionary
-        panda_endpoint_map = {}
+        panda_endpoint_map: dict[str, Any] = {}
         for panda_ddm_row in results_panda_ddm:
             tmp_relation = {}
             for column_name, column_val in zip(column_names, panda_ddm_row):
@@ -2242,6 +2247,11 @@ class EntityModule(BaseModule):
             varMap = {}
             varMap[":owner"] = owner
             tmpS, tmpR = self.getClobObj(sqlC, varMap, use_commit=use_commit)
+            # The decoded object, or the json text when get_json is set. That flag
+            # decides which, and each use below is guarded by it -- an invariant the
+            # type system cannot express, hence Any rather than a union mypy would
+            # reject at each use.
+            data: Any
             if not tmpR:
                 data = {}
                 if not get_json:
@@ -2739,7 +2749,7 @@ class EntityModule(BaseModule):
                 "GROUP BY scj.data.region, tmp_total.total_hs "
             )
 
-            region_dic = {}
+            region_dic: dict[str, Any] = {}
             self.cur.arraysize = 1000
             stats_raw = self.cur.execute(sql_stat + comment)
             for entry in stats_raw:
@@ -3629,8 +3639,8 @@ class EntityModule(BaseModule):
         self.cur.execute(sql + comment, varMap)
         resList = self.cur.fetchall()
 
-        networkMap = {}
-        total = {}
+        networkMap: dict[str, Any] = {}
+        total: dict[str, Any] = {}
         for res in resList:
             src, key, value, ts = res
             networkMap.setdefault(src, {})
@@ -3700,7 +3710,7 @@ class EntityModule(BaseModule):
 
         self.cur.execute(sql + comment)
         resList = self.cur.fetchall()
-        mapping = {}
+        mapping: dict[str, Any] = {}
 
         for res in resList:
             pandaSiteName, siteName, scope = res
@@ -3751,7 +3761,7 @@ class EntityModule(BaseModule):
             GROUP BY name, resource_type
         """
 
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             self.cur.arraysize = 1000
             self.cur.execute(f"{sql_get_active_combinations} {comment}", var_map)

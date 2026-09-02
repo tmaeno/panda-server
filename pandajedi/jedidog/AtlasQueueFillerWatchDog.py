@@ -6,6 +6,7 @@ import socket
 import sys
 import time
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -233,7 +234,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
     def get_available_sites_list(self):
         tmp_log = MsgWrapper(logger, "get_available_sites_list")
         # initialize
-        available_sites_dict = {}
+        available_sites_dict: dict[str, Any] = {}
         # get global share
         tmpSt, jobStatPrioMap = self.taskBufferIF.getJobStatisticsByGlobalShare(self.vo)
         if not tmpSt:
@@ -315,7 +316,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
 
     # get busy sites
     def get_busy_sites(self):
-        busy_sites_dict = {}
+        busy_sites_dict: dict[str, Any] = {}
         # get global share
         tmpSt, jobStatPrioMap = self.taskBufferIF.getJobStatisticsByGlobalShare(self.vo)
         if not tmpSt:

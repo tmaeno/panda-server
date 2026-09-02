@@ -8,7 +8,7 @@ This module uses the PandaLogger for logging and the panda_config for configurat
 import sys
 import threading
 import traceback
-from typing import List
+from typing import Any, List
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -83,7 +83,7 @@ class Setupper(threading.Thread):
                 p_job_list.append(p_job)
             self.jobs = p_job_list
             # group jobs per VO
-            vo_jobs_map = {}
+            vo_jobs_map: dict[str, Any] = {}
             tmp_log.debug(f"{len(self.jobs)} jobs in total")
             for tmp_job in self.jobs:
                 # set VO=local for DDM free

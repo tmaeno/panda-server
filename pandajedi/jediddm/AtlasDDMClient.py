@@ -76,8 +76,8 @@ class AtlasDDMClient(DDMClientBase):
             # get length
             tmpMeta = client.get_metadata(scope, dsn)
             # get files
-            fileMap = {}
-            baseLFNmap = {}
+            fileMap: dict[str, Any] = {}
+            baseLFNmap: dict[str, Any] = {}
             fileSet = set()
             for x in client.list_files(scope, dsn, long=longFormat):
                 # convert to old dict format
@@ -123,6 +123,8 @@ class AtlasDDMClient(DDMClientBase):
                         continue
                     baseLFNmap[baseLFN] = {"guid": guid, "attNr": attNr}
                 fileMap[guid] = attrs
+            # the set of LFNs when only names were asked for, the guid-keyed map otherwise
+            return_list: set[str] | dict[str, Any]
             if lfn_only:
                 return_list = fileSet
             else:
@@ -160,7 +162,7 @@ class AtlasDDMClient(DDMClientBase):
                 return self.SC_SUCCEEDED, tmpRet
             else:
                 # list of attributes summed up
-                retMap = {}
+                retMap: dict[str, Any] = {}
                 detailedRetMap = {}
                 # get constituent datasets
                 if element_list:
@@ -351,7 +353,7 @@ class AtlasDDMClient(DDMClientBase):
 
             # collect GUIDs and LFNs
             file_map = {}  # GUID to LFN
-            lfn_filespec_map = {}  # LFN to file spec
+            lfn_filespec_map: dict[str, Any] = {}  # LFN to file spec
             scope_map = {}  # LFN to scope list
             for tmp_file in dataset_spec.Files:
                 file_map[tmp_file.GUID] = tmp_file.lfn
@@ -433,7 +435,7 @@ class AtlasDDMClient(DDMClientBase):
                             rucio_lfn_to_rse_map[tmp_file.lfn] = detailed_comp_replica_map[files_in_container[tmp_file.lfn]]
 
             # initialize the return map and add complete/cached replicas
-            return_map = {}
+            return_map: dict[str, Any] = {}
             checked_dst = set()
             for site_name, tmp_endpoints in site_endpoint_map.items():
                 return_map.setdefault(site_name, {"localdisk": [], "localtape": [], "cache": [], "remote": []})

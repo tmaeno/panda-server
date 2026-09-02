@@ -10,7 +10,7 @@ import re
 import sys
 import time
 import traceback
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -256,14 +256,14 @@ class AdderAtlasPlugin(AdderPluginBase):
                             self.extra_info["nevents"][tmp_zip_file_name] += n_events_input[tmp_lfn]
 
         # check files
-        id_map = {}
+        id_map: dict[str, Any] = {}
         # fileList = []
-        sub_map = {}
+        sub_map: dict[str, Any] = {}
         dataset_destination_map = {}
         dist_datasets = set()
-        map_for_alt_stage_out = {}
+        map_for_alt_stage_out: dict[str, Any] = {}
         alt_staged_files = set()
-        zip_files = {}
+        zip_files: dict[str, Any] = {}
         log_files = []
         cont_zip_map = {}
         sub_to_ds_map = {}
@@ -698,12 +698,12 @@ class AdderAtlasPlugin(AdderPluginBase):
         self.logger.debug("addFiles end")
         return 0
 
-    def register_files(self, reg_num_files: int, zip_files: list, dest_id_map: dict, cont_zip_map: dict, log_files: list | None = None) -> int | None:
+    def register_files(self, reg_num_files: int, zip_files: dict, dest_id_map: dict, cont_zip_map: dict, log_files: list | None = None) -> int | None:
         """
         Register files with Rucio.
 
         :param reg_num_files: Number of files to register.
-        :param zip_files: List of zip files to register.
+        :param zip_files: Map of zip files to register, keyed by file name.
         :param dest_id_map: Destination ID map.
         :param cont_zip_map: Container zip map.
         :param log_files: List of log file LFNs to skip during registration validation.
@@ -902,7 +902,7 @@ class AdderAtlasPlugin(AdderPluginBase):
 
         elif "--mergeOutput" not in self.job.jobParameters:
             # send request to DaTRI unless files will be merged
-            tmp_top_datasets = {}
+            tmp_top_datasets: dict[Any, Any] = {}
             # collect top-level datasets
             for tmp_name, tmp_val in sub_map.items():
                 for ddm_id, opt_sub, opt_source in tmp_val:
@@ -991,7 +991,7 @@ class AdderAtlasPlugin(AdderPluginBase):
             if tmp_top_dataset != tmp_dataset:
                 dataset_destination_map[tmp_top_dataset] = dataset_destination_map[tmp_dataset]
 
-        destination_id_map = {}
+        destination_id_map: dict[str, Any] = {}
         for tmp_dataset in id_map:
             # exclude files uploaded with alternative stage-out
             tmp_files = [f for f in id_map[tmp_dataset] if f["lfn"] not in alt_staged_files]
@@ -1048,7 +1048,7 @@ class AdderAtlasPlugin(AdderPluginBase):
             # get ES dataset name
             event_service_dataset = EventServiceUtils.getEsDatasetName(self.job.jediTaskID)
             # collect files
-            id_map = {}
+            id_map: dict[str, Any] = {}
             file_set = set()
             for file_spec in self.job.Files:
                 if file_spec.type != "zipoutput":

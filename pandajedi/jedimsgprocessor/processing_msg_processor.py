@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from pandacommon.pandalogger import logger_utils
 
@@ -54,7 +55,7 @@ class ProcessingMsgProcPlugin(BaseMsgProcPlugin):
             # whether to proceed the targets
             if to_proceed:
                 # initialize
-                scope_name_dict_map = {}
+                scope_name_dict_map: dict[str, Any] = {}
                 missing_files_dict = {}
                 # loop over targets
                 for target in target_list:

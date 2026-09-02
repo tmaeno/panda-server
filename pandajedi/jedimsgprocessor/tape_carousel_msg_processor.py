@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from pandacommon.pandalogger import logger_utils
 
@@ -54,7 +55,7 @@ class TapeCarouselMsgProcPlugin(BaseMsgProcPlugin):
             # whether to proceed the targets
             if to_proceed:
                 # map
-                scope_name_dict_map = {}
+                scope_name_dict_map: dict[str, Any] = {}
                 # loop over targets
                 for target in target_list:
                     name = target["name"]

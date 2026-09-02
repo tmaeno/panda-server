@@ -4,6 +4,7 @@ ddm endpoint specification object
 """
 
 import re
+from typing import Any
 
 # DDM endpoint activity statuses that indicate downtime (activity disabled)
 DOWNTIME_STATUSES = ("OFF", "TEST")
@@ -182,7 +183,7 @@ class DdmSpec(object):
             dict: A dictionary mapping tokens to endpoint names.
         """
         ret_map = {}
-        orders = {}
+        orders: dict[str, Any] = {}
         for tmp_ddm_endpoint_name in self.all:
             tmp_ddm_endpoint_dict = self.all[tmp_ddm_endpoint_name]
             token = tmp_ddm_endpoint_dict["ddm_spacetoken_name"]

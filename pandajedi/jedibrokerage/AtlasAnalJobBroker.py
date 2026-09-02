@@ -81,7 +81,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
         includeList = None
         scanSiteList = []
         # problematic sites
-        problematic_sites_dict = {}
+        problematic_sites_dict: dict[str, Any] = {}
         # not to use VP replicas for merging, scouts, and forceStaged
         if inputChunk.isMerging or taskSpec.avoid_vp() or taskSpec.useScout() or taskSpec.useLocalIO():
             useVP = False
@@ -377,7 +377,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
         loc_check_timeout_val = self.taskBufferIF.getConfigValue(ANALYSIS_COMPONENT, loc_check_timeout_key, "jedi", taskSpec.vo)
 
         # check input datasets
-        element_map = dict()
+        element_map: dict[str, Any] = dict()
         ddsList = set()
         complete_disk_ok = {}
         complete_tape_ok = {}
@@ -522,7 +522,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
 
         retVal = None
         checkDataLocality = False
-        scanSiteWoVP = []
+        scanSiteWoVP: list[Any] = []
         summaryList = []
         site_list_with_data = None
         overall_site_list = set()
@@ -537,7 +537,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             # selection for data availability
             hasDDS = False
             dataWeight = {}
-            remoteSourceList = {}
+            remoteSourceList: dict[str, Any] = {}
             sites_in_nucleus = []
             for datasetSpec in inputChunk.getDatasets():
                 datasetSpec.reset_distributed()
@@ -1820,8 +1820,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
         # make data weight
         totalSize = 0
         totalNumFiles = 0
-        totalDiskSizeMap = dict()
-        totalTapeSizeMap = dict()
+        totalDiskSizeMap: dict[str, Any] = dict()
+        totalTapeSizeMap: dict[str, Any] = dict()
         for datasetSpec in inputChunk.getDatasets():
             totalNumFiles += len(datasetSpec.Files)
             for fileSpec in datasetSpec.Files:
@@ -1843,11 +1843,11 @@ class AtlasAnalJobBroker(JobBrokerBase):
         ######################################
         # final procedure
         tmpLog.info(f"{len(scanSiteList)} candidates for final check")
-        weightMap = {}
+        weightMap: dict[str, Any] = {}
         weightStr = {}
         candidateSpecList = []
         preSiteCandidateSpec = None
-        basic_weight_compar_map = {}
+        basic_weight_compar_map: dict[str, Any] = {}
         workerStat = self.taskBufferIF.ups_load_worker_stats()
         for tmpPseudoSiteName in scanSiteList:
             tmpSiteSpec = self.siteMapper.getSite(tmpPseudoSiteName)

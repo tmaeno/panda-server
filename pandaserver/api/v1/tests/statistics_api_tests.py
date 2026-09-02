@@ -1,5 +1,6 @@
 # Description: Unit tests for the Statistics API methods
 import unittest
+from typing import Any
 
 from pandaserver.api.v1.http_client import HttpClient, api_url_ssl
 
@@ -26,7 +27,7 @@ class TestTaskAPI(unittest.TestCase):
     def test_production_job_stats_by_cloud_and_processing_type(self):
         url = f"{api_url_ssl}/statistics/production_job_stats_by_cloud_and_processing_type"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status
@@ -41,7 +42,7 @@ class TestTaskAPI(unittest.TestCase):
     def test_active_job_stats_by_site(self):
         url = f"{api_url_ssl}/statistics/active_job_stats_by_site"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status
@@ -56,7 +57,7 @@ class TestTaskAPI(unittest.TestCase):
     def test_active_job_detailed_stats_by_site(self):
         url = f"{api_url_ssl}/statistics/active_job_detailed_stats_by_site"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         output["status"] = status

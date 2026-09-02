@@ -1,9 +1,9 @@
 """
 This class is a dummy plugin. It inherits from the SetupperPluginBase class.
 """
-import uuid
 
-from typing import List, Dict
+import uuid
+from typing import Any, Dict, List
 
 from pandaserver.dataservice.setupper_plugin_base import SetupperPluginBase
 
@@ -24,7 +24,7 @@ class SetupperDummyPlugin(SetupperPluginBase):
         :param params: Additional parameters.
         """
         # defaults
-        default_map = {}
+        default_map: dict[str, Any] = {}
         SetupperPluginBase.__init__(self, taskBuffer, jobs, logger, params, default_map)
 
     # main

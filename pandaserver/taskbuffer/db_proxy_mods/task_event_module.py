@@ -6,6 +6,7 @@ import operator
 import re
 import traceback
 import uuid
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -242,7 +243,7 @@ class TaskEventModule(BaseModule):
                     noMoreEvents = True
                 # make dict
                 fileInfo = {}
-                jobsetList = {}
+                jobsetList: dict[str, Any] = {}
                 for (
                     tmpJediTaskID,
                     datasetID,
@@ -328,7 +329,7 @@ class TaskEventModule(BaseModule):
         comment = " /* DBProxy.updateEventRanges */"
         tmp_log = self.create_tagged_logger(comment)
         commandMap = {}
-        retList = []
+        retList: list[Any] = []
         try:
             regStart = naive_utcnow()
             jobAttrs = {}
@@ -395,7 +396,7 @@ class TaskEventModule(BaseModule):
                         eventDictList.append(eventDictChunk)
             # update events
             tmp_log.debug(f"total {len(eventDictList)} events")
-            zipRowIdMap = {}
+            zipRowIdMap: dict[str, Any] = {}
             nEventsMap = dict()
             iEvents = 0
             maxEvents = 100000
@@ -730,7 +731,7 @@ class TaskEventModule(BaseModule):
             sqlCE += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID AND fileID=:fileID AND PandaID=:PandaID "
             sqlCE += "AND NOT status IN (:esFinished,:esDone,:esDiscarded,:esCancelled,:esFailed,:esFatal,:esCorrupted) "
             # look for consumers for each input
-            killPandaIDs = {}
+            killPandaIDs: dict[str, Any] = {}
             for fileSpec in job.Files:
                 if fileSpec.type not in ["input", "pseudo_input"]:
                     continue
@@ -1277,7 +1278,7 @@ class TaskEventModule(BaseModule):
             allDone = True
             proc_status = None
             checkedPandaIDs = set()
-            jobStatusMap = dict()
+            jobStatusMap: dict[str, Any] = dict()
             for fileSpec in fileList:
                 if fileSpec.type == "input":
                     varMap = {}
@@ -3117,8 +3118,8 @@ class TaskEventModule(BaseModule):
         sqlOST += "UNION "
         sqlOST += f"SELECT fsize,destinationSE FROM {panda_config.schemaPANDAARCH}.filesTable_ARCH "
         sqlOST += "WHERE row_ID=:row_ID "
-        objStoreZipMap = dict()
-        storageZipMap = dict()
+        objStoreZipMap: dict[str, Any] = dict()
+        storageZipMap: dict[str, Any] = dict()
         zipRowIDs = set()
         totalZipSize = 0
         for tmpFileSpec in jobSpec.Files:
@@ -4757,7 +4758,7 @@ class TaskEventModule(BaseModule):
             self.cur.execute(sqlAV + comment, varMap)
             resAV = self.cur.fetchall()
             tmpLog.debug("got tasks")
-            tasksWithJumbo = dict()
+            tasksWithJumbo: dict[str, Any] = dict()
             for jediTaskID, taskStatus, splitRule, useJumbo, nEvents, currentPriority, nFiles, nFilesFinished, nFilesFailed, taskSite, nEventsUsed in resAV:
                 tasksWithJumbo[jediTaskID] = dict()
                 taskData = tasksWithJumbo[jediTaskID]

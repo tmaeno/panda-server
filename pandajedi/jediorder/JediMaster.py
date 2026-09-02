@@ -6,6 +6,7 @@ import pwd
 import signal
 import sys
 import time
+from typing import Any
 
 import daemon
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -37,7 +38,7 @@ class JediMaster:
     # convert config parameters
     def convParams(self, itemStr):
         items = itemStr.split(":")
-        newItems = []
+        newItems: list[Any] = []
         for item in items:
             if item == "":
                 newItems.append(None)

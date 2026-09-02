@@ -1,4 +1,5 @@
 import copy
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -115,7 +116,7 @@ class JobSplitter:
         tmpLog.debug("--- main loop")
         # split
         returnList = []
-        subChunks = []
+        subChunks: list[Any] = []
         iSubChunks = 0
         if inputChunk.useScout() and not inputChunk.isMerging:
             default_nSubChunks = 2
@@ -126,7 +127,7 @@ class JobSplitter:
         subChunk = None
         nSubChunks = default_nSubChunks
         strict_chunkSize = False
-        tmp_ng_list = []
+        tmp_ng_list: list[Any] = []
         change_site_for_dist_dataset = False
         # carried between iterations, set by the first one that picks a site candidate
         siteName = None

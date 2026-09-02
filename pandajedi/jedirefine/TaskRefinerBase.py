@@ -3,7 +3,7 @@ import datetime
 import re
 import sys
 import uuid
-from typing import List
+from typing import Any, List
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -633,7 +633,7 @@ class TaskRefinerBase(object):
                                 # get datasets in dataset container
                                 dataset_names_in_container = tmpIF.expandContainer(datasetName)
                                 # sort datasets to process online complete replicas first
-                                tmp_ok_list = []
+                                tmp_ok_list: list[Any] = []
                                 tmp_ng_list = []
                                 for tmp_dataset_name_in_container in dataset_names_in_container:
                                     # skip the check if enough datasets are OK

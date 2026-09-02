@@ -7,6 +7,7 @@ import sys
 import traceback
 import uuid
 from statistics import mean
+from typing import Any
 
 import numpy
 from pandacommon.pandalogger.LogWrapper import LogWrapper
@@ -709,7 +710,7 @@ class TaskUtilsModule(BaseModule):
                     siteMap[pandaID] = computingSite
 
                     # --- core power by host (CPU model) ---
-                    benchmarks = []
+                    benchmarks: list[Any] = []
                     atlas_site = "NO_SITE"  # in case of no match
                     if site_mapper:
                         atlas_site = site_mapper.getSite(computingSite).pandasite
@@ -903,7 +904,7 @@ class TaskUtilsModule(BaseModule):
                     jobTagMap[tmpPandaID].append(tagStr)
 
         # calculate values
-        jobTagMap = {}
+        jobTagMap: dict[str, Any] = {}
         if outSizeList != []:
             median, origValues = CoreUtils.percentile(outSizeList, 75, outSizeDict)
             for origValue in origValues:

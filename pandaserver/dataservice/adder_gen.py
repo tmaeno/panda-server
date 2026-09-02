@@ -9,7 +9,7 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -23,6 +23,7 @@ from pandaserver.srvcore.CoreUtils import normalize_cpu_model
 
 if TYPE_CHECKING:
     from pandaserver.taskbuffer.JobSpec import JobSpec
+
 from pandaserver.taskbuffer import EventServiceUtils, JobUtils, retryModule
 
 _logger = PandaLogger().getLogger("adder")
@@ -67,7 +68,7 @@ class AdderGen:
         self.ignore_tmp_error = ignore_tmp_error
         self.lock_offset = lock_offset
         self.siteMapper = siteMapper
-        self.dataset_map = {}
+        self.dataset_map: dict[str, Any] = {}
         self.extra_info = {
             "surl": {},
             "nevents": {},
@@ -958,7 +959,7 @@ class AdderGen:
             if tmp_file.type in ["output", "log"]:
                 original_output_files[tmp_file.lfn] = tmp_file
         # look for unknown files
-        orig_to_new_map = {}
+        orig_to_new_map: dict[str, Any] = {}
         for new_lfn in lfns:
             if new_lfn not in original_output_files:
                 # look for corresponding original output

@@ -2,6 +2,7 @@ import copy
 import os.path
 import re
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 from .workflow_utils import ConditionItem, Node
@@ -147,8 +148,8 @@ def resolve_nodes(node_list, root_inputs, data, serial_id, parent_ids, out_ds_na
         kk = k.split("#")[-1]
         if kk in data:
             root_inputs[k] = data[kk]
-    tmp_to_real_id_map = {}
-    resolved_map = {}
+    tmp_to_real_id_map: dict[str, Any] = {}
+    resolved_map: dict[str, Any] = {}
     all_nodes = []
     for node in node_list:
         # resolve input
@@ -274,7 +275,7 @@ def resolve_nodes(node_list, root_inputs, data, serial_id, parent_ids, out_ds_na
 def parse_condition_string(cond_string):
     # remove $()
     cond_string = re.sub(r"\$\((?P<aaa>.+)\)", r"\g<aaa>", cond_string)
-    cond_map = {}
+    cond_map: dict[str, Any] = {}
     id = 0
     while True:
         # look for the most inner parentheses

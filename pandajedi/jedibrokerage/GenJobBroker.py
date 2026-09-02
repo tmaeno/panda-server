@@ -1,5 +1,6 @@
 import random
 import re
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -329,7 +330,7 @@ class GenJobBroker(JobBrokerBase):
         ######################################
         # final procedure
         tmpLog.debug(f"final {len(scanSiteList)} candidates")
-        weightMap = {}
+        weightMap: dict[Any, Any] = {}
         candidateSpecList = []
         preSiteCandidateSpec = None
         for tmpSiteName in scanSiteList:

@@ -4,6 +4,7 @@ mapper to map task/job to a work queue
 """
 
 import re
+from typing import Any
 
 from .WorkQueue import WorkQueue
 
@@ -58,7 +59,7 @@ class WorkQueueMapper:
         for vo in self.work_queue_map:
             for type in self.work_queue_map[vo]:
                 # make ordered map
-                ordered_map = {}
+                ordered_map: dict[str, Any] = {}
                 queue_map = self.work_queue_map[vo][type]
                 for wq in queue_map:
                     if wq.queue_order not in ordered_map:

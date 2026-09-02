@@ -11,7 +11,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -1257,8 +1257,8 @@ class RucioAPI:
             # get length
             tmpMeta = client.get_metadata(scope, dsn)
             # get files
-            fileMap = {}
-            baseLFNmap = {}
+            fileMap: dict[str, Any] = {}
+            baseLFNmap: dict[str, Any] = {}
             fileSet = set()
             for x in client.list_files(scope, dsn, long=long_format):
                 # convert to old dict format
@@ -1304,6 +1304,8 @@ class RucioAPI:
                         continue
                     baseLFNmap[baseLFN] = {"guid": guid, "attNr": attNr}
                 fileMap[guid] = attrs
+            # the set of LFNs when only names were asked for, the guid-keyed map otherwise
+            return_list: set[str] | dict[str, Any]
             if lfn_only:
                 return_list = fileSet
             else:

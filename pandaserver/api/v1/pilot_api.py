@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import traceback
-from typing import List
+from typing import Any, List
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -245,7 +245,7 @@ def acquire_jobs(
         return generate_response(False, message=message)
 
     # Try to get the jobs
-    jobs = []
+    jobs: list[Any] = []
     if isinstance(timed_method.result, list):
         result = timed_method.result
         secrets_map = result.pop()

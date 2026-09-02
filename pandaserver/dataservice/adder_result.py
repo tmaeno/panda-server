@@ -1,12 +1,16 @@
+from typing import Any
+
 """
 Class to represent the result of the Adder operation
 
 """
 
+
 class AdderResult:
     """
     Class to represent the result of the Adder operation.
     """
+
     # slot
     __slot__ = ("statusCode", "transferringFiles")
 
@@ -24,10 +28,10 @@ class AdderResult:
         self.status_code = None
 
         # list of files which are being transferred by DMS
-        self.transferring_files = []
+        self.transferring_files: list[Any] = []
 
         # list of files which are being merged
-        self.merging_files = []
+        self.merging_files: list[Any] = []
 
     # succeeded
     def set_succeeded(self):

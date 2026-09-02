@@ -6,7 +6,7 @@ import os
 import re
 import subprocess
 from threading import Lock
-from typing import Generator
+from typing import Any, Generator
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -371,7 +371,7 @@ wallTimeOffset = 10 * 60
 # convert config parameters
 def convert_config_params(itemStr):
     items = itemStr.split(":")
-    newItems = []
+    newItems: list[Any] = []
     for item in items:
         if item == "":
             newItems.append(None)

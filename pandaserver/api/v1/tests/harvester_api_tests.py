@@ -1,6 +1,7 @@
 import json
 import unittest
 from datetime import datetime, timezone
+from typing import Any
 
 from pandaserver.api.v1.http_client import HttpClient, api_url_ssl
 
@@ -80,7 +81,7 @@ class TestHarvesterAPI(unittest.TestCase):
     def test_get_worker_statistics(self):
         url = f"{api_url_ssl}/harvester/get_worker_statistics"
         print(f"Testing URL: {url}")
-        data = {}
+        data: dict[str, Any] = {}
         status, output = self.http_client.get(url, data)
         print(output)
         # the statistics can't be predicted, so we just check the type of the response

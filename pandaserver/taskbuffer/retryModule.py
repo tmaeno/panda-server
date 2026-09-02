@@ -3,6 +3,7 @@ import sys
 import time
 import traceback
 from re import error as ReError
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -125,7 +126,7 @@ def preprocess_rules(rules, error_diag_job, release_job, architecture_job, wqid_
     tmp_log = LogWrapper(_logger, f"preprocess_rules")
     tmp_log.debug("Start")
     filtered_rules = []
-    limit_retry_rule = {}
+    limit_retry_rule: dict[str, Any] = {}
     try:
         # See if there is a INCREASE_MEM rule.
         # The effect of INCREASE_MEM rules is the same, so take the first one that appears
@@ -480,7 +481,7 @@ def classify_error(task_buffer, job_id, job_errors):
 
     # Query the error classification rules from the database
     sql = "SELECT id, error_source, error_code, error_diag, error_class, active FROM ATLAS_PANDA.ERROR_CLASSIFICATION"
-    var_map = []
+    var_map: list[Any] = []
     status, rules = task_buffer.querySQLS(sql, var_map)
     if not rules:
         tmp_log.debug(f"No error classification rules defined in the database")

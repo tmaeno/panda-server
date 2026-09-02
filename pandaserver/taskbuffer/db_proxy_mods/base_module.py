@@ -6,7 +6,7 @@ import sys
 import time
 import traceback
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -39,7 +39,7 @@ SQL_QUEUE_TOPIC_async_dataset_update = "async_dataset_update"
 
 # Internal caching of a result. Use only for information with low update frequency and low memory footprint
 def memoize(f):
-    memo = {}
+    memo: dict[Any, Any] = {}
     kwd_mark = object()
 
     def helper(self, *args, **kwargs):
@@ -86,10 +86,10 @@ class BaseModule:
         # host name
         self.hostname = None
         # composite modules
-        self.composite_modules = {}
+        self.composite_modules: dict[str, Any] = {}
 
         # typical input cache
-        self.typical_input_cache = {}
+        self.typical_input_cache: dict[str, Any] = {}
 
         # list of work queues
         self.workQueueMap = None

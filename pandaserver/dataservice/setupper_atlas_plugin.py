@@ -14,7 +14,7 @@ import sys
 import time
 import traceback
 import uuid
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -54,17 +54,17 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         }
         SetupperPluginBase.__init__(self, taskBuffer, jobs, logger, params, default_map)
         # VUIDs of dispatchDBlocks
-        self.vuid_map = {}
+        self.vuid_map: dict[str, Any] = {}
         # file list for dispDS for PandaDDM
-        self.disp_file_list = {}
+        self.disp_file_list: dict[str, Any] = {}
         # site mapper
         self.site_mapper = None
         # available files at satellite sites
-        self.available_lfns_in_satellites = {}
+        self.available_lfns_in_satellites: dict[str, Any] = {}
         # list of missing datasets
-        self.missing_dataset_list = {}
+        self.missing_dataset_list: dict[str, Any] = {}
         # lfn ds map
-        self.lfn_dataset_map = {}
+        self.lfn_dataset_map: dict[str, Any] = {}
         # source label
         self.prod_source_label = None
         self.job_label = None
@@ -114,7 +114,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                 "managed",
                 "test",
             ]:
-                tmp_job_map = {}
+                tmp_job_map: dict[str, Any] = {}
                 for tmp_job in self.jobs:
                     # add site
                     if tmp_job.computingSite not in tmp_job_map:
@@ -225,10 +225,10 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
         tmp_logger = LogWrapper(self.logger, "<setup_source>")
 
-        file_list = {}
+        file_list: dict[str, Any] = {}
         prod_list = []
         prod_error = {}
-        disp_error = {}
+        disp_error: dict[str, Any] = {}
         back_end_map = {}
         ds_task_map = dict()
         jedi_task_id = None
@@ -908,16 +908,16 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
         tmp_logger = LogWrapper(self.logger, "<correct_lfn>")
 
-        lfn_map = {}
+        lfn_map: dict[str, Any] = {}
         val_map = {}
         prod_error = {}
         missing_datasets = {}
         jobs_waiting = []
         jobs_failed = []
         jobs_processed = []
-        all_lfns = {}
-        all_guids = {}
-        all_scopes = {}
+        all_lfns: dict[str, Any] = {}
+        all_guids: dict[str, Any] = {}
+        all_scopes: dict[str, Any] = {}
         lfn_ds_map = {}
         tmp_logger.debug("start")
 
@@ -1409,7 +1409,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
         :return: A dictionary mapping (destination DDM endpoint, log dataset name) to a list of files.
         """
-        dataset_file_map = {}
+        dataset_file_map: dict[Any, Any] = {}
         n_max_jobs = 20
         n_jobs_map = {}
         for tmp_job in self.jobs:

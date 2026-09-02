@@ -3,6 +3,7 @@ import re
 import socket
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -153,7 +154,7 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
             # throttle interval
             thrInterval = 120
             # loop over all user tasks with data motion
-            user_motion_to_keep_throttled = {}
+            user_motion_to_keep_throttled: dict[str, Any] = {}
             for userName, userDict in dispUserTasks.items():
                 # loop over all transfer types
                 for transferType, maxSize in [("prestaging", maxPrestaging), ("transfer", maxTransfer)]:
@@ -309,8 +310,8 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
             # get total number of users and running/done jobs
             totalUsers = 0
             totalRunDone = 0
-            usersTotalJobs = {}
-            usersTotalCores = {}
+            usersTotalJobs: dict[str, Any] = {}
+            usersTotalCores: dict[str, Any] = {}
             for prodUserName in usageBreakDownPerUser:
                 wgValMap = usageBreakDownPerUser[prodUserName]
                 for workingGroup in wgValMap:
@@ -389,8 +390,8 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
             globalAverageRunDone = float(totalRunDone) / float(totalUsers)
             tmpLog.debug(f"global average: {globalAverageRunDone}")
             # count the number of users and run/done jobs for each site
-            siteRunDone = {}
-            siteUsers = {}
+            siteRunDone: dict[str, Any] = {}
+            siteUsers: dict[str, Any] = {}
             for computingSite in usageBreakDownPerSite:
                 userValMap = usageBreakDownPerSite[computingSite]
                 for prodUserName in userValMap:
@@ -638,7 +639,7 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
                             else:
                                 # get PandaID with lib.tgz
                                 # ids = self.taskBufferIF.updateInFilesReturnPandaIDs(libDSName,'ready')
-                                ids = []
+                                ids: list[Any] = []
                                 # get jobs
                                 jobs = self.taskBufferIF.peekJobs(ids, fromActive=False, fromArchived=False, fromWaiting=False)
                                 # remove None and unknown

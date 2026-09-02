@@ -7,6 +7,7 @@ import datetime
 import time
 import traceback
 import uuid
+from typing import Any
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -41,7 +42,7 @@ class AdderSimplePlugin(AdderPluginBase):
         """
         try:
             # loop over all files
-            file_map = {}
+            file_map: dict[str, Any] = {}
             for file_spec in self.job.Files:
                 # ignore inputs
                 if file_spec.type not in ["output", "log"]:

@@ -6,6 +6,7 @@ import datetime
 import json
 import os.path
 import pathlib
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -47,7 +48,7 @@ class TokenCache:
         self.refresh_interval = refresh_interval
         self.task_buffer = task_buffer
         # cache for access tokens
-        self.cached_access_tokens = {}
+        self.cached_access_tokens: dict[str, Any] = {}
 
     # construct target path
     def construct_target_path(self, client_name: str) -> str:

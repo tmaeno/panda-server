@@ -2,7 +2,7 @@ import datetime
 import json
 import re
 import sys
-from typing import Dict
+from typing import Any, Dict
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -575,7 +575,7 @@ class MetricsModule(BaseModule):
             varMap[":cloud"] = cloud
         for tmpPrio in tmpPrioMap.keys():
             varMap[tmpPrio] = tmpPrioMap[tmpPrio]
-        returnMap = {}
+        returnMap: dict[str, Any] = {}
         try:
             iActive = 0
             for table in tables:
@@ -642,7 +642,7 @@ class MetricsModule(BaseModule):
         sql0 += "WHERE vo=:vo AND prodSourceLabel=:prodSourceLabel "
         sql0 += "GROUP BY computingSite,cloud,prodSourceLabel,jobStatus "
         var_map = {":vo": vo, ":prodSourceLabel": prod_source_label}
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             self.conn.begin()
             # select
@@ -701,7 +701,7 @@ class MetricsModule(BaseModule):
 
         tables = [f"{panda_config.schemaPANDA}.JOBS_SHARE_STATS", f"{panda_config.schemaPANDA}.JOBSDEFINED_SHARE_STATS"]
 
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             for table in tables:
                 self.cur.arraysize = 10000
@@ -754,7 +754,7 @@ class MetricsModule(BaseModule):
 
         tables = [f"{panda_config.schemaPANDA}.JOBS_SHARE_STATS", f"{panda_config.schemaPANDA}.JOBSDEFINED_SHARE_STATS"]
 
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             for table in tables:
                 self.cur.arraysize = 10000
@@ -801,7 +801,7 @@ class MetricsModule(BaseModule):
 
         tables = [f"{panda_config.schemaPANDA}.JOBS_SHARE_STATS", f"{panda_config.schemaPANDA}.JOBSDEFINED_SHARE_STATS"]
 
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             for table in tables:
                 self.cur.arraysize = 10000
@@ -848,7 +848,7 @@ class MetricsModule(BaseModule):
         else:
             table = f"{panda_config.schemaPANDA}.JOBSDEFINED_SHARE_STATS"
 
-        return_map = {}
+        return_map: dict[str, Any] = {}
         try:
             self.cur.arraysize = 10000
             sql_exe = (sql_jt + comment) % table
