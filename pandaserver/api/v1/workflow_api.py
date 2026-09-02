@@ -24,8 +24,11 @@ from pandaserver.workflow.workflow_core import WorkflowInterface
 _logger = PandaLogger().getLogger("api_workflow")
 
 # These global variables are initialized in the init_task_buffer method
-global_task_buffer = None
-global_wfif = None
+# Installed by init_task_buffer() before any handler runs, so these are declared
+# non-Optional for the same reason as BaseModule.conn/cur: an Optional type would
+# only push a None check onto every handler without making any of them safer.
+global_task_buffer: TaskBuffer = None  # type: ignore[assignment]
+global_wfif: WorkflowInterface = None  # type: ignore[assignment]
 
 # These global variables don't depend on DB access and can be initialized here
 # global_proxy_cache = panda_proxy_cache.MyProxyInterface()

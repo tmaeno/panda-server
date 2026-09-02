@@ -30,8 +30,11 @@ _logger = PandaLogger().getLogger("api_pilot")
 pilot_logger = PandaLogger().getLogger("PilotRequests")
 
 
-global_task_buffer = None
-global_site_mapper_cache = None
+# Installed by init_task_buffer() before any handler runs, so these are declared
+# non-Optional for the same reason as BaseModule.conn/cur: an Optional type would
+# only push a None check onto every handler without making any of them safer.
+global_task_buffer: TaskBuffer = None  # type: ignore[assignment]
+global_site_mapper_cache: CoreUtils.CachedObject = None  # type: ignore[assignment]
 
 VALID_JOB_STATES = ["running", "failed", "finished", "holding", "starting", "transferring"]
 

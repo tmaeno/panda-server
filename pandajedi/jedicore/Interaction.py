@@ -317,6 +317,11 @@ class CommandSendInterface(object):
 
 # interface class to receive command
 class CommandReceiveInterface(object):
+    # installed on this class by Interaction.installSC() at the bottom of this module
+    SC_SUCCEEDED: StatusCode
+    SC_FAILED: StatusCode
+    SC_FATAL: StatusCode
+
     # constructor
     def __init__(self, con):
         self.con = con

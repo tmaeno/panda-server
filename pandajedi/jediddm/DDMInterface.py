@@ -16,6 +16,10 @@ class DDMInterface:
             items = configStr.split(":")
             # check format
             active = True
+            # the optional group field is either the 5th item or absent. Declared
+            # without a value, which binds nothing at runtime, so that the first
+            # assignment below does not fix group to str alone.
+            group: str | None
             try:
                 vo = items[0]
                 maxSize = int(items[1])

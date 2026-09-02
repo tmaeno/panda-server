@@ -11,6 +11,11 @@ from .WatchDogBase import WatchDogBase
 
 # base class for typical watchdog (for production and analysis, etc.)
 class TypicalWatchDogBase(WatchDogBase):
+    # installed on this class by Interaction.installSC() at the bottom of this module
+    SC_SUCCEEDED: Interaction.StatusCode
+    SC_FAILED: Interaction.StatusCode
+    SC_FATAL: Interaction.StatusCode
+
     # pre-action
     def pre_action(self, tmpLog, vo, prodSourceLabel, pid, *args, **kwargs):
         # rescue picked files

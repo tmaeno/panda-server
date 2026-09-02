@@ -37,8 +37,11 @@ from pandaserver.taskbuffer.TaskBuffer import TaskBuffer
 _logger = PandaLogger().getLogger("api_data_carousel")
 
 # These global variables are initialized in the init_task_buffer method
-global_task_buffer = None
-global_dcif = None
+# Installed by init_task_buffer() before any handler runs, so these are declared
+# non-Optional for the same reason as BaseModule.conn/cur: an Optional type would
+# only push a None check onto every handler without making any of them safer.
+global_task_buffer: TaskBuffer = None  # type: ignore[assignment]
+global_dcif: DataCarouselInterface = None  # type: ignore[assignment]
 
 # service whose async request daemon runs the Data Carousel operations, which must match the
 # service_name that daemon runs with (pandajedi.jedidog.AsyncRequestWatchDog); JEDI is where the

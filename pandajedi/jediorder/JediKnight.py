@@ -7,6 +7,11 @@ from pandajedi.jedicore.ThreadUtils import ZombieCleaner
 
 
 class JediKnight(Interaction.CommandReceiveInterface):
+    # installed on this class by Interaction.installSC() at the bottom of this module
+    SC_SUCCEEDED: Interaction.StatusCode
+    SC_FAILED: Interaction.StatusCode
+    SC_FATAL: Interaction.StatusCode
+
     # constructor
     def __init__(self, commuChannel, taskBufferIF, ddmIF, logger, **kwargs):
         Interaction.CommandReceiveInterface.__init__(self, commuChannel)

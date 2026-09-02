@@ -5,6 +5,7 @@ import random
 import re
 import sys
 import traceback
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -67,6 +68,10 @@ class AtlasAnalJobBroker(JobBrokerBase):
         # return for failure
         retFatal = self.SC_FATAL, inputChunk
         retTmpError = self.SC_FAILED, inputChunk
+        # doBrokerage returns either one of the error tuples above or None. Declared
+        # without a value, which binds nothing at runtime, so that the first assignment
+        # further down does not fix retVal to the tuple type alone.
+        retVal: tuple[Interaction.StatusCode, Any] | None
         # new maxwdir
         newMaxwdir = {}
         # get primary site candidates
