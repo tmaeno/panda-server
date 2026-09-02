@@ -4,7 +4,7 @@ from snakemake.workflow import Rule, RuleProxy
 
 
 class ParamRule(object):
-    def __init__(self, name: str, source_rule: Rule = None):
+    def __init__(self, name: str, source_rule: Rule | None = None):
         self._name = name
         self._source_rule = source_rule
 
@@ -20,7 +20,7 @@ class ParamRule(object):
         return self._source_rule
 
 
-def param_of(name, source: RuleProxy = None) -> ParamRule:
+def param_of(name, source: RuleProxy | None = None) -> ParamRule:
     rule = source.rule if source is not None else None
     return ParamRule(name, rule)
 

@@ -96,7 +96,7 @@ class MetricsModule(BaseModule):
             return False
 
     # get job or task metrics
-    def get_workload_metrics(self, jedi_task_id: int, panda_id: int = None) -> tuple[bool, dict | None]:
+    def get_workload_metrics(self, jedi_task_id: int, panda_id: int | None = None) -> tuple[bool, dict | None]:
         """
         Get job metrics or task metrics
 
@@ -194,7 +194,7 @@ class MetricsModule(BaseModule):
             # not found
             tmp_log.debug("task not found")
             return
-        (task_status, task_old_status, queued_time, activated_time, current_priority, global_share) = res
+        task_status, task_old_status, queued_time, activated_time, current_priority, global_share = res
         has_input = False
         active_status_list = ("ready", "running", "scouting", "scouted")
         if task_status in active_status_list or (task_old_status in active_status_list and task_status == "pending"):
@@ -254,7 +254,7 @@ class MetricsModule(BaseModule):
         tmp_log.debug(f"done in {task_status}")
 
     # record job queuing period
-    def record_job_queuing_period(self, panda_id: int, job_spec: JobSpec = None) -> bool | None:
+    def record_job_queuing_period(self, panda_id: int, job_spec: JobSpec | None = None) -> bool | None:
         """
         Record queuing period in job metrics. Skip if job.jobMetrics doesn't contain task queued time
 
@@ -315,7 +315,7 @@ class MetricsModule(BaseModule):
             return None
 
     # unset task active period
-    def unset_task_activated_time(self, jedi_task_id: int, task_status: str = None) -> bool | None:
+    def unset_task_activated_time(self, jedi_task_id: int, task_status: str | None = None) -> bool | None:
         """
         Unset activated time and record active period in task metrics
 

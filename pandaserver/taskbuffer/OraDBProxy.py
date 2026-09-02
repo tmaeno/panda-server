@@ -80,12 +80,8 @@ class DBProxy(
 ):
     # constructor
     def __init__(self, useOtherError=False):
-        # init modules
+        # init modules. this also installs the connection and cursor placeholders
         super().__init__(_logger)
-        # connection object
-        self.conn = None
-        # cursor object
-        self.cur = None
 
         # use special error codes for reconnection in querySQL
         self.useOtherError = useOtherError
@@ -163,7 +159,8 @@ class DBProxy(
                 if panda_config.dump_sql:
                     from pandaserver.taskbuffer.SQLDumper import SQLDumper
 
-                    self.cur = SQLDumper(self.cur)
+                    # SQLDumper delegates every attribute to the cursor it wraps
+                    self.cur = SQLDumper(self.cur)  # type: ignore[assignment]
             except Exception:
                 pass
             self.hostname = self.cur.initialize()

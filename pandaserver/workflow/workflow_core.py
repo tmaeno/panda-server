@@ -201,7 +201,7 @@ class WorkflowInterface(object):
             logger.warning(f"Failed to set mb_proxy about queue {MESSAGE_QUEUE_NAME}; skipped workflow manager messaging: {traceback.format_exc()}")
             return None
 
-    def _send_message(self, tmp_log, msg_type: str, data_dict: Dict[str, Any] = None):
+    def _send_message(self, tmp_log, msg_type: str, data_dict: Dict[str, Any] | None = None):
         """
         Send a message to the workflow manager message queue
 

@@ -13,12 +13,17 @@ import traceback
 from typing import Dict, List
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
+
 from pandaserver.config import panda_config
 from pandaserver.dataservice import DataServiceUtils, ErrorCode
 from pandaserver.dataservice.adder_plugin_base import AdderPluginBase
 from pandaserver.dataservice.DataServiceUtils import select_scope
 from pandaserver.dataservice.ddm import rucioAPI
-from pandaserver.srvcore.exceptions import DatasetLocationError, FileRegistrationError, SubscriptionRegistrationError
+from pandaserver.srvcore.exceptions import (
+    DatasetLocationError,
+    FileRegistrationError,
+    SubscriptionRegistrationError,
+)
 from pandaserver.srvcore.MailUtils import MailUtils
 from pandaserver.taskbuffer import EventServiceUtils, JobUtils
 from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
@@ -693,7 +698,7 @@ class AdderAtlasPlugin(AdderPluginBase):
         self.logger.debug("addFiles end")
         return 0
 
-    def register_files(self, reg_num_files: int, zip_files: list, dest_id_map: dict, cont_zip_map: dict, log_files: list = None) -> int | None:
+    def register_files(self, reg_num_files: int, zip_files: list, dest_id_map: dict, cont_zip_map: dict, log_files: list | None = None) -> int | None:
         """
         Register files with Rucio.
 
@@ -704,7 +709,7 @@ class AdderAtlasPlugin(AdderPluginBase):
         :param log_files: List of log file LFNs to skip during registration validation.
         :return: 1 if registration fails, None otherwise.
         """
-        if not dest_id_map and not zip_files and not cont_zip_map: 
+        if not dest_id_map and not zip_files and not cont_zip_map:
             self.logger.debug("no files to register")
             return
         max_attempt = 3

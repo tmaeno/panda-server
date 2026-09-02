@@ -536,7 +536,7 @@ def validate_cache_file(req: PandaRequest, file_size: int, checksum: int | str) 
     return generate_response(True, message)
 
 
-def _get_checkpoint_filename(task_id: str, sub_id: str) -> Dict:
+def _get_checkpoint_filename(task_id: str, sub_id: str) -> str:
     """
     Get the checkpoint file name.
 
@@ -649,10 +649,10 @@ def delete_hpo_checkpoint(req: PandaRequest, task_id: str, sub_id: str) -> Dict:
 @request_validation(_logger, secure=True, request_method="POST", task_owner=True, task_buffer=lambda: global_task_buffer)
 def upload_file_recovery_request(
     req: PandaRequest,
-    task_id: int = None,
-    dry_run: bool = None,
-    dataset: str = None,
-    files: List[str] = None,
+    task_id: int | None = None,
+    dry_run: bool | None = None,
+    dataset: str | None = None,
+    files: List[str] | None = None,
     no_child_retry: bool = True,
     resurrect_datasets: bool = False,
     force: bool = False,

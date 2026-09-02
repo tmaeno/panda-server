@@ -159,7 +159,7 @@ def get_description_incl_archive(req: PandaRequest, job_ids: List[int]) -> Dict:
 
 
 @request_validation(_logger, secure=False, request_method="GET")
-def generate_offline_execution_script(req: PandaRequest, job_id: int, days: int = None) -> Dict:
+def generate_offline_execution_script(req: PandaRequest, job_id: int, days: int | None = None) -> Dict:
     """
     Get execution script for a job.
 
@@ -223,7 +223,7 @@ def get_metadata_for_analysis_jobs(req: PandaRequest, task_id: int) -> Dict:
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def kill(req, job_ids: List[int], code: int = None, use_email_as_id: bool = False, kill_options: List[str] = []):
+def kill(req, job_ids: List[int], code: int | None = None, use_email_as_id: bool = False, kill_options: List[str] = []):
     """
     Kill the jobs
 

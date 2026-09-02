@@ -25,7 +25,7 @@ class TokenCache:
     """
 
     # constructor
-    def __init__(self, target_path: str = None, file_prefix: str = None, refresh_interval: int = 60, task_buffer=None):
+    def __init__(self, target_path: str | None = None, file_prefix: str | None = None, refresh_interval: int = 60, task_buffer=None):
         """
         Constructs all the necessary attributes for the TokenCache object.
 

@@ -6,6 +6,7 @@ import sys
 import time
 import traceback
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -17,6 +18,13 @@ from pandaserver.taskbuffer.JediTaskSpec import (
 from pandaserver.taskbuffer.JobSpec import (
     push_status_changes as job_push_status_changes,
 )
+
+if TYPE_CHECKING:
+    # imported for annotations only. WrappedCursor imports panda_config, so
+    # importing it at runtime here would close an import cycle
+    from pandaserver.taskbuffer.wrapped_oracle_conn import WrappedOracleConn
+    from pandaserver.taskbuffer.WrappedCursor import WrappedCursor
+    from pandaserver.taskbuffer.WrappedPostgresConn import WrappedPostgresConn
 
 if panda_config.backend == "oracle":
     import oracledb
@@ -55,11 +63,18 @@ def convert_dict_to_bind_vars(item):
 
 # Base class for DB proxy modules
 class BaseModule:
+    # The connection and cursor are installed by DBProxy.connect() before any query
+    # runs. They are declared non-Optional on purpose: typing them as Optional would
+    # only push a None check onto each of the ~1600 call sites without making any of
+    # them safer, since a query issued before connect() is a bug either way.
+    conn: "WrappedOracleConn | WrappedPostgresConn"
+    cur: "WrappedCursor"
+
     # constructor
     def __init__(self, log_stream: LogWrapper):
         self._log_stream = log_stream
-        self.conn = None
-        self.cur = None
+        self.conn = None  # type: ignore[assignment]
+        self.cur = None  # type: ignore[assignment]
         self.mb_proxy_dict = None
         self.useOtherError = False
         self.backend = panda_config.backend
@@ -225,7 +240,7 @@ class BaseModule:
         tmp_log.error(err_str)
 
     # create logger with tag
-    def create_tagged_logger(self, comment: str, tag: str = None) -> LogWrapper:
+    def create_tagged_logger(self, comment: str, tag: str | None = None) -> LogWrapper:
         """
         Create logger from function comment and tag
 

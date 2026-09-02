@@ -81,7 +81,7 @@ def _validate_user_permissions(compact_name, tokenized=False) -> dict:
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def set_user_secrets(req: PandaRequest, key: str = None, value: str = None) -> dict:
+def set_user_secrets(req: PandaRequest, key: str | None = None, value: str | None = None) -> dict:
     """
     Set user secrets
 
@@ -111,7 +111,7 @@ def set_user_secrets(req: PandaRequest, key: str = None, value: str = None) -> d
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_user_secrets(req: PandaRequest, keys: List[str] = None) -> dict:
+def get_user_secrets(req: PandaRequest, keys: List[str] | None = None) -> dict:
     """
     Get user secrets
 
@@ -212,7 +212,7 @@ def get_key_pair(req: PandaRequest, public_key_name: str, private_key_name: str)
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_proxy(req: PandaRequest, role: str = None, dn: str = None) -> dict:
+def get_proxy(req: PandaRequest, role: str | None = None, dn: str | None = None) -> dict:
     """
     Get proxy
 
@@ -266,7 +266,7 @@ def get_proxy(req: PandaRequest, role: str = None, dn: str = None) -> dict:
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_access_token(req: PandaRequest, client_name: str, token_key: str = None) -> dict:
+def get_access_token(req: PandaRequest, client_name: str, token_key: str | None = None) -> dict:
     """
     Get access token
 

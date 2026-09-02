@@ -142,7 +142,7 @@ def active_job_detailed_stats_by_site(req: PandaRequest) -> Dict[str, Any]:
 
 
 @request_validation(_logger, secure=False, request_method="GET")
-def job_stats_by_site_and_resource_type(req: PandaRequest, time_window: int = None) -> Dict[str, Any]:
+def job_stats_by_site_and_resource_type(req: PandaRequest, time_window: int | None = None) -> Dict[str, Any]:
     """
     Job statistics by site and resource type
 
@@ -175,7 +175,7 @@ def job_stats_by_site_and_resource_type(req: PandaRequest, time_window: int = No
 
 
 @request_validation(_logger, secure=False, request_method="GET")
-def job_stats_by_site_share_and_resource_type(req: PandaRequest, time_window: int = None) -> Dict[str, Any]:
+def job_stats_by_site_share_and_resource_type(req: PandaRequest, time_window: int | None = None) -> Dict[str, Any]:
     """
     Job statistics by site, global share and resource type
 

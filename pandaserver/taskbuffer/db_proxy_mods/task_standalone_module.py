@@ -2041,7 +2041,13 @@ class TaskStandaloneModule(BaseModule):
                     tmp_dataset_spec = JediDatasetSpec()
                     tmp_dataset_spec.pack(res_item)
                     # get file
-                    var_map = {":jediTaskID": jedi_task_id, ":datasetID": tmp_dataset_spec.datasetID, ":type": "lib", ":status1": "failed", ":status2": "cancelled"}
+                    var_map = {
+                        ":jediTaskID": jedi_task_id,
+                        ":datasetID": tmp_dataset_spec.datasetID,
+                        ":type": "lib",
+                        ":status1": "failed",
+                        ":status2": "cancelled",
+                    }
                     self.cur.execute(sql_read_file + comment, var_map)
                     res_file_list = self.cur.fetchall()
                     for res_file_item in res_file_list:
@@ -3022,7 +3028,7 @@ class TaskStandaloneModule(BaseModule):
             return None
 
     # release a task with on-hold status
-    def release_task_on_hold(self, jedi_task_id: int, target_status: str = None) -> bool:
+    def release_task_on_hold(self, jedi_task_id: int, target_status: str | None = None) -> bool:
         """Release a JEDI task with non-empty old status.
         Args:
             jedi_task_id: JEDI task ID to be released.

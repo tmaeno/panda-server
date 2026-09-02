@@ -2025,7 +2025,7 @@ class TaskUtilsModule(BaseModule):
             return None
 
     # check parent task status
-    def checkParentTask_JEDI(self, parent_task_id: int, jedi_task_id: int = None, use_commit: bool = True) -> str | None:
+    def checkParentTask_JEDI(self, parent_task_id: int, jedi_task_id: int | None = None, use_commit: bool = True) -> str | None:
         """
         Check the status of parent task
         Args:

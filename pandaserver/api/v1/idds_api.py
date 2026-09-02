@@ -33,7 +33,7 @@ def decode_idds_enum(d):
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def relay_idds_command(req, command_name: str, args: str = None, kwargs: str = None, manager: bool = False, json_outputs: bool = False):
+def relay_idds_command(req, command_name: str, args: str | None = None, kwargs: str | None = None, manager: bool = False, json_outputs: bool = False):
     tmp_log = LogWrapper(
         _logger,
         f"relay_idds_command-{naive_utcnow().isoformat('/')}",
@@ -100,7 +100,7 @@ def relay_idds_command(req, command_name: str, args: str = None, kwargs: str = N
 
 # relay iDDS workflow command with ownership check
 @request_validation(_logger, secure=True, request_method="POST")
-def execute_idds_workflow_command(req, command_name: str, kwargs: str = None, json_outputs: bool = False):
+def execute_idds_workflow_command(req, command_name: str, kwargs: str | None = None, json_outputs: bool = False):
     tmp_log = LogWrapper(
         _logger,
         f"execute_idds_workflow_command-{naive_utcnow().isoformat('/')}",

@@ -176,7 +176,7 @@ def add_dialogs(req: PandaRequest, harvester_id: str, dialogs: list) -> Dict[str
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def heartbeat(req: PandaRequest, harvester_id: str, data: dict = None) -> Dict[str, Any]:
+def heartbeat(req: PandaRequest, harvester_id: str, data: dict | None = None) -> Dict[str, Any]:
     """
     Heartbeat for harvester.
 
@@ -411,7 +411,7 @@ def add_sweep_command(req: PandaRequest, panda_queue: str, status_list: List[str
 
 
 @request_validation(_logger, secure=True, production=True, request_method="POST")
-def add_target_slots(req, panda_queue: str, slots: int, global_share: str = None, resource_type: str = None, expiration_date: str = None):
+def add_target_slots(req, panda_queue: str, slots: int, global_share: str | None = None, resource_type: str | None = None, expiration_date: str | None = None):
     """
     Set target slots.
 

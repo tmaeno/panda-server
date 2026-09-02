@@ -47,18 +47,24 @@ jobs:
     - name: Check for undefined names
       run: ruff check --isolated --select F821 .
 
-    # Reported, not enforced. The tree currently has ~1700 mypy findings, most of
-    # them annotations too weak to say anything -- `dict` where the value type
-    # matters, `object` where a real class does. Failing on that would mean
-    # failing every PR, so this prints the count for the files a PR touches and
-    # leaves the judgement to the reviewer.
-    - name: Type-check changed files (advisory)
-      continue-on-error: true
+    # Enforced against a baseline, not against zero. The tree still carries ~1060
+    # findings, most of them annotations too weak to say anything -- `dict` where
+    # the value type matters, `object` where a real class does -- so mypy-baseline
+    # filters out everything already recorded in mypy-baseline.txt and fails only
+    # on findings a PR adds. A count-based gate would not work here: annotating a
+    # function turns on checking of its whole body, so improving the annotations
+    # can raise the number of findings.
+    #
+    # The whole tree, not just the changed files: a cold run takes about five
+    # seconds, and the baseline only lines up if every run sees the same files
+    # with the same flags. The flags live in [tool.mypy] in pyproject.toml.
+    #
+    # Fixing a recorded finding never fails this step (allow_unsynced), so the
+    # baseline can go stale as findings are cleaned up. To drop resolved entries,
+    # to record a finding you are not fixing, or to refresh after a mypy upgrade:
+    #   mypy | mypy-baseline sync
+    # and commit mypy-baseline.txt in the same PR.
+    - name: Type check against baseline
       run: |
-        pip install 'mypy==1.13.0'
-        files=$(git diff --name-only --diff-filter=d origin/master...HEAD -- '*.py')
-        if [ -n "$files" ]; then
-          echo "$files" | xargs mypy --ignore-missing-imports --follow-imports=silent
-        else
-          echo "No Python files changed."
-        fi
+        pip install 'mypy==1.13.0' 'mypy-baseline==0.7.4'
+        mypy | mypy-baseline filter

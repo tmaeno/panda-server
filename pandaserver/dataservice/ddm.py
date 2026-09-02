@@ -38,7 +38,11 @@ from rucio.common.exception import (
 )
 
 from pandaserver.srvcore import CoreUtils
-from pandaserver.srvcore.exceptions import DatasetLocationError, FileRegistrationError, SubscriptionRegistrationError
+from pandaserver.srvcore.exceptions import (
+    DatasetLocationError,
+    FileRegistrationError,
+    SubscriptionRegistrationError,
+)
 
 # logger
 _logger = PandaLogger().getLogger("ddm_rucio_api")
@@ -142,13 +146,13 @@ class RucioAPI:
     def register_dataset(
         self,
         dataset_name: str,
-        lfns: list = None,
-        guids: list = None,
-        sizes: list = None,
-        checksums: list = None,
-        lifetime: int = None,
-        scope: str = None,
-        metadata: dict = None,
+        lfns: list | None = None,
+        guids: list | None = None,
+        sizes: list | None = None,
+        checksums: list | None = None,
+        lifetime: int | None = None,
+        scope: str | None = None,
+        metadata: dict | None = None,
     ) -> dict:
         """
         Register a dataset in Rucio
@@ -229,10 +233,10 @@ class RucioAPI:
         self,
         dataset_name: str,
         rses: list,
-        lifetime: int = None,
-        owner: str = None,
-        activity: str = None,
-        scope: str = None,
+        lifetime: int | None = None,
+        owner: str | None = None,
+        activity: str | None = None,
+        scope: str | None = None,
         grouping: str = "DATASET",
         notify: str = "N",
     ) -> bool:
@@ -310,7 +314,14 @@ class RucioAPI:
 
     # register dataset subscription
     def register_dataset_subscription(
-        self, dataset_name: str, rses: list, lifetime: int = None, owner: str = None, activity: str = None, distinguished_name: str = None, comment: str = None
+        self,
+        dataset_name: str,
+        rses: list,
+        lifetime: int | None = None,
+        owner: str | None = None,
+        activity: str | None = None,
+        distinguished_name: str | None = None,
+        comment: str | None = None,
     ) -> bool:
         """
         Register a dataset subscription in Rucio.
@@ -404,14 +415,18 @@ class RucioAPI:
 
     # register files in dataset
     def register_files_in_dataset(
-        self, id_map: dict, files_without_rses: list = None, files_to_skip_validation: list = None, ignore_missing_data_identifier: bool = False
+        self,
+        id_map: dict,
+        files_without_rses: list | dict | None = None,
+        files_to_skip_validation: list | None = None,
+        ignore_missing_data_identifier: bool = False,
     ) -> bool:
         """
         Register files in a dataset
 
         Parameters:
         id_map (dict): A dictionary containing dataset information. Maps RSEs to datasets and files.
-        files_without_rses (list, optional): List of files without RSEs. Defaults to None.
+        files_without_rses (list or dict, optional): Names of files without RSEs. Only membership is tested, so a dict keyed by file name works too. Defaults to None.
         files_to_skip_validation (list, optional): List of files to skip validation for. Defaults to None.
         ignore_missing_data_identifier (bool, optional): If True, ignore DataIdentifierNotFound instead of raising a fatal error. Defaults to False.
 
@@ -675,7 +690,7 @@ class RucioAPI:
             return 1, f"{err_type} {err_value}"
 
     # get metadata
-    def get_metadata(self, dataset_name: str, scope: str = None):
+    def get_metadata(self, dataset_name: str, scope: str | None = None):
         """
         Get metadata of a dataset in Rucio.
 
@@ -702,7 +717,7 @@ class RucioAPI:
             return False, f"{err_type} {err_value}"
 
     # delete dataset
-    def erase_dataset(self, dataset_name: str, scope: str = None, grace_period: int = None):
+    def erase_dataset(self, dataset_name: str, scope: str | None = None, grace_period: int | None = None):
         """
         Delete a dataset in Rucio.
 
@@ -760,7 +775,7 @@ class RucioAPI:
         return True
 
     # list file replicas
-    def list_file_replicas(self, scopes: List[str], lfns: List[str], rses: List[str] = None):
+    def list_file_replicas(self, scopes: List[str], lfns: List[str], rses: List[str] | None = None):
         """
         List file replicas in Rucio.
 
@@ -848,7 +863,7 @@ class RucioAPI:
             return False, f"{err_type} {err_value}"
 
     # list files in dataset
-    def list_files_in_dataset(self, dataset_name: str, long: bool = False, file_list: List[str] = None):
+    def list_files_in_dataset(self, dataset_name: str, long: bool = False, file_list: List[str] | None = None):
         """
         List files in a Rucio dataset.
 
@@ -893,7 +908,7 @@ class RucioAPI:
         return (return_dict, None)
 
     # get # of files in dataset
-    def get_number_of_files(self, dataset_name: str, preset_scope: str = None):
+    def get_number_of_files(self, dataset_name: str, preset_scope: str | None = None):
         """
         Get the number of files in a Rucio dataset.
 
@@ -954,7 +969,7 @@ class RucioAPI:
         return result
 
     # register container
-    def register_container(self, container_name: str, datasets: List[str] = None, preset_scope: str = None) -> bool:
+    def register_container(self, container_name: str, datasets: List[str] | None = None, preset_scope: str | None = None) -> bool:
         """
         Register a container in Rucio.
 

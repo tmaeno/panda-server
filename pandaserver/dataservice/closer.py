@@ -31,7 +31,7 @@ class Closer:
     """
 
     # constructor
-    def __init__(self, taskBuffer, destination_data_blocks: List[str], job, dataset_map: Dict[str, DatasetSpec] = None) -> None:
+    def __init__(self, taskBuffer, destination_data_blocks: List[str], job, dataset_map: Dict[str, DatasetSpec] | None = None) -> None:
         """
         Constructor
 

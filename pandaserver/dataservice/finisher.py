@@ -42,7 +42,7 @@ class Finisher(threading.Thread):
     """
 
     # constructor
-    def __init__(self, taskBuffer, dataset: DatasetSpec, job: str = None, site: str = None):
+    def __init__(self, taskBuffer, dataset: DatasetSpec, job: str | None = None, site: str | None = None):
         """
         Constructs all the necessary attributes for the Finisher object.
 

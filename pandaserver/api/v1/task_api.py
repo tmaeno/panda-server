@@ -42,7 +42,7 @@ def init_task_buffer(task_buffer: TaskBuffer) -> None:
 def retry(
     req: PandaRequest,
     task_id: int,
-    new_parameters: Dict | str = None,
+    new_parameters: Dict | str | None = None,
     no_child_retry: bool = False,
     discard_events: bool = False,
     disable_staging_mode: bool = False,
@@ -224,7 +224,7 @@ def release(req: PandaRequest, task_id: int) -> Dict[str, Any]:
 
 # reassign task to site/cloud
 @request_validation(_logger, secure=True, request_method="POST")
-def reassign(req: PandaRequest, task_id: int, site: str = None, cloud: str = None, nucleus: str = None, mode: str = None):
+def reassign(req: PandaRequest, task_id: int, site: str | None = None, cloud: str | None = None, nucleus: str | None = None, mode: str | None = None):
     """
     Task reassign
 
@@ -367,7 +367,7 @@ def kill(req: PandaRequest, task_id: int, broadcast: bool = False) -> Dict[str, 
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def kill_unfinished_jobs(req: PandaRequest, task_id: int, code: int = None, use_email_as_id: bool = False):
+def kill_unfinished_jobs(req: PandaRequest, task_id: int, code: int | None = None, use_email_as_id: bool = False):
     """
     Kill all unfinished jobs in a task
 
@@ -649,7 +649,7 @@ def reassign_global_share(req: PandaRequest, task_id_list: List[int], share: str
 
 
 @request_validation(_logger, secure=True, production=True, request_method="POST")
-def enable_jumbo_jobs(req: PandaRequest, task_id: int, jumbo_jobs_total: int, jumbo_jobs_per_site: int = None):
+def enable_jumbo_jobs(req: PandaRequest, task_id: int, jumbo_jobs_total: int, jumbo_jobs_per_site: int | None = None):
     """
     Enable Jumbo jobs
 
@@ -720,9 +720,9 @@ def get_jumbo_job_datasets(req: PandaRequest, from_offset: int, to_offset: int =
 def enable_job_cloning(
     req: PandaRequest,
     jedi_task_id: int,
-    mode: str = None,
-    multiplicity: int = None,
-    num_sites: int = None,
+    mode: str | None = None,
+    multiplicity: int | None = None,
+    num_sites: int | None = None,
 ) -> Dict[str, Any]:
     """
     Enable job cloning
@@ -1096,7 +1096,9 @@ def change_split_rule(req: PandaRequest, task_id: int, attribute_name: str, valu
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_tasks_modified_since(req, since: str, dn: str = None, full: bool = False, min_task_id: int = None, prod_source_label: str = "user") -> Dict[str, Any]:
+def get_tasks_modified_since(
+    req, since: str, dn: str | None = None, full: bool = False, min_task_id: int | None = None, prod_source_label: str = "user"
+) -> Dict[str, Any]:
     """
     Get tasks modified since
 
@@ -1133,7 +1135,7 @@ def get_tasks_modified_since(req, since: str, dn: str = None, full: bool = False
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_tasks_detailed_info_since(req, since: str = None, filters: str = None, n_tasks: int = 500) -> Dict[str, Any]:
+def get_tasks_detailed_info_since(req, since: str | None = None, filters: str | None = None, n_tasks: int = 500) -> Dict[str, Any]:
     """
     Get detailed task info for tasks, optionally restricted to those modified since a given time.
 
@@ -1326,7 +1328,7 @@ def get_job_ids(req: PandaRequest, task_id: int) -> Dict[str, Any]:
 
 
 @request_validation(_logger, secure=True, request_method="POST")
-def submit(req: PandaRequest, task_parameters: Dict, parent_tid: int = None) -> Dict[str, Any]:
+def submit(req: PandaRequest, task_parameters: Dict, parent_tid: int | None = None) -> Dict[str, Any]:
     """
     Register task
 

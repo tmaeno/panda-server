@@ -115,3 +115,23 @@ line-length = 160
 
 [tool.flake8]
 ignore = ['E501', 'U100']
+
+# Type checking is gated on a baseline (mypy-baseline.txt) rather than on an
+# error count, because annotating a function turns on checking of its whole body:
+# improving the annotations can legitimately raise the number of findings. The
+# flags below have to stay in sync with the baseline -- changing them, or the
+# pinned mypy version in .github/workflows/syntax-check.yml, changes the set of
+# errors mypy reports and invalidates the file. Regenerate it in the same commit:
+#   mypy pandaserver pandajedi | mypy-baseline sync
+[tool.mypy]
+files = ["pandaserver", "pandajedi"]
+ignore_missing_imports = true
+
+[tool.mypy-baseline]
+baseline_path = "mypy-baseline.txt"
+sort_baseline = true
+# only findings a change ADDS fail the gate. Without this, a PR that fixes an
+# existing finding also fails, until its author regenerates the baseline -- which
+# would punish exactly the cleanup this baseline exists to make room for. The
+# cost is that a resolved entry lingers until someone runs `mypy-baseline sync`.
+allow_unsynced = true

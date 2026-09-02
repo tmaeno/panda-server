@@ -1916,7 +1916,7 @@ class TaskEventModule(BaseModule):
             return None
 
     # enable job cloning
-    def enable_job_cloning(self, jedi_task_id: int, mode: str = None, multiplicity: int = None, num_sites: int = None) -> tuple[bool, str]:
+    def enable_job_cloning(self, jedi_task_id: int, mode: str | None = None, multiplicity: int | None = None, num_sites: int | None = None) -> tuple[bool, str]:
         """
         Enable job cloning for a task
 

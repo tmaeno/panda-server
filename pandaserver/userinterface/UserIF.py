@@ -314,7 +314,7 @@ def putEventPickingRequest(
 
 
 # upload lost file recovery request
-def put_file_recovery_request(panda_request: PandaRequest, jediTaskID: str, dryRun: bool = None) -> str:
+def put_file_recovery_request(panda_request: PandaRequest, jediTaskID: str, dryRun: bool | None = None) -> str:
     """
     Upload lost file recovery request to the server.
 

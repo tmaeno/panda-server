@@ -1,11 +1,13 @@
 """
 A class used to handle DDM (Distributed Data Management) operations.
 """
+
 import re
 import threading
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
+
 from pandaserver.dataservice.activator import Activator
 from pandaserver.dataservice.finisher import Finisher
 
@@ -35,9 +37,9 @@ class DDMHandler(threading.Thread):
     run():
         Starts the thread to handle DDM operations.
     """
+
     # constructor
-    def __init__(self, task_buffer, vuid: str, site: str = None, dataset: str = None,
-                     scope: str = None):
+    def __init__(self, task_buffer, vuid: str, site: str | None = None, dataset: str | None = None, scope: str | None = None):
         """
         Constructs all the necessary attributes for the DDMHandler object.
 

@@ -380,7 +380,7 @@ class DynDataDistributer:
         return res_for_failure
 
     def register_dataset_container_with_datasets(
-        self, container_name: str, files: List, replica_map: Dict, n_sites: int = 1, owner: str = None, max_attempts: int = 3
+        self, container_name: str, files: List, replica_map: Dict, n_sites: int = 1, owner: str | None = None, max_attempts: int = 3
     ) -> Tuple[bool, Dict]:
         """
         Register a new dataset container with datasets.
@@ -480,7 +480,7 @@ class DynDataDistributer:
         tmp_logger.debug("end")
         return True
 
-    def register_dataset_with_location(self, dataset_name: str, files: List, locations: List, owner: str = None, max_attempts: int = 3) -> bool:
+    def register_dataset_with_location(self, dataset_name: str, files: List, locations: List, owner: str | None = None, max_attempts: int = 3) -> bool:
         """
         Register a new dataset with locations.
 

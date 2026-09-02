@@ -111,11 +111,11 @@ def acquire_event_ranges(
     req: PandaRequest,
     job_id: int,
     jobset_id: int,
-    task_id: int = None,
+    task_id: int | None = None,
     n_ranges: int = 10,
     timeout: int = 60,
     scattered: bool = False,
-    segment_id: int = None,
+    segment_id: int | None = None,
 ) -> dict:
     """
     Acquire event ranges
@@ -173,9 +173,9 @@ def update_single_event_range(
     req: PandaRequest,
     event_range_id: str,
     event_range_status: str,
-    core_count: int = None,
-    cpu_consumption_time: float = None,
-    object_store_id: id = None,
+    core_count: int | None = None,
+    cpu_consumption_time: float | None = None,
+    object_store_id: id | None = None,
     timeout: int = 60,
 ):
     """

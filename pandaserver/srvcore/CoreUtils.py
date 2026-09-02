@@ -482,7 +482,7 @@ def use_direct_io_for_job(task_spec, site_spec, input_chunk):
 class StopWatch:
     """Utility class to measure timing information."""
 
-    def __init__(self, identifier: str = None):
+    def __init__(self, identifier: str | None = None):
         self.start_time = datetime.datetime.now()
         self.checkpoint = self.start_time
         self.step_name = None
@@ -519,7 +519,7 @@ class StopWatch:
 
 
 # construct execution comment to reassign a task
-def make_reassign_comment(site: str = None, cloud: str = None, nucleus: str = None, mode: str = None) -> str:
+def make_reassign_comment(site: str | None = None, cloud: str | None = None, nucleus: str | None = None, mode: str | None = None) -> str:
     """
     Construct execution comment to reassign a task to a site, cloud or nucleus with different modes.
 

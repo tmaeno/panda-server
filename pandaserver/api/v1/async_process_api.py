@@ -130,10 +130,10 @@ def submit_grep_request(
     req: PandaRequest,
     pattern: str,
     log_filename: str,
-    service_name: str = None,
-    machine_name: str = None,
-    max_matches: int = None,
-    tail_bytes: int = None,
+    service_name: str | None = None,
+    machine_name: str | None = None,
+    max_matches: int | None = None,
+    tail_bytes: int | None = None,
 ) -> Dict[str, Any]:
     """
     Submit a grep request to be processed asynchronously on the target service or machine.

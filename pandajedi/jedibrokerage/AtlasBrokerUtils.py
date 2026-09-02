@@ -1215,8 +1215,13 @@ def resolve_cmt_config(queue_name: str, cmt_config: str, base_platform, sw_map: 
 
 
 def check_endpoints_with_blacklist(
-    site_spec: SiteSpec.SiteSpec, scope_input: str, scope_output: str, sites_in_nucleus: list, remote_source_available: bool,
-    storage_type: str = None, complete_replica_locations: set = None
+    site_spec: SiteSpec.SiteSpec,
+    scope_input: str,
+    scope_output: str,
+    sites_in_nucleus: list,
+    remote_source_available: bool,
+    storage_type: str | None = None,
+    complete_replica_locations: set | None = None,
 ) -> str | None:
     """
     Check if site's endpoints are in the blacklist
@@ -1247,7 +1252,9 @@ def check_endpoints_with_blacklist(
             if tmp_read_input_over_lan not in DOWNTIME_STATUSES:
                 read_input_over_lan = True
             # can receive input from remote to local
-            if tmp_site_name not in sites_in_nucleus or (complete_replica_locations and tmp_input_endpoint["ddm_endpoint_name"] not in complete_replica_locations):
+            if tmp_site_name not in sites_in_nucleus or (
+                complete_replica_locations and tmp_input_endpoint["ddm_endpoint_name"] not in complete_replica_locations
+            ):
                 # satellite sites
                 if tmp_receive_input_over_wan not in DOWNTIME_STATUSES:
                     receive_input_over_wan = True
