@@ -1708,7 +1708,7 @@ class TaskEventModule(BaseModule):
                 # only for input
                 if tmpFile.type in ["input", "pseudo_input"]:
                     # get ranges
-                    if tmpFile.fileID is [None, "NULL"]:
+                    if tmpFile.fileID in [None, "NULL"]:
                         continue
                     varMap = {}
                     varMap[":jediTaskID"] = tmpFile.jediTaskID

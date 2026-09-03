@@ -99,9 +99,12 @@ class FileSpec(object):
     def __getattribute__(self, name):
         # PandaID
         if name == "PandaID":
-            if self._owner is None:
+            # read _owner without going through this method again, which would replace an
+            # absent owner with the "NULL" sentinel and make the check below never true
+            owner = object.__getattribute__(self, "_owner")
+            if owner is None:
                 return "NULL"
-            return self._owner.PandaID
+            return owner.PandaID
         # others
         ret = object.__getattribute__(self, name)
         if ret is None:
