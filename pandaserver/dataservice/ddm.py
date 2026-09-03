@@ -236,7 +236,7 @@ class RucioAPI:
         owner: str | None = None,
         activity: str | None = None,
         scope: str | None = None,
-        grouping: str = "DATASET",
+        grouping: str | None = "DATASET",
         notify: str = "N",
     ) -> bool:
         """
@@ -249,7 +249,7 @@ class RucioAPI:
         owner (str, optional): Owner of the dataset. Defaults to None.
         activity (str, optional): Activity associated with the dataset. Defaults to None.
         scope (str, optional): Scope of the dataset. Defaults to None.
-        grouping (str, optional): Grouping of the dataset. Defaults to "DATASET".
+        grouping (str | None, optional): Grouping of the dataset. None is replaced by the default "DATASET".
         notify (str, optional): Notification option. Defaults to "N".
 
         Returns:
@@ -812,7 +812,7 @@ class RucioAPI:
             return False, f"{type(e)} {e}"
 
     # get zip files
-    def get_zip_files(self, dids: List[str], rses: List[str]):
+    def get_zip_files(self, dids: List[str], rses: List[str] | None):
         """
         Get zip files from Rucio.
 
@@ -822,7 +822,7 @@ class RucioAPI:
 
         Parameters:
         dids (List[str]): A list of Data Identifiers (DIDs) for which to retrieve the associated zip files.
-        rses (List[str]): A list of Rucio Storage Elements (RSEs) where the files should be replicated.
+        rses (List[str] | None): Rucio Storage Elements the files should be replicated to, or None to accept any RSE.
 
         Returns:
         Tuple[bool, Union[str, Dict[str, Dict[str, Any]]]]: A tuple containing a boolean indicating the success of the operation and a dictionary of zip files or an error message.

@@ -14,7 +14,7 @@ import sys
 import time
 import traceback
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union, cast, overload
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -38,6 +38,10 @@ class SetupperAtlasPlugin(SetupperPluginBase):
     ATLAS-specific functionality.
     """
 
+    # Built at the top of run(), which is the only way into the methods below that use it,
+    # so the placeholder assigned in __init__ never survives construction.
+    site_mapper: SiteMapper
+
     # constructor
     def __init__(self, taskBuffer, jobs: List, logger, **params: Dict) -> None:
         """
@@ -58,16 +62,17 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         # file list for dispDS for PandaDDM
         self.disp_file_list: dict[str, Any] = {}
         # site mapper
-        self.site_mapper = None
+        self.site_mapper = None  # type: ignore[assignment]
         # available files at satellite sites
         self.available_lfns_in_satellites: dict[str, Any] = {}
         # list of missing datasets
         self.missing_dataset_list: dict[str, Any] = {}
         # lfn ds map
         self.lfn_dataset_map: dict[str, Any] = {}
-        # source label
-        self.prod_source_label = None
-        self.job_label = None
+        # source label, taken from the first job in run() and left as None when there is
+        # no job to take it from
+        self.prod_source_label: str | None = None
+        self.job_label: str | None = None
 
     # main
     def run(self) -> None:
@@ -341,7 +346,9 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
     def register_dispatch_datasets(
         self,
-        file_list: Dict[str, Dict[str, List[str]]],
+        # keyed by dispatch block, then by "lfns"/"guids"/"fsizes"/"chksums", so the
+        # element type differs per key
+        file_list: Dict[str, Dict[str, List[Any]]],
         use_zip_to_pin_map: Dict[str, bool],
         ds_task_map: Dict[str, int],
         tmp_logger: LogWrapper,
@@ -1257,12 +1264,13 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         return status, items
 
     # get list of datasets in container
-    def get_list_dataset_in_container(self, container: str) -> Tuple[bool, List[str]]:
+    def get_list_dataset_in_container(self, container: str) -> Tuple[bool, Union[List[str], str]]:
         """
         Get list dataset in container method for running the setup process.
 
         :param container: The container to get the list of datasets from.
-        :return: A tuple containing a boolean indicating the status and the list of datasets.
+        :return: A tuple containing a boolean indicating the status and, when the status is
+                 True, the list of datasets -- otherwise the error message from Rucio.
         """
 
         tmp_logger = LogWrapper(self.logger, "<get_list_dataset_in_container>")
@@ -1279,9 +1287,19 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         return False, out
 
     # get datasets in container
-    def get_list_dataset_replicas_in_container(self, container: str, get_map: bool = False) -> Tuple[int, str]:
+    @overload
+    def get_list_dataset_replicas_in_container(self, container: str, get_map: Literal[False] = False) -> Tuple[int, str]: ...
+
+    @overload
+    def get_list_dataset_replicas_in_container(self, container: str, get_map: Literal[True]) -> Tuple[bool, Union[Dict[str, Any], str]]: ...
+
+    def get_list_dataset_replicas_in_container(self, container: str, get_map: bool = False) -> Tuple[Union[bool, int], Union[Dict[str, Any], str]]:
         """
         Get list dataset replicas in container method for running the setup process.
+
+        The get_map flag switches both halves of the return value, which is why this has
+        overloads: with it the status is a bool and the second element is the per-dataset
+        replica map, without it the status is a return code and the map is stringified.
 
         :param container: The container to get the list of dataset replicas from.
         :param get_map: Whether to get the map. Defaults to False.
@@ -1291,7 +1309,9 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         tmp_logger.debug(container)
 
         datasets = None
-        out = ""
+        # holds the Rucio error message while listing the container, then the per-dataset
+        # replica map returned by get_list_dataset_replicas below
+        out: Union[Dict[str, Any], str] = ""
         for _ in range(3):
             datasets, out = rucioAPI.list_datasets_in_container(container)
             if datasets is None:
@@ -1350,9 +1370,19 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         return 0, str(all_rep_map)
 
     # get list of replicas for a dataset
-    def get_list_dataset_replicas(self, dataset: str, get_map: bool = True) -> Tuple[bool, str]:
+    @overload
+    def get_list_dataset_replicas(self, dataset: str, get_map: Literal[True] = True) -> Tuple[bool, Union[Dict[str, Any], str]]: ...
+
+    @overload
+    def get_list_dataset_replicas(self, dataset: str, get_map: Literal[False]) -> Tuple[int, str]: ...
+
+    def get_list_dataset_replicas(self, dataset: str, get_map: bool = True) -> Tuple[Union[bool, int], Union[Dict[str, Any], str]]:
         """
         Get list dataset replicas method for running the setup process.
+
+        The get_map flag switches both halves of the return value, which is why this has
+        overloads: with it the status is a bool and the second element is the replica map,
+        without it the status is a return code and the map is stringified.
 
         :param dataset: The dataset to get the list of replicas from.
         :param get_map: Whether to get the map. Defaults to True.
