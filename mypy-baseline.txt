@@ -315,7 +315,6 @@ pandaserver/dataservice/setupper.py:0: error: "object" has no attribute "notDisc
 pandaserver/dataservice/setupper.py:0: error: "object" has no attribute "notDiscardEvents"  [attr-defined]
 pandaserver/dataservice/setupper.py:0: error: Incompatible types in assignment (expression has type "list[PickleJobSpec]", variable has type "list[object]")  [assignment]
 pandaserver/dataservice/setupper_atlas_plugin.py:0: error: "dict[Any, Any]" has no attribute "splitlines"  [attr-defined]
-pandaserver/dataservice/setupper_atlas_plugin.py:0: error: "str" has no attribute "error"  [attr-defined]
 pandaserver/dataservice/setupper_atlas_plugin.py:0: error: Argument 1 to "is_sub_dataset" has incompatible type "tuple[str, str | Literal['NULL'], str | Literal['NULL']]"; expected "str"  [arg-type]
 pandaserver/dataservice/setupper_atlas_plugin.py:0: error: Argument 3 to "make_sub_dataset_name" of "SetupperAtlasPlugin" has incompatible type "int | Literal['NULL']"; expected "int"  [arg-type]
 pandaserver/dataservice/setupper_atlas_plugin.py:0: error: Argument 3 to "register_dispatch_datasets" of "SetupperAtlasPlugin" has incompatible type "dict[str, int | Literal['NULL']]"; expected "dict[str, int]"  [arg-type]

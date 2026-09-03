@@ -477,7 +477,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                 self.vuid_map[dataset.name] = dataset.vuid
             except Exception:
                 error_type, error_value = sys.exc_info()[:2]
-                dispatch_data_block.error(f"{error_type} {error_value}")
+                tmp_logger.error(f"{error_type} {error_value}")
                 disp_error[dispatch_data_block] = "setupper.setup_source() could not decode VUID dispatch_data_block"
         return disp_list
 
