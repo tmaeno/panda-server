@@ -20,8 +20,8 @@ class PandaCallbackMsgProcPlugin(BaseMsgProcPlugin):
         self.site_mapper = None
         self.verbose = False
 
-    def initialize(self, **params):
-        BaseMsgProcPlugin.initialize(self, **params)
+    def initialize(self, in_collective=False, **params):
+        BaseMsgProcPlugin.initialize(self, in_collective, **params)
         # activity list to use file callback
         self.activities_with_file_callback = self.params.get("activities_with_file_callback", [])
         # component action map

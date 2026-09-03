@@ -21,8 +21,8 @@ class JediJobGeneratorMsgProcPlugin(BaseMsgProcPlugin):
     Message-driven Job Generator
     """
 
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         # DDM interface
         self.ddmIF = DDMInterface()
         self.ddmIF.setupInterface()

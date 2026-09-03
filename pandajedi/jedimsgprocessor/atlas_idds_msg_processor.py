@@ -14,8 +14,8 @@ base_logger = logger_utils.setup_logger(__name__.split(".")[-1])
 
 # Atlas iDDS message processing plugin, a bridge connect to other idds related message processing plugins
 class AtlasIddsMsgProcPlugin(BaseMsgProcPlugin):
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         self.plugin_TapeCarousel = TapeCarouselMsgProcPlugin()
         self.plugin_HPO = HPOMsgProcPlugin()
         self.plugin_Processing = ProcessingMsgProcPlugin()

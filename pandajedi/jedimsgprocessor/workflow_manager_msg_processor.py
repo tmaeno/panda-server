@@ -14,11 +14,11 @@ class WorkflowManagerMsgProcPlugin(BaseMsgProcPlugin):
     Message-driven workflow manager
     """
 
-    def initialize(self):
+    def initialize(self, in_collective=False):
         """
         Initialize the plugin
         """
-        BaseMsgProcPlugin.initialize(self)
+        BaseMsgProcPlugin.initialize(self, in_collective)
         self.workflow_interface = WorkflowInterface(self.tbIF)
 
     def process(self, msg_obj):

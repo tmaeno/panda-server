@@ -18,8 +18,8 @@ class JediPostProcessorMsgProcPlugin(BaseMsgProcPlugin):
     Message-driven Post-Processor
     """
 
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         # DDM interface
         ddmIF = DDMInterface()
         ddmIF.setupInterface()

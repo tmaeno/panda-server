@@ -5,6 +5,7 @@ from typing import Any
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
 from pandajedi.jediconfig import jedi_config
+from pandaserver.config import panda_config
 from pandaserver.taskbuffer import OraDBProxy
 
 logger = PandaLogger().getLogger(__name__.split(".")[-1])
@@ -53,5 +54,9 @@ class DBProxy(OraDBProxy.DBProxy):
         dbname=jedi_config.db.dbname,
         dbtimeout=None,
         reconnect=False,
+        # the JEDI config has no port of its own, so this is the value DBProxy defaults to
+        dbport=panda_config.dbport,
     ):
-        return OraDBProxy.DBProxy.connect(self, dbhost=dbhost, dbpasswd=dbpasswd, dbuser=dbuser, dbname=dbname, dbtimeout=dbtimeout, reconnect=reconnect)
+        return OraDBProxy.DBProxy.connect(
+            self, dbhost=dbhost, dbpasswd=dbpasswd, dbuser=dbuser, dbname=dbname, dbtimeout=dbtimeout, reconnect=reconnect, dbport=dbport
+        )

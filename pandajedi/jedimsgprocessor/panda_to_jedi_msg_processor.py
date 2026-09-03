@@ -15,8 +15,8 @@ base_logger = logger_utils.setup_logger(__name__.split(".")[-1])
 
 # plugin to process messages from Panda to JEDI
 class PandaToJediMsgProcPlugin(BaseMsgProcPlugin):
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         self.ddmIF = DDMInterface()
         self.ddmIF.setupInterface()
         self.pid = f"{socket.getfqdn().split('.')[0]}-{os.getpid()}_{os.getpgrp()}-pjmsg"

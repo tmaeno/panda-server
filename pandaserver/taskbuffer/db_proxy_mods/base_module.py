@@ -127,10 +127,11 @@ class BaseModule:
         self.jedi_config = jedi_config
         self.jedi_mb_proxy_dict_setter = jedi_mb_proxy_dict_setter
 
-    # abstract method to commit
-    def connect(self, **kwargs):
+    # abstract method to connect. *args/**kwargs because the concrete signature belongs
+    # to the subclass, which is where the connection parameters and their defaults are
+    def connect(self, *args, **kwargs):
         """
-        Commit the transaction
+        Connect to the database
         """
         raise NotImplementedError("connect is not implemented")
 

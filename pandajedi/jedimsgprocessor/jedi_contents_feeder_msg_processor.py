@@ -15,8 +15,8 @@ class JediContentsFeederMsgProcPlugin(BaseMsgProcPlugin):
     Message-driven Contents Feeder
     """
 
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         ddmIF = DDMInterface()
         ddmIF.setupInterface()
         the_pid = self.get_pid()

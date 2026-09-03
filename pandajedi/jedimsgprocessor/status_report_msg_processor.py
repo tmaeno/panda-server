@@ -50,8 +50,8 @@ class StatusReportMsgProcPlugin(BaseMsgProcPlugin):
     Return the processed message to send to iDDS via MQ
     """
 
-    def initialize(self):
-        BaseMsgProcPlugin.initialize(self)
+    def initialize(self, in_collective=False):
+        BaseMsgProcPlugin.initialize(self, in_collective)
         # forwarding plugins: incoming message will be forwarded to process method of these plugins
         self.forwarding_plugins = []
         forwarding_plugin_names = self.params.get("forwarding_plugins", [])
