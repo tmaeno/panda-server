@@ -47,26 +47,20 @@ jobs:
     - name: Check for undefined names
       run: ruff check --isolated --select F821 .
 
-    # Enforced against a baseline, not against zero. The tree still carries ~2190
-    # findings, most of them annotations too weak to say anything -- `dict` where
-    # the value type matters, `object` where a real class does -- so mypy-baseline
-    # filters out everything already recorded in mypy-baseline.txt and fails only
-    # on findings a PR adds. A count-based gate would not work here: annotating a
-    # function turns on checking of its whole body, so improving the annotations
-    # can raise the number of findings.
+    # The tree is clean under these flags, so the gate is mypy itself: any finding
+    # fails the step. This replaced a baseline of ~2190 findings, which is why a
+    # count-based gate was never used -- annotating a function turns on checking of
+    # its whole body, so improving the annotations can raise the number of findings
+    # before it lowers it. With zero as the bar that problem goes away.
     #
     # The whole tree, not just the changed files: a cold run takes about five
-    # seconds, and the baseline only lines up if every run sees the same files
-    # with the same flags. The flags live in [tool.mypy] in pyproject.toml.
+    # seconds, and a finding can be introduced in one file by an edit in another.
+    # The flags live in [tool.mypy] in pyproject.toml.
     #
-    # Fixing a recorded finding never fails this step (allow_unsynced), so the
-    # baseline can go stale as findings are cleaned up. To drop resolved entries,
-    # to record a finding you are not fixing, or to refresh after a mypy upgrade:
-    #   mypy | mypy-baseline sync
-    # and commit mypy-baseline.txt in the same PR.
-    # The stub packages are pinned like mypy itself: they are part of what the run
-    # sees, so an unpinned upgrade would change the findings without a code change.
-    - name: Type check against baseline
+    # mypy and the stub packages are pinned together: the stubs are part of what the
+    # run sees, so an unpinned upgrade would produce findings without a code change.
+    # When upgrading either, fix what the new version reports in the same PR.
+    - name: Type check
       run: |
-        pip install 'mypy==1.13.0' 'mypy-baseline==0.7.4' 'types-requests==2.33.0.20260712' 'types-PyYAML==6.0.12.20260815'
-        mypy | mypy-baseline filter
+        pip install 'mypy==1.13.0' 'types-requests==2.33.0.20260712' 'types-PyYAML==6.0.12.20260815'
+        mypy

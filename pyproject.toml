@@ -116,13 +116,11 @@ line-length = 160
 [tool.flake8]
 ignore = ['E501', 'U100']
 
-# Type checking is gated on a baseline (mypy-baseline.txt) rather than on an
-# error count, because annotating a function turns on checking of its whole body:
-# improving the annotations can legitimately raise the number of findings. The
-# flags below have to stay in sync with the baseline -- changing them, or the
-# pinned mypy version in .github/workflows/syntax-check.yml, changes the set of
-# errors mypy reports and invalidates the file. Regenerate it in the same commit:
-#   mypy | mypy-baseline sync
+# The tree is clean under these flags and CI fails on any finding, so a change that
+# introduces one has to fix it. Widening the flags (the strictness options are all
+# still off) will surface findings that were never counted; do that in a PR that
+# also resolves them, together with the mypy pin in
+# .github/workflows/syntax-check.yml.
 [tool.mypy]
 files = ["pandaserver", "pandajedi"]
 ignore_missing_imports = true
@@ -130,18 +128,3 @@ ignore_missing_imports = true
 # which is most of this tree, so the gate would only cover the code that needs it
 # least. New code goes through the gate whether or not its author annotates it.
 check_untyped_defs = true
-
-[tool.mypy-baseline]
-baseline_path = "mypy-baseline.txt"
-sort_baseline = true
-# Notes are the continuation lines of an error that is recorded anyway, so nothing
-# is lost by dropping them -- and keeping them makes the baseline depend on mypy's
-# cache. mypy prints an overload variant as `def list(self) -> list[_T]` with a warm
-# cache and `def __init__(self) -> list[_T]` with a cold one, so a baseline written
-# on a developer's machine would not match the cold run CI does.
-ignore_categories = ["note"]
-# only findings a change ADDS fail the gate. Without this, a PR that fixes an
-# existing finding also fails, until its author regenerates the baseline -- which
-# would punish exactly the cleanup this baseline exists to make room for. The
-# cost is that a resolved entry lingers until someone runs `mypy-baseline sync`.
-allow_unsynced = true
