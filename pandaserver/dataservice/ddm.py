@@ -7,7 +7,6 @@ import datetime
 import hashlib
 import json
 import re
-import sys
 import threading
 import time
 import traceback
@@ -648,9 +647,8 @@ class RucioAPI:
                 if content["type"] == "DATASET":
                     result.append(str(f"{content['scope']}:{content['name']}"))
             return result, ""
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            return None, f"{err_type} {err_value}"
+        except Exception as e:
+            return None, f"{type(e)} {e}"
 
     # list dataset replicas
     def list_dataset_replicas(self, dataset_name: str):
@@ -685,9 +683,8 @@ class RucioAPI:
                     }
                 ]
             return 0, return_map
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            return 1, f"{err_type} {err_value}"
+        except Exception as e:
+            return 1, f"{type(e)} {e}"
 
     # get metadata
     def get_metadata(self, dataset_name: str, scope: str | None = None):
@@ -712,9 +709,8 @@ class RucioAPI:
             return True, client.get_metadata(scope, dataset_name)
         except DataIdentifierNotFound:
             return True, None
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            return False, f"{err_type} {err_value}"
+        except Exception as e:
+            return False, f"{type(e)} {e}"
 
     # delete dataset
     def erase_dataset(self, dataset_name: str, scope: str | None = None, grace_period: int | None = None):
@@ -812,9 +808,8 @@ class RucioAPI:
                             ret_val[tmp_lfn] = tmp_rses
                     dids = []
             return True, ret_val
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            return False, f"{err_type} {err_value}"
+        except Exception as e:
+            return False, f"{type(e)} {e}"
 
     # get zip files
     def get_zip_files(self, dids: List[str], rses: List[str]):
@@ -858,9 +853,8 @@ class RucioAPI:
                                 break
                     data = []
             return True, ret_val
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            return False, f"{err_type} {err_value}"
+        except Exception as e:
+            return False, f"{type(e)} {e}"
 
     # list files in dataset
     def list_files_in_dataset(self, dataset_name: str, long: bool = False, file_list: List[str] | None = None):
@@ -941,9 +935,8 @@ class RucioAPI:
         except DataIdentifierNotFound:
             tmp_log.debug("dataset not found")
             return None, "dataset not found"
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            err_msg = f"{err_type.__name__} {err_value}"
+        except Exception as e:
+            err_msg = f"{type(e).__name__} {e}"
             tmp_log.error(f"got error ; {traceback.format_exc()}")
             return False, err_msg
 

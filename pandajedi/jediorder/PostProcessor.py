@@ -9,7 +9,6 @@ Each worker calls the VO/label-specific post-processor implementation
 
 import os
 import socket
-import sys
 import time
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -78,9 +77,8 @@ class PostProcessor(JediKnight, FactoryBase):
                         thread_pool.join()
 
                 tmp_log.info("done")
-            except Exception:
-                err_type, err_value = sys.exc_info()[:2]
-                tmp_log.error(f"failed in {self.__class__.__name__}.start() with {err_type.__name__} {err_value}")
+            except Exception as e:
+                tmp_log.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__} {e}")
 
             # sleep for the remainder of the 60-second cycle
             loop_cycle = 60
@@ -171,9 +169,8 @@ class PostProcessorThread(WorkerThread):
                     self.logger.debug(f"{self.__class__.__name__} terminating since no more items")
                     return
                 self.post_process_tasks(task_list)
-            except Exception:
-                err_type, err_value = sys.exc_info()[:2]
-                logger.error(f"{self.__class__.__name__} failed in runImpl() with {err_type.__name__}:{err_value}")
+            except Exception as e:
+                logger.error(f"{self.__class__.__name__} failed in runImpl() with {type(e).__name__}:{e}")
 
 
 def launcher(commuChannel, taskBufferIF, ddmIF, vos=None, prodSourceLabels=None):

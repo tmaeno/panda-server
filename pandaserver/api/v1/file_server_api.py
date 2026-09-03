@@ -5,7 +5,6 @@ import json
 import os
 import re
 import struct
-import sys
 import traceback
 import uuid
 import zlib
@@ -153,9 +152,8 @@ def upload_jedi_log(req: PandaRequest, file: FileStorage) -> Dict:
         tmp_logger.debug("Done")
         return generate_response(True, data=file_url)
 
-    except Exception:
-        error_type, error_value = sys.exc_info()[:2]
-        error_message = f"failed to write log with {error_type.__name__}:{error_value}"
+    except Exception as e:
+        error_message = f"failed to write log with {type(e).__name__}:{e}"
         tmp_logger.error(error_message)
         tmp_logger.debug("Done")
         return generate_response(False, error_message)
@@ -195,10 +193,9 @@ def update_jedi_log(req: PandaRequest, file: FileStorage) -> Dict:
         with open(log_name, "a") as file_object:
             file_object.write(new_content)
 
-    except Exception:
-        error_type, error_value, _ = sys.exc_info()
-        tmp_logger.error(f"{error_type} {error_value}")
-        return generate_response(False, f"ERROR: cannot update file with {error_type} {error_value}")
+    except Exception as e:
+        tmp_logger.error(f"{type(e)} {e}")
+        return generate_response(False, f"ERROR: cannot update file with {type(e)} {e}")
 
     tmp_logger.debug("Done")
     return generate_response(True)
@@ -238,9 +235,8 @@ def download_jedi_log(req: PandaRequest, log_name: str, offset: int = 0) -> str:
             file_object.seek(int(offset))
             return_string += file_object.read()
 
-    except Exception:
-        error_type, error_value, _ = sys.exc_info()
-        tmp_logger.error(f"Failed with: {error_type} {error_value}")
+    except Exception as e:
+        tmp_logger.error(f"Failed with: {type(e)} {e}")
 
     tmp_logger.debug(f"Read {len(return_string)} bytes")
     tmp_logger.debug("Done")
@@ -430,9 +426,8 @@ def touch_cache_file(req: PandaRequest, file_name: str) -> Dict:
         os.utime(f"{panda_config.cache_dir}/{file_name.split('/')[-1]}", None)
         tmp_logger.debug(f"Done")
         return generate_response(True)
-    except Exception:
-        error_type, error_value = sys.exc_info()[:2]
-        message = f"Failed to touch file with: {error_type} {error_value}"
+    except Exception as e:
+        message = f"Failed to touch file with: {type(e)} {e}"
         _logger.error(message)
         return generate_response(False, message)
 

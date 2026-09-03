@@ -1,6 +1,5 @@
 import datetime
 import itertools
-import sys
 import time
 import traceback
 
@@ -73,9 +72,8 @@ class TaskRefiner(JediKnight, FactoryBase):
                                 thr.start()
                             # join
                             threadPool.join()
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__} {e}")
                 tmpLog.error(f"Traceback: {traceback.format_exc()}")
             # sleep if needed
             loopCycle = jedi_config.taskrefine.loopCycle
@@ -126,9 +124,8 @@ class TaskRefinerThread(WorkerThread):
                         taskParam = None
                         taskParam = self.taskBufferIF.getTaskParamsWithID_JEDI(jediTaskID)
                         taskParamMap = RefinerUtils.decodeJSON(taskParam)
-                    except Exception:
-                        errtype, errvalue = sys.exc_info()[:2]
-                        errStr = f"conversion to map from json failed with {errtype.__name__}:{errvalue}"
+                    except Exception as e:
+                        errStr = f"conversion to map from json failed with {type(e).__name__}:{e}"
                         tmpLog.debug(taskParam)
                         tmpLog.error(errStr)
                         continue
@@ -151,9 +148,8 @@ class TaskRefinerThread(WorkerThread):
                                 tmpStat = Interaction.SC_FAILED
                             # get data carousel config map
                             dc_config_map = self.data_carousel_interface.dc_config_map
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            errStr = f"failed to get task refiner with {errtype.__name__}:{errvalue}"
+                        except Exception as e:
+                            errStr = f"failed to get task refiner with {type(e).__name__}:{e}"
                             tmpLog.error(errStr)
                             tmpStat = Interaction.SC_FAILED
                     # adjust task parameters
@@ -177,9 +173,8 @@ class TaskRefinerThread(WorkerThread):
                                         # enable input pre-staging for early access user
                                         taskParamMap["inputPreStaging"] = True
                                         tmpLog.info(f"set inputPreStaging for data carousel early access user {user_name}")
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            errStr = f"failed to adjust task parameters with {errtype.__name__}:{errvalue}"
+                        except Exception as e:
+                            errStr = f"failed to adjust task parameters with {type(e).__name__}:{e}"
                             tmpLog.error(errStr)
                             tmpStat = Interaction.SC_FAILED
                     # extract common parameters
@@ -194,11 +189,10 @@ class TaskRefinerThread(WorkerThread):
                             # set parent tid
                             if parent_tid not in [None, jediTaskID]:
                                 impl.taskSpec.parent_tid = parent_tid
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
+                        except Exception as e:
                             # on hold in case of external error
-                            if errtype == JediException.ExternalTempError:
-                                tmpErrStr = f"pending due to external problem. {errvalue}"
+                            if type(e) == JediException.ExternalTempError:
+                                tmpErrStr = f"pending due to external problem. {e}"
                                 setFrozenTime = True
                                 impl.taskSpec.status = taskStatus
                                 impl.taskSpec.setOnHold()
@@ -214,7 +208,7 @@ class TaskRefinerThread(WorkerThread):
                                     setFrozenTime=setFrozenTime,
                                 )
                                 continue
-                            errStr = f"failed to extract common parameters with {errtype.__name__}:{errvalue} {traceback.format_exc()}"
+                            errStr = f"failed to extract common parameters with {type(e).__name__}:{e} {traceback.format_exc()}"
                             tmpLog.error(errStr)
                             tmpStat = Interaction.SC_FAILED
                     # check attribute length
@@ -257,9 +251,8 @@ class TaskRefinerThread(WorkerThread):
                                 tmpStat = Interaction.SC_FAILED
                                 tmpErrStr = f"parent task {parent_tid} failed to complete"
                                 impl.taskSpec.setErrDiag(tmpErrStr)
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            errStr = f"failed to check parent task with {errtype.__name__}:{errvalue}"
+                        except Exception as e:
+                            errStr = f"failed to check parent task with {type(e).__name__}:{e}"
                             tmpLog.error(errStr)
                             tmpStat = Interaction.SC_FAILED
 
@@ -268,8 +261,8 @@ class TaskRefinerThread(WorkerThread):
                         tmpLog.info(f"refining with {impl.__class__.__name__}")
                         try:
                             tmpStat = impl.doRefine(jediTaskID, taskParamMap)
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
+                        except Exception as e:
+                            errtype = type(e)
                             # wait unknown input if noWaitParent or waitInput
                             toFinish = False
                             if (
@@ -289,10 +282,10 @@ class TaskRefinerThread(WorkerThread):
                                     tmpErrStr = f"pending until parent produces input. parent is {parentState}"
                                     setFrozenTime = False
                                 elif errtype == Interaction.JEDITemporaryError or errtype == JediException.ExternalTempError:
-                                    tmpErrStr = f"pending due to external temporary problem. {errvalue}"
+                                    tmpErrStr = f"pending due to external temporary problem. {e}"
                                     setFrozenTime = True
                                 elif errtype == JediException.TempBadStorageError:
-                                    tmpErrStr = f"pending due to temporary storage issue. {errvalue}"
+                                    tmpErrStr = f"pending due to temporary storage issue. {e}"
                                     setFrozenTime = True
                                 else:
                                     tmpErrStr = "pending until input is staged"
@@ -330,7 +323,7 @@ class TaskRefinerThread(WorkerThread):
                                 )
                                 continue
                             else:
-                                errStr = f"failed to refine task with {errtype.__name__}:{errvalue}"
+                                errStr = f"failed to refine task with {errtype.__name__}:{e}"
                                 tmpLog.error(errStr)
                                 tmpStat = Interaction.SC_FAILED
                     # data carousel (input pre-staging) ; currently for all analysis tasks, and production tasks with "panda_data_carousel"
@@ -493,9 +486,8 @@ class TaskRefinerThread(WorkerThread):
                                         tmpLog.info(f"added relations to existing data carousel requests: {related_dcreq_ids}")
                                     else:
                                         tmpLog.error(f"failed to add relations to existing data carousel requests: {related_dcreq_ids}; skipped")
-                            except Exception:
-                                errtype, errvalue = sys.exc_info()[:2]
-                                errStr = f"failed to check about data carousel with {errtype.__name__}:{errvalue}"
+                            except Exception as e:
+                                errStr = f"failed to check about data carousel with {type(e).__name__}:{e}"
                                 tmpLog.error(errStr)
                                 tmpStat = Interaction.SC_FAILED
                     # staging
@@ -545,9 +537,8 @@ class TaskRefinerThread(WorkerThread):
                                         tmp_ds_set.add(dataset_name)
                                 if tmp_ds_set:
                                     tmpLog.debug(f"set no_staging for master datasets not to stage: {list(tmp_ds_set)}")
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            errStr = f"failed to adjust spec after refining {errtype.__name__}:{errvalue}"
+                        except Exception as e:
+                            errStr = f"failed to adjust spec after refining {type(e).__name__}:{e}"
                             tmpLog.error(errStr)
                             tmpStat = Interaction.SC_FAILED
                     # register
@@ -626,15 +617,13 @@ class TaskRefinerThread(WorkerThread):
                                 )
                                 if not tmpStat:
                                     tmpLog.error("failed to append datasets for incexec")
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            tmpErrStr = f"failed to register the task to JEDI with {errtype.__name__}:{errvalue}"
+                        except Exception as e:
+                            tmpErrStr = f"failed to register the task to JEDI with {type(e).__name__}:{e}"
                             tmpLog.error(tmpErrStr)
                         else:
                             tmpLog.info("done")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                logger.error(f"{self.__class__.__name__} failed in runImpl() with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                logger.error(f"{self.__class__.__name__} failed in runImpl() with {type(e).__name__}:{e}")
 
 
 def launcher(commuChannel, taskBufferIF, ddmIF, vos=None, prodSourceLabels=None):

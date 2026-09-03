@@ -3,7 +3,6 @@ import datetime
 import math
 import random
 import re
-import sys
 import traceback
 from typing import Any
 
@@ -1812,9 +1811,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 if tmpAvFileMap is None:
                     raise Interaction.JEDITemporaryError("ddmIF.getAvailableFiles failed")
                 availableFileMap[datasetSpec.datasetName] = tmpAvFileMap
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed to get available files with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                tmpLog.error(f"failed to get available files with {type(e).__name__} {e}")
                 taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
                 return retTmpError
         # make data weight

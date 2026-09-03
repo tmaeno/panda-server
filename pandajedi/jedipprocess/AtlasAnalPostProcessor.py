@@ -8,7 +8,6 @@ for user analysis tasks.
 import datetime
 import random
 import re
-import sys
 import time
 import traceback
 from email.mime.multipart import MIMEMultipart
@@ -167,16 +166,14 @@ class AtlasAnalPostProcessor(PostProcessorBase):
             if use_lib and n_ok_lib == 0:
                 taskSpec.setErrDiag("No build jobs succeeded", True)
 
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            tmp_logger.warning(f"failed to freeze datasets with {err_type.__name__}:{err_value}")
+        except Exception as e:
+            tmp_logger.warning(f"failed to freeze datasets with {type(e).__name__}:{e}")
 
         ret_val = self.SC_SUCCEEDED
         try:
             self.doBasicPostProcess(taskSpec, tmp_logger)
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            tmp_logger.error(f"doBasicPostProcess failed with {err_type.__name__}:{err_value}")
+        except Exception as e:
+            tmp_logger.error(f"doBasicPostProcess failed with {type(e).__name__}:{e}")
             ret_val = self.SC_FATAL
 
         return ret_val
@@ -205,18 +202,16 @@ class AtlasAnalPostProcessor(PostProcessorBase):
                     carbon_footprint_redacted[job_status] = format_weight(carbon_footprint[job_status])
                 else:
                     carbon_footprint_redacted[job_status] = zero
-        except Exception:
+        except Exception as e:
             carbon_footprint_redacted = {}
-            err_type, err_value = sys.exc_info()[:2]
-            tmp_logger.error(f"failed to calculate task carbon footprint {err_type.__name__}:{err_value}")
+            tmp_logger.error(f"failed to calculate task carbon footprint {type(e).__name__}:{e}")
 
         # read task parameters
         try:
             task_parameters = self.taskBufferIF.getTaskParamsWithID_JEDI(taskSpec.jediTaskID)
             self.taskParamMap = RefinerUtils.decodeJSON(task_parameters)
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            tmp_logger.error(f"task param conversion from json failed with {err_type.__name__}:{err_value}")
+        except Exception as e:
+            tmp_logger.error(f"task param conversion from json failed with {type(e).__name__}:{e}")
 
         # send email notification unless suppressed
         if to_add is None or (self.taskParamMap is not None and "noEmail" in self.taskParamMap and self.taskParamMap["noEmail"] is True):
@@ -416,13 +411,12 @@ class AtlasAnalPostProcessor(PostProcessorBase):
                         if not_send_mail or mail_address == "":
                             return ret_suppressed
                         return mail_address
-                    except Exception:
+                    except Exception as e:
                         if iDDMTry + 1 < n_tries:
                             tmp_logger.debug(f"sleep for retry {iDDMTry}/{n_tries}")
                             time.sleep(10)
                         else:
-                            err_type, err_value = sys.exc_info()[:2]
-                            tmp_logger.error(f"{err_type}:{err_value}")
+                            tmp_logger.error(f"{type(e)}:{e}")
 
         return ret_suppressed
 

@@ -5,7 +5,6 @@ import os
 import random
 import re
 import socket
-import sys
 import time
 import traceback
 from typing import Any
@@ -276,9 +275,8 @@ class JobGenerator(JediKnight):
                                     tmpLog_inner.debug(f"check throttle with {throttle.getClassName(vo, prodSourceLabel)}")
                                     try:
                                         tmpSt, thrFlag = throttle.toBeThrottled(vo, prodSourceLabel, cloudName, workQueue, resource_type.resource_name)
-                                    except Exception:
-                                        errtype, errvalue = sys.exc_info()[:2]
-                                        tmpLog_inner.error(f"throttler failed with {errtype} {errvalue}")
+                                    except Exception as e:
+                                        tmpLog_inner.error(f"throttler failed with {type(e)} {e}")
                                         tmpLog_inner.error(f"throttler failed with traceback {traceback.format_exc()}")
                                         raise RuntimeError("crashed when checking throttle")
                                     if tmpSt != self.SC_SUCCEEDED:
@@ -430,9 +428,8 @@ class JobGenerator(JediKnight):
                                         component=None,
                                         pid=self.pid,
                                     )
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {errtype.__name__}:{errvalue} {traceback.format_exc()}")
+            except Exception as e:
+                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__}:{e} {traceback.format_exc()}")
             # unlock just in case
             try:
                 for vo in self.vos:
@@ -455,9 +452,8 @@ class JobGenerator(JediKnight):
                 globalThreadPool.clean()
                 # dump
                 tmpLog.debug(f"dump global pool : {globalThreadPool.dump()}")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed to dump global pool with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                tmpLog.error(f"failed to dump global pool with {type(e).__name__} {e}")
             tmpLog.debug("end")
             # memory check
             try:
@@ -651,9 +647,8 @@ class JobGeneratorThread(WorkerThread):
                             tmpLog.debug(f"run brokerage with {jobBroker.getClassName(taskSpec.vo, taskSpec.prodSourceLabel)}")
                             try:
                                 tmpStat, inputChunk = jobBroker.doBrokerage(taskSpec, cloudName, inputChunk, taskParamMap)
-                            except Exception:
-                                errtype, errvalue = sys.exc_info()[:2]
-                                tmpLog.error(f"brokerage crashed with {errtype.__name__}:{errvalue} {traceback.format_exc()}")
+                            except Exception as e:
+                                tmpLog.error(f"brokerage crashed with {type(e).__name__}:{e} {traceback.format_exc()}")
                                 tmpStat = Interaction.SC_FAILED
                             if tmpStat != Interaction.SC_SUCCEEDED:
                                 nBrokergeFailed += 1
@@ -707,9 +702,8 @@ class JobGeneratorThread(WorkerThread):
                                 if lockCounter:
                                     for tmpSubChunk in subChunks:
                                         self.liveCounter.add(tmpSubChunk["siteName"], len(tmpSubChunk["subChunks"]))
-                            except Exception:
-                                errtype, errvalue = sys.exc_info()[:2]
-                                tmpLog.error(f"splitter crashed with {errtype.__name__}:{errvalue} {traceback.format_exc()}")
+                            except Exception as e:
+                                tmpLog.error(f"splitter crashed with {type(e).__name__}:{e} {traceback.format_exc()}")
                                 tmpStat = Interaction.SC_FAILED
                             if tmpStat != Interaction.SC_SUCCEEDED:
                                 tmpErrStr = "splitting failed"
@@ -942,9 +936,8 @@ class JobGeneratorThread(WorkerThread):
             taskParam = self.taskBufferIF.getTaskParamsWithID_JEDI(taskSpec.jediTaskID)
             taskParamMap = RefinerUtils.decodeJSON(taskParam)
             return True, taskParamMap
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            tmpLog.error(f"task param conversion from json failed with {errtype.__name__}:{errvalue}")
+        except Exception as e:
+            tmpLog.error(f"task param conversion from json failed with {type(e).__name__}:{e}")
             return False, None
 
     # generate jobs
@@ -2136,8 +2129,7 @@ class JobGeneratorThread(WorkerThread):
             jobSpec.jobParameters = self.makeBuildJobParameters(taskParamMap["preproSpec"]["jobParameters"], paramMap)
             # return
             return Interaction.SC_SUCCEEDED, jobSpec, datasetToRegister
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
+        except Exception as e:
             tmpLog.error(f"{self.__class__.__name__}.doGeneratePrePro() failed with {traceback.format_exc()}")
             return failedRet
 

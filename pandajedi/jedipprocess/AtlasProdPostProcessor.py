@@ -2,8 +2,6 @@
 Post-processor implementation for ATLAS production tasks.
 """
 
-import sys
-
 from pandaserver.dataservice import DataServiceUtils
 from pandaserver.taskbuffer import EventServiceUtils
 
@@ -37,9 +35,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
             tmpStat = self.doPreCheck(taskSpec, tmpLog)
             if tmpStat:
                 return self.SC_SUCCEEDED
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            tmpLog.error(f"doPreCheck failed with {errtype.__name__}:{errvalue}")
+        except Exception as e:
+            tmpLog.error(f"doPreCheck failed with {type(e).__name__}:{e}")
             return self.SC_FATAL
 
         # get DDM I/F
@@ -70,9 +67,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
                             tmpLog.debug(f"delete {attMap['lfn']} from {datasetSpec.datasetName}")
                     if toDelete != []:
                         ddmIF.deleteFilesFromDataset(datasetSpec.datasetName, toDelete)
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.warning(f"failed to remove wrong files with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                tmpLog.warning(f"failed to remove wrong files with {type(e).__name__}:{e}")
                 return self.SC_FAILED
 
             try:
@@ -80,9 +76,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
                 if datasetSpec.type in ["output", "log", "trn_log"]:
                     tmpLog.info(f"freezing datasetID={datasetSpec.datasetID}:Name={datasetSpec.datasetName}")
                     ddmIF.freezeDataset(datasetSpec.datasetName, ignoreUnknown=True)
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.warning(f"failed to freeze datasets with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                tmpLog.warning(f"failed to freeze datasets with {type(e).__name__}:{e}")
                 return self.SC_FAILED
 
             try:
@@ -91,9 +86,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
                     tmpLog.debug(f"deleting datasetID={datasetSpec.datasetID}:Name={datasetSpec.datasetName}")
                     retStr = ddmIF.deleteDataset(datasetSpec.datasetName, False, ignoreUnknown=True)
                     tmpLog.info(retStr)
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.warning(f"failed to delete datasets with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                tmpLog.warning(f"failed to delete datasets with {type(e).__name__}:{e}")
 
         # check for duplicate tasks and pause if found
         if self.getFinalTaskStatus(taskSpec) in ["finished", "done"] and taskSpec.gshare != "Test":
@@ -113,9 +107,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
                 tmpLog.debug(f"deleting ES dataset name={targetName}")
                 retStr = ddmIF.deleteDataset(targetName, False, ignoreUnknown=True)
                 tmpLog.debug(retStr)
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.warning(f"failed to delete ES dataset with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                tmpLog.warning(f"failed to delete ES dataset with {type(e).__name__}:{e}")
 
         try:
             AtlasPostProcessorUtils.send_notification(self.taskBufferIF, ddmIF, taskSpec, tmpLog)
@@ -125,9 +118,8 @@ class AtlasProdPostProcessor(PostProcessorBase):
 
         try:
             self.doBasicPostProcess(taskSpec, tmpLog)
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            tmpLog.error(f"doBasicPostProcess failed with {errtype.__name__}:{errvalue}")
+        except Exception as e:
+            tmpLog.error(f"doBasicPostProcess failed with {type(e).__name__}:{e}")
             return self.SC_FATAL
 
         return self.SC_SUCCEEDED

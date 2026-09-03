@@ -2,7 +2,6 @@ import copy
 import datetime
 import math
 import random
-import sys
 import traceback
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -618,9 +617,8 @@ class AtlasProdTaskBrokerThread(WorkerThread):
                         else:
                             rwMap[candidateNucleus] = taskRW
                     self.prioRW.release()
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                errMsg = f"{self.__class__.__name__}.runImpl() failed with {errtype.__name__} {errvalue} "
+            except Exception as e:
+                errMsg = f"{self.__class__.__name__}.runImpl() failed with {type(e).__name__} {e} "
                 errMsg += f"lastJediTaskID={lastJediTaskID} "
                 errMsg += traceback.format_exc()
                 logger.error(errMsg)

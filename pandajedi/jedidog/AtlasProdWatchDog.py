@@ -1,7 +1,6 @@
 import copy
 import os
 import socket
-import sys
 import traceback
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -62,9 +61,8 @@ class AtlasProdWatchDog(TypicalWatchDogBase):
             # action to provoke (mark files ready) data carousel tasks to start if DDM rules of input DS are done
             self.doActionToProvokeDCTasks(tmpLog)
 
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            tmpLog.error(f"failed with {errtype.__name__}:{errvalue} {traceback.format_exc()}")
+        except Exception as e:
+            tmpLog.error(f"failed with {type(e).__name__}:{e} {traceback.format_exc()}")
         # return
         tmpLog.debug("done")
         return self.SC_SUCCEEDED
@@ -339,9 +337,8 @@ class AtlasProdWatchDog(TypicalWatchDogBase):
                         tmpLog.error("failed to move replication rules")
                         isOK = False
                         break
-                except Exception:
-                    errtype, errvalue = sys.exc_info()[:2]
-                    tmpLog.warning(f"failed to move replication rules with {errtype.__name__}:{errvalue}")
+                except Exception as e:
+                    tmpLog.warning(f"failed to move replication rules with {type(e).__name__}:{e}")
                     isOK = False
                     break
             # succeeded

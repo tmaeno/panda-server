@@ -1,5 +1,4 @@
 import datetime
-import sys
 import time
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -98,9 +97,8 @@ class TaskBroker(JediKnight, FactoryBase):
                                     # join
                                     threadPool.join()
                                 tmpLog.debug(msgLabel + "done")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__} {e}")
             tmpLog.debug("done")
             # sleep if needed
             loopCycle = jedi_config.taskbroker.loopCycle
@@ -160,18 +158,16 @@ class TaskCheckerThread(WorkerThread):
                                 # task brokerage is undefined
                                 tmpLog.error(f"task broker is undefined for vo={self.vo} sourceLabel={self.prodSourceLabel}")
                                 tmpStat = Interaction.SC_FAILED
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            tmpLog.error(f"getImpl failed with {errtype.__name__}:{errvalue}")
+                        except Exception as e:
+                            tmpLog.error(f"getImpl failed with {type(e).__name__}:{e}")
                             tmpStat = Interaction.SC_FAILED
                     # check
                     if tmpStat == Interaction.SC_SUCCEEDED:
                         tmpLog.info(f"check with {impl.__class__.__name__}")
                         try:
                             tmpStat, taskCloudMap = impl.doCheck(taskSpecList)
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            tmpLog.error(f"doCheck failed with {errtype.__name__}:{errvalue}")
+                        except Exception as e:
+                            tmpLog.error(f"doCheck failed with {type(e).__name__}:{e}")
                             tmpStat = Interaction.SC_FAILED
                     # update
                     if tmpStat != Interaction.SC_SUCCEEDED:
@@ -179,9 +175,8 @@ class TaskCheckerThread(WorkerThread):
                     else:
                         tmpRet = self.taskBufferIF.setCloudToTasks_JEDI(taskCloudMap)
                         tmpLog.info(f"done with {tmpRet} for {str(taskCloudMap)}")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                logger.error(f"{self.__class__.__name__} failed in runImpl() with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                logger.error(f"{self.__class__.__name__} failed in runImpl() with {type(e).__name__}:{e}")
 
 
 # thread for real worker
@@ -237,27 +232,24 @@ class TaskBrokerThread(WorkerThread):
                             # task refiner is undefined
                             tmpLog.error(f"task broker is undefined for vo={self.vo} sourceLabel={self.prodSourceLabel}")
                             tmpStat = Interaction.SC_FAILED
-                    except Exception:
-                        errtype, errvalue = sys.exc_info()[:2]
-                        tmpLog.error(f"getImpl failed with {errtype.__name__}:{errvalue}")
+                    except Exception as e:
+                        tmpLog.error(f"getImpl failed with {type(e).__name__}:{e}")
                         tmpStat = Interaction.SC_FAILED
                 # brokerage
                 if tmpStat == Interaction.SC_SUCCEEDED:
                     tmpLog.info(f"brokerage with {impl.__class__.__name__} for {len(tmpListToAssign)} tasks ")
                     try:
                         tmpStat = impl.doBrokerage(tmpListToAssign, self.vo, self.prodSourceLabel, self.workQueue, self.resource_name)
-                    except Exception:
-                        errtype, errvalue = sys.exc_info()[:2]
-                        tmpLog.error(f"doBrokerage failed with {errtype.__name__}:{errvalue}")
+                    except Exception as e:
+                        tmpLog.error(f"doBrokerage failed with {type(e).__name__}:{e}")
                         tmpStat = Interaction.SC_FAILED
                 # register
                 if tmpStat != Interaction.SC_SUCCEEDED:
                     tmpLog.error("failed")
                 else:
                     tmpLog.info("done")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                logger.error(f"{self.__class__.__name__} failed in runImpl() with {errtype.__name__}:{errvalue}")
+            except Exception as e:
+                logger.error(f"{self.__class__.__name__} failed in runImpl() with {type(e).__name__}:{e}")
 
 
 # launch

@@ -3,7 +3,6 @@ import math
 import os
 import re
 import socket
-import sys
 import time
 import traceback
 import uuid
@@ -70,9 +69,8 @@ class ContentsFeeder(JediKnight):
                                 thr.start()
                             # join
                             threadPool.join()
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                logger.error(f"failed in {self.__class__.__name__}.start() with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                logger.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__} {e}")
             # sleep if needed
             loopCycle = jedi_config.confeeder.loopCycle
             timeDelta = naive_utcnow() - startTime
@@ -252,10 +250,9 @@ class ContentsFeederThread(WorkerThread):
                         # set mutable when workflow holdup is set
                         if taskSpec.is_workflow_holdup():
                             tmpMetadata = {"state": "mutable"}
-                    except Exception:
-                        errtype, errvalue = sys.exc_info()[:2]
-                        tmpLog.error(f"{self.__class__.__name__} failed to get metadata to {errtype.__name__}:{errvalue}")
-                        if errtype == Interaction.JEDIFatalError:
+                    except Exception as e:
+                        tmpLog.error(f"{self.__class__.__name__} failed to get metadata to {type(e).__name__}:{e}")
+                        if type(e) == Interaction.JEDIFatalError:
                             # fatal error
                             datasetStatus = "broken"
                             taskBroken = True
@@ -407,11 +404,10 @@ class ContentsFeederThread(WorkerThread):
                                             "checksum": None,
                                             "events": n_events,
                                         }
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
-                            reason = str(errvalue)
-                            tmpLog.error(f"failed to get files in {self.__class__.__name__}:{errtype.__name__} due to {reason}")
-                            if errtype == Interaction.JEDIFatalError:
+                        except Exception as e:
+                            reason = str(e)
+                            tmpLog.error(f"failed to get files in {self.__class__.__name__}:{type(e).__name__} due to {reason}")
+                            if type(e) == Interaction.JEDIFatalError:
                                 # fatal error
                                 datasetStatus = "broken"
                                 taskBroken = True

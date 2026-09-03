@@ -1,7 +1,6 @@
 import datetime
 import os
 import socket
-import sys
 import time
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -60,9 +59,8 @@ class WatchDog(JediKnight, FactoryBase):
                         else:
                             tmpLog.warning(f"no plugin for vo={vo} label={prodSourceLabel} subType={self.subStr}")
                 tmpLog.info("done")
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {errtype.__name__} {errvalue}")
+            except Exception as e:
+                tmpLog.error(f"failed in {self.__class__.__name__}.start() with {type(e).__name__} {e}")
             # sleep if needed
             loopCycle = jedi_config.watchdog.loopCycle if self.period is None else self.period
             timeDelta = naive_utcnow() - startTime

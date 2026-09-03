@@ -5,7 +5,6 @@ import math
 import os
 import random
 import re
-import sys
 import traceback
 from typing import Any
 
@@ -356,9 +355,8 @@ class TaskComplexModule(BaseModule):
             if xmlConfig is not None:
                 try:
                     xmlConfig = ParseJobXML.dom_parser(xmlStr=xmlConfig)
-                except Exception:
-                    errtype, errvalue = sys.exc_info()[:2]
-                    tmpErrStr = f"failed to load XML config with {errtype.__name__}:{errvalue}"
+                except Exception as e:
+                    tmpErrStr = f"failed to load XML config with {type(e).__name__}:{e}"
                     raise RuntimeError(tmpErrStr)
                 newFileMap = {}
                 for guid, fileVal in fileMap.items():

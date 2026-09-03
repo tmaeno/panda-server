@@ -1,6 +1,5 @@
 import json
 import re
-import sys
 import uuid
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -104,7 +103,6 @@ class AtlasTaskGenerator(TaskGeneratorBase):
             # return
             tmpLog.info("done")
             return retOK
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            tmpLog.error(f"doGenerate failed with {errtype.__name__}:{errvalue}")
+        except Exception as e:
+            tmpLog.error(f"doGenerate failed with {type(e).__name__}:{e}")
             return retFatal

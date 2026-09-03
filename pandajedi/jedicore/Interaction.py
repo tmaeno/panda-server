@@ -3,7 +3,6 @@ import multiprocessing
 import multiprocessing.reduction
 import os
 import signal
-import sys
 import time
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
@@ -159,7 +158,9 @@ class MethodClass(object):
         nTry = 3
         for iTry in range(nTry):
             # exceptions
-            retException = None
+            # either one of the two JEDI errors below, picked from the status code, or
+            # whatever the try block raised, so the declaration has to cover both
+            retException: type[BaseException] | None = None
             strException = None
             try:
                 stepIdx = 0
@@ -198,11 +199,10 @@ class MethodClass(object):
                     retException = JEDITemporaryError
                 elif ret.statusCode == SC_FATAL:
                     retException = JEDIFatalError
-            except Exception:
-                errtype, errvalue = sys.exc_info()[:2]
-                retException = errtype
+            except Exception as e:
+                retException = type(e)
                 argStr = f"args={str(args)} kargs={str(kwargs)}"
-                strException = f"VO={self.vo} type={errtype.__name__} stepIdx={stepIdx} : {self.className}.{self.methodName} {errvalue} {argStr[:200]}"
+                strException = f"VO={self.vo} type={type(e).__name__} stepIdx={stepIdx} : {self.className}.{self.methodName} {e} {argStr[:200]}"
             # increment nused
             child_process.nused += 1
             # memory check
@@ -232,10 +232,9 @@ class MethodClass(object):
                     dumpStdOut(self.className, f"waiting pid={child_process.pid}")
                     os.waitpid(child_process.pid, 0)
                     dumpStdOut(self.className, f"terminated pid={child_process.pid}")
-                except Exception:
-                    errtype, errvalue = sys.exc_info()[:2]
-                    if "No child processes" not in str(errvalue):
-                        dumpStdOut(self.className, f"failed to terminate {child_process.pid} with {errtype}:{errvalue}")
+                except Exception as e:
+                    if "No child processes" not in str(e):
+                        dumpStdOut(self.className, f"failed to terminate {child_process.pid} with {type(e)}:{e}")
                 # make new child process
                 self.voIF.launchChild()
             else:
@@ -287,9 +286,8 @@ class CommandSendInterface(object):
         timeNow = naive_utcnow()
         try:
             cls(channel).start()
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            dumpStdOut(self.className, f"launcher crashed with {errtype}:{errvalue}")
+        except Exception as e:
+            dumpStdOut(self.className, f"launcher crashed with {type(e)}:{e}")
 
     # launch child processes to interact with DDM
     def launchChild(self):
@@ -403,11 +401,10 @@ class CommandReceiveInterface(object):
                     else:
                         retObj.statusCode = self.SC_SUCCEEDED
                         retObj.returnValue = tmpRet
-                except Exception:
-                    errtype, errvalue = sys.exc_info()[:2]
+                except Exception as e:
                     # failed
                     retObj.statusCode = self.SC_FATAL
-                    retObj.errorValue = f"type={errtype.__name__} : {className}.{commandObj.methodName} : {errvalue}"
+                    retObj.errorValue = f"type={type(e).__name__} : {className}.{commandObj.methodName} : {e}"
                 # cache
                 if useCache and doExec and retObj.statusCode == self.SC_SUCCEEDED:
                     self.cacheMap[tmpCacheKey] = {"utime": naive_utcnow(), "value": tmpRet}

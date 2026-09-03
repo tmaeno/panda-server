@@ -1,5 +1,3 @@
-import sys
-
 from .MsgWrapper import MsgWrapper
 
 _factoryModuleName = __name__.split(".")[-1]
@@ -91,11 +89,10 @@ class FactoryBase:
                             self.implMap[vo][sourceLabel][subType] = impl
                             self.classMap[vo][sourceLabel][subType] = cls
                             self.logger.info(f"{cls} is ready for {vo}:{sourceLabel}:{subType}")
-                        except Exception:
-                            errtype, errvalue = sys.exc_info()[:2]
+                        except Exception as e:
                             self.logger.error(
                                 "failed to import {mn}.{cn} for vo={vo} label={lb} subtype={st} due to {et} {ev}".format(
-                                    et=errtype.__name__, ev=errvalue, st=subType, vo=vo, lb=sourceLabel, cn=className, mn=moduleName
+                                    et=type(e).__name__, ev=e, st=subType, vo=vo, lb=sourceLabel, cn=className, mn=moduleName
                                 )
                             )
                             raise ImportError(f"failed to import {moduleName}.{className}")

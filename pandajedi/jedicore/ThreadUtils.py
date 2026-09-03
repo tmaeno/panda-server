@@ -1,5 +1,4 @@
 import multiprocessing
-import sys
 import threading
 import time
 
@@ -180,9 +179,8 @@ class WorkerThread(threading.Thread):
         # execute real work
         try:
             self.runImpl()
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            self.logger.error(f"{self.__class__.__name__} crashed in WorkerThread.run() with {errtype.__name__}:{errvalue}")
+        except Exception as e:
+            self.logger.error(f"{self.__class__.__name__} crashed in WorkerThread.run() with {type(e).__name__}:{e}")
         # remove self from thread pool
         if self.threadPool is not None:
             self.threadPool.remove(self)

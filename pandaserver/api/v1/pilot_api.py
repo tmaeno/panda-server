@@ -1,7 +1,6 @@
 import datetime
 import json
 import os
-import sys
 import time
 import traceback
 from typing import Any, List
@@ -716,9 +715,8 @@ def update_jobs_bulk(req, job_list: List, harvester_id: str | None = None):
             tmp_ret = update_job(req, job_id, status, **job_dict)
             data.append(tmp_ret)
         success = True
-    except Exception:
-        err_type, err_value = sys.exc_info()[:2]
-        message = f"failed with {err_type.__name__} {err_value}"
+    except Exception as e:
+        message = f"failed with {type(e).__name__} {e}"
         data = []
         tmp_logger.error(f"{message}\n{traceback.format_exc()}")
 

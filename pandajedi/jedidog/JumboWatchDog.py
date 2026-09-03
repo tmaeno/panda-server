@@ -1,6 +1,5 @@
 import os
 import socket
-import sys
 import traceback
 
 from pandaserver.taskbuffer.JediTaskSpec import JediTaskSpec
@@ -138,10 +137,9 @@ class JumboWatchDog:
             )
 
             self.log.debug(f"component={self.component} done")
-        except Exception:
+        except Exception as e:
             # error
-            errtype, errvalue = sys.exc_info()[:2]
-            errStr = f": {errtype.__name__} {errvalue}"
+            errStr = f": {type(e).__name__} {e}"
             errStr.strip()
             errStr += traceback.format_exc()
             self.log.error(errStr)

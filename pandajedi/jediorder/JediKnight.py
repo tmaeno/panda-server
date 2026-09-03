@@ -1,5 +1,4 @@
 import random
-import sys
 import time
 
 from pandajedi.jedicore import Interaction
@@ -35,9 +34,8 @@ class JediKnight(Interaction.CommandReceiveInterface):
     def startImpl(self):
         try:
             Interaction.CommandReceiveInterface.start(self)
-        except Exception:
-            errtype, errvalue = sys.exc_info()[:2]
-            self.logger.error(f"crashed in JediKnight.startImpl() with {errtype.__name__} {errvalue}")
+        except Exception as e:
+            self.logger.error(f"crashed in JediKnight.startImpl() with {type(e).__name__} {e}")
 
     # parse init params
     def parseInit(self, par):

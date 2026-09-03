@@ -140,10 +140,9 @@ class BaseModule:
             err_type, err_value = sys.exc_info()[:2]
             # get error code for postgres
             if self.backend == "postgres":
-                try:
-                    err_code = err_value.pgcode
-                except Exception:
-                    pass
+                # pgcode is on the psycopg exceptions only, and err_value is whatever the
+                # caller is handling -- getattr keeps that as a lookup rather than a raise
+                err_code = getattr(err_value, "pgcode", None)
             # get ORA ErrorCode
             if err_code is None:
                 err_code = str(err_value).split()[0]
@@ -233,6 +232,12 @@ class BaseModule:
         """
         # error
         err_type, err_value = sys.exc_info()[:2]
+        if err_type is None:
+            # every one of the ~400 call sites is inside an except block, which is the only
+            # place sys.exc_info() returns anything. Log the caller instead of raising
+            # AttributeError on None.__name__ if that ever stops being true.
+            tmp_log.error(f"dump_error_message() called outside an except block\n{''.join(traceback.format_stack())}")
+            return
         err_str = f"{err_type.__name__} {err_value}"
         err_str.strip()
         err_str += " "
