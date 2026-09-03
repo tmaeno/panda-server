@@ -57,21 +57,21 @@ def relay_idds_command(req, command_name: str, args: str | None = None, kwargs: 
 
         if args:
             try:
-                args = idds.common.utils.json_loads(args)
+                parsed_args = idds.common.utils.json_loads(args)
             except Exception as e:
                 tmp_log.warning(f"failed to load args json with {str(e)}")
-                args = json.loads(args, object_hook=decode_idds_enum)
+                parsed_args = json.loads(args, object_hook=decode_idds_enum)
         else:
-            args = []
+            parsed_args = []
 
         if kwargs:
             try:
-                kwargs = idds.common.utils.json_loads(kwargs)
+                parsed_kwargs = idds.common.utils.json_loads(kwargs)
             except Exception as e:
                 tmp_log.warning(f"failed to load kwargs json with {str(e)}")
-                kwargs = json.loads(kwargs, object_hook=decode_idds_enum)
+                parsed_kwargs = json.loads(kwargs, object_hook=decode_idds_enum)
         else:
-            kwargs = {}
+            parsed_kwargs = {}
 
         # json outputs
         if json_outputs and manager:
@@ -82,8 +82,10 @@ def relay_idds_command(req, command_name: str, args: str | None = None, kwargs: 
         if dn:
             c.set_original_user(user_name=clean_user_id(dn))
 
-        tmp_log.debug(f"execute: class={c.__class__.__name__} com={command_name} host={idds_host} args={str(args)[:200]} kwargs={str(kwargs)[:200]}")
-        ret = getattr(c, command_name)(*args, **kwargs)
+        tmp_log.debug(
+            f"execute: class={c.__class__.__name__} com={command_name} host={idds_host} args={str(parsed_args)[:200]} kwargs={str(parsed_kwargs)[:200]}"
+        )
+        ret = getattr(c, command_name)(*parsed_args, **parsed_kwargs)
         tmp_log.debug(f"ret: {str(ret)[:200]}")
 
         try:
@@ -108,11 +110,11 @@ def execute_idds_workflow_command(req, command_name: str, kwargs: str | None = N
     try:
         if kwargs:
             try:
-                kwargs = idds.common.utils.json_loads(kwargs)
+                parsed_kwargs = idds.common.utils.json_loads(kwargs)
             except Exception:
-                kwargs = json.loads(kwargs, object_hook=decode_idds_enum)
+                parsed_kwargs = json.loads(kwargs, object_hook=decode_idds_enum)
         else:
-            kwargs = {}
+            parsed_kwargs = {}
 
         if "+" in command_name:
             command_name, idds_host = command_name.split("+")
@@ -143,20 +145,20 @@ def execute_idds_workflow_command(req, command_name: str, kwargs: str | None = N
             requester = clean_user_id(dn)
 
             # get request_id
-            request_id = kwargs.get("request_id")
+            request_id = parsed_kwargs.get("request_id")
             if request_id is None:
                 tmp_message = "request_id is missing"
                 tmp_log.error(tmp_message)
                 return generate_response(False, tmp_message)
 
             # get request
-            req = c.get_requests(request_id=request_id)
-            if not req:
+            idds_requests = c.get_requests(request_id=request_id)
+            if not idds_requests:
                 tmp_message = f"request {request_id} is not found"
                 tmp_log.error(tmp_message)
                 return generate_response(False, tmp_message)
 
-            user_name = req[0].get("username")
+            user_name = idds_requests[0].get("username")
             if user_name and user_name != requester:
                 tmp_message = f"request {request_id} is not owned by {requester}"
                 tmp_log.error(tmp_message)
@@ -167,8 +169,8 @@ def execute_idds_workflow_command(req, command_name: str, kwargs: str | None = N
             c.set_original_user(user_name=clean_user_id(dn))
 
         # execute command
-        tmp_log.debug(f"com={command_name} host={idds_host} kwargs={str(kwargs)}")
-        ret = getattr(c, command_name)(**kwargs)
+        tmp_log.debug(f"com={command_name} host={idds_host} kwargs={str(parsed_kwargs)}")
+        ret = getattr(c, command_name)(**parsed_kwargs)
         tmp_log.debug(str(ret))
 
         if isinstance(ret, dict) and "message" in ret:

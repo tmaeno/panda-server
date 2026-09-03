@@ -274,7 +274,7 @@ def kill(req, job_ids: List[int], code: int | None = None, use_email_as_id: bool
 
     # Get the user's email address if use_email_as_id is set
     if use_email_as_id:
-        email = get_email_address(user)
+        email = get_email_address(user, tmp_logger)
         if email:
             user = email
 
@@ -406,22 +406,22 @@ def submit(req: PandaRequest, jobs: str):
 
     # deserialize job specs
     try:
-        jobs = JobUtils.load_jobs_json(jobs)
-        tmp_logger.debug(f"{user} len:{len(jobs)} is_production_role={is_production_role} FQAN:{fqans}")
+        job_specs = JobUtils.load_jobs_json(jobs)
+        tmp_logger.debug(f"{user} len:{len(job_specs)} is_production_role={is_production_role} FQAN:{fqans}")
         max_jobs = 5000
-        if len(jobs) > max_jobs:
+        if len(job_specs) > max_jobs:
             _logger.error(f"Number of jobs exceeded maximum {max_jobs}. Truncating the list.")
-            jobs = jobs[:max_jobs]
+            job_specs = job_specs[:max_jobs]
     except Exception as ex:
         error_message = f"Failed to deserialize jobs: {str(ex)} {traceback.format_exc()}"
         tmp_logger.error(error_message)
         return generate_response(False, message=error_message)
 
-    if not jobs:
+    if not job_specs:
         return generate_response(False, message="No jobs were submitted")
 
     # check prodSourceLabel and job_label are correct
-    for tmp_job in jobs:
+    for tmp_job in job_specs:
         # check production jobs are submitted with production role
         if tmp_job.prodSourceLabel in ["managed"] and not is_production_role:
             return generate_response(False, message=f"{user} is missing production for prodSourceLabel={tmp_job.prodSourceLabel} submission")
@@ -430,7 +430,7 @@ def submit(req: PandaRequest, jobs: str):
         if tmp_job.job_label not in [None, "", "NULL"] and tmp_job.job_label not in JobUtils.job_labels:
             return generate_response(False, message=f"job_label={tmp_job.job_label} is not valid")
 
-    sample_job = jobs[0]
+    sample_job = job_specs[0]
 
     # get user VO
     try:
@@ -453,7 +453,7 @@ def submit(req: PandaRequest, jobs: str):
             tmp_logger.error(f"VO {user_vo} check: username not found in job parameters and defaulted to submitter ({user})")
 
     # store jobs
-    ret = global_task_buffer.storeJobs(jobs, user, fqans=fqans, hostname=host, userVO=user_vo)
+    ret = global_task_buffer.storeJobs(job_specs, user, fqans=fqans, hostname=host, userVO=user_vo)
     tmp_logger.debug(f"{user} -> {len(ret)}")
 
     # There was no response

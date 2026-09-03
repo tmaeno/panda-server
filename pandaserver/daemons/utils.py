@@ -63,7 +63,9 @@ def kill_proc_tree(pid, sig=signal.SIGKILL, include_parent=True, timeout=None, o
     return (gone, alive)
 
 
-def daemon_loop(dem_config, msg_queue, pipe_conn, worker_lifetime, tbuf=None, lock_pool=None):
+# tbuf is a TaskBuffer or the interface proxy that stands in for one, neither of which can be
+# named here since the module is imported inside the function on purpose, hence Any
+def daemon_loop(dem_config, msg_queue, pipe_conn, worker_lifetime, tbuf: Any = None, lock_pool=None):
     """
     Main loop of daemon worker process
     """
@@ -108,15 +110,16 @@ def daemon_loop(dem_config, msg_queue, pipe_conn, worker_lifetime, tbuf=None, lo
             return
         # taskBuffer object
         try:
-            from pandaserver.taskbuffer.TaskBuffer import taskBuffer as tbuf
+            from pandaserver.taskbuffer.TaskBuffer import taskBuffer
 
-            tbuf.init(
+            taskBuffer.init(
                 panda_config.dbhost,
                 panda_config.dbpasswd,
                 nDBConnection=1,
                 useTimeout=True,
                 requester=requester_id,
             )
+            tbuf = taskBuffer
             tmp_log.debug("taskBuffer initialized")
         except Exception as e:
             tmp_log.error(f"failed to initialize taskBuffer with {e.__class__.__name__}: {e} ; terminated")
@@ -227,7 +230,7 @@ def daemon_loop(dem_config, msg_queue, pipe_conn, worker_lifetime, tbuf=None, lo
             if to_run_daemon:
                 last_run_start_ts = int(time.time())
                 # send daemon status back to master
-                status_tuple = (dem_name, to_run_daemon, has_run, last_run_start_ts, last_run_end_ts)
+                status_tuple: tuple[Any, bool, bool, int, int] = (dem_name, to_run_daemon, has_run, last_run_start_ts, last_run_end_ts)
                 pipe_conn.send(status_tuple)
                 try:
                     if is_loop:
@@ -294,6 +297,13 @@ class DaemonWorker(object):
         "dem_name",
         "dem_ts",
     )
+
+    # the daemon script the worker is currently running and the timestamp when it started.
+    # They are set together by set_dem() and cleared together by unset_dem(), and start()
+    # clears them before the process runs. Declared without a value so that __slots__ stays
+    # the only thing that creates them
+    dem_name: str | None
+    dem_ts: int | None
 
     # class lock
     _lock = threading.Lock()
@@ -363,13 +373,13 @@ class DaemonWorker(object):
         """
         whether the worker is still running a daemon script
         """
-        return not (self.dem_name is None and self.dem_ts is None)
+        return self.dem_name is not None and self.dem_ts is not None
 
     def set_dem(self, dem_name, dem_ts):
         """
         set current running daemon in this worker
         """
-        if not self.is_running_dem() or dem_ts >= self.dem_ts:
+        if self.dem_ts is None or dem_ts >= self.dem_ts:
             self.dem_name = dem_name
             self.dem_ts = dem_ts
 
@@ -429,7 +439,8 @@ class DaemonMaster(object):
         """
         reset the message queue for sending commands to workers
         """
-        self.msg_queue = multiprocessing.Queue()
+        # the queue carries daemon names from the scheduler thread to the workers
+        self.msg_queue: multiprocessing.Queue[str] = multiprocessing.Queue()
         self.logger.info(f"reset message queue (qid={id(self.msg_queue)})")
 
     def _make_tbif(self):
@@ -467,7 +478,9 @@ class DaemonMaster(object):
         """
         for j in range(n_workers):
             with self._worker_lock:
-                if self.use_tbif:
+                # tbif is set by _make_tbif() exactly when use_tbif is on, so testing it
+                # is the same check and tells a type checker the interface is there
+                if self.tbif is not None:
                     tbuf = self.tbif.getInterface()
                 else:
                     tbuf = None
@@ -604,8 +617,9 @@ class DaemonMaster(object):
                             # warning since daemon run duration longer than daemon period (non-looping)
                             self.logger.warning(f"worker_pid={worker.pid} daemon {dem_name} took {run_duration} sec , exceeding its period {run_period} sec")
                     dem_run_attrs["msg_ongoing"] = False
-                # kill the worker due to daemon run timeout
-                if worker.is_running_dem():
+                # kill the worker due to daemon run timeout. The condition is is_running_dem()
+                # spelled out, so that the two attributes are known to be set when read below
+                if worker.dem_name is not None and worker.dem_ts is not None:
                     run_till_now = now_ts - worker.dem_ts
                     run_timeout = self.dem_config[worker.dem_name].get("timeout")
                     if run_till_now > run_timeout:
@@ -696,8 +710,8 @@ class DaemonMaster(object):
         time.sleep(1)
         # close message queue
         self.msg_queue.close()
-        # stop taskBuffer interface
-        if self.use_tbif:
+        # stop taskBuffer interface, which exists only when use_tbif is on
+        if self.tbif is not None:
             self.tbif.stop()
         # wait a bit
         time.sleep(2)

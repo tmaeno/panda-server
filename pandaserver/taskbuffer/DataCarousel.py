@@ -11,7 +11,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 from dataclasses import MISSING, InitVar, asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Callable, Concatenate, Dict, List, ParamSpec, TypeVar
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -45,6 +45,10 @@ FINAL_TASK_STATUSES = ["done", "finished", "failed", "exhausted", "aborted", "to
 
 # named tuple for attribute with type
 AttributeWithType = namedtuple("AttributeWithType", ["attribute", "type"])
+
+# parameters and return value of a method wrapped by the refresh decorator below
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 # DDM rule activity map for data carousel
 DDM_RULE_ACTIVITY_MAP = {"anal": "Data Carousel Analysis", "prod": "Data Carousel Production"}
@@ -429,13 +433,17 @@ class DataCarouselInterface(object):
         self._update_dc_config(time_limit_minutes=5)
 
     @staticmethod
-    def refresh(func):
+    def refresh(func: Callable[Concatenate["DataCarouselInterface", _P], _R]) -> Callable[Concatenate["DataCarouselInterface", _P], _R]:
         """
         Decorator to call _refresh_all_attributes before the method
+
+        The signature is spelled out with ParamSpec so that the decorated methods keep their
+        parameter and return types; an untyped decorator would erase them to Any and silently
+        turn off type checking at every call site.
         """
 
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self: "DataCarouselInterface", *args: _P.args, **kwargs: _P.kwargs) -> _R:
             self._refresh_all_attributes()
             return func(self, *args, **kwargs)
 
