@@ -3,6 +3,7 @@ import json
 import os
 import time
 import traceback
+from collections.abc import Callable
 from typing import Any, List
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
@@ -142,20 +143,17 @@ def acquire_jobs(
         prod_user_id = real_dn
 
     # allow get_proxy_key for production role
-    if get_proxy_key and is_production_manager:
-        get_proxy_key = True
-    else:
-        get_proxy_key = False
+    use_proxy_key = bool(get_proxy_key) and is_production_manager
 
     # convert memory
     try:
-        memory = max(0, memory)
+        memory = max(0, memory or 0)
     except (ValueError, TypeError):
         memory = 0
 
     # convert disk_space
     try:
-        disk_space = max(0, disk_space)
+        disk_space = max(0, disk_space or 0)
     except (ValueError, TypeError):
         disk_space = 0
 
@@ -188,7 +186,7 @@ def acquire_jobs(
 
     tmp_logger.debug(
         f"{site_name}, n_jobs={n_jobs}, memory={memory}, disk={disk_space}, source_label={prod_source_label}, "
-        f"node={node}, ce={computing_element}, user={prod_user_id}, proxy={get_proxy_key}, "
+        f"node={node}, ce={computing_element}, user={prod_user_id}, proxy={use_proxy_key}, "
         f"task_id={task_id}, DN={real_dn}, role={is_production_manager}, "
         f"bg={background}, rt={resource_type}, harvester_id={harvester_id}, worker_id={worker_id}, "
         f"scheduler_id={scheduler_id}, job_type={job_type}, via_topic={via_topic} remaining_time={remaining_time}, "
@@ -245,6 +243,10 @@ def acquire_jobs(
 
     # Try to get the jobs
     jobs: list[Any] = []
+    # only read below when jobs is non-empty, which happens only in the branch that sets them
+    secrets_map: dict[str, Any] = {}
+    proxy_key = None
+    n_sent = None
     if isinstance(timed_method.result, list):
         result = timed_method.result
         secrets_map = result.pop()
@@ -274,7 +276,7 @@ def acquire_jobs(
         response.appendNode("nSent", n_sent)
 
         # set proxy key
-        if get_proxy_key:
+        if use_proxy_key:
             response.setProxyKey(proxy_key)
 
         # set user secrets
@@ -516,8 +518,8 @@ def update_job(
         return generate_response(success=False, message=message, data=response.data)
 
     # create the job parameter map
-    param = {}
-    fields = [
+    param: dict[str, Any] = {}
+    fields: list[tuple[str, Any, Callable[[Any], Any]]] = [
         ("cpuConsumptionTime", cpu_consumption_time, int),
         ("cpuConsumptionUnit", cpu_consumption_unit, str),
         ("cpu_architecture_level", cpu_architecture_level, lambda x: str(x)[:20]),
@@ -629,8 +631,9 @@ def update_job(
         param["jobDispatcherErrorDiag"] = f"set to {job_status} by the pilot at {naive_utcnow().strftime('%Y-%m-%d %H:%M:%S')}"
 
     # update the job status in the database
-    timeout = None if job_status == "holding" else timeout
-    timed_method = TimedMethod(global_task_buffer.updateJobStatus, timeout)
+    # holding is updated without a timeout
+    effective_timeout = None if job_status == "holding" else timeout
+    timed_method = TimedMethod(global_task_buffer.updateJobStatus, effective_timeout)
     timed_method.run(job_id, tmp_status, param, update_state_change, attempt_nr)
 
     # time-out

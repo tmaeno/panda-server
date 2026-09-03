@@ -418,6 +418,9 @@ def request_validation(logger, secure=True, production=False, request_method=Non
 
 # a wrapper to install timeout into a method
 class TimedMethod:
+    # whatever the wrapped method returns, or the TIME_OUT token while it has not returned
+    result: typing.Any
+
     def __init__(self, method, timeout):
         self.method = method
         self.timeout = timeout

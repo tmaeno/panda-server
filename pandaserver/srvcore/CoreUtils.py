@@ -155,6 +155,10 @@ def resolve_bool(param):
 
 # cached object
 class CachedObject:
+    # whatever update_func returns, which differs per cache, and None until the first
+    # successful update
+    cachedObj: Any
+
     # constructor
     def __init__(self, name, time_interval, update_func, log_stream):
         # name
@@ -485,7 +489,8 @@ class StopWatch:
     def __init__(self, identifier: str | None = None):
         self.start_time = datetime.datetime.now()
         self.checkpoint = self.start_time
-        self.step_name = None
+        # name of the step being timed, unset until the first get_elapsed_time() call
+        self.step_name: str | None = None
         self.identifier = identifier
 
     def reset(self):
