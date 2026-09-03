@@ -8,6 +8,7 @@ import traceback
 from typing import Any
 
 import requests
+import urllib3
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_utcnow
@@ -29,7 +30,7 @@ def main(argv=tuple(), tbuf=None, **kwargs):
     requester_id = GenericThread().get_full_id(__name__, sys.modules[__name__].__file__)
 
     # password
-    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+    urllib3.disable_warnings(category=InsecureRequestWarning)
 
     _logger.debug("===================== start =====================")
 

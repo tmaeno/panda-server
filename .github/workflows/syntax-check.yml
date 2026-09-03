@@ -64,7 +64,9 @@ jobs:
     # to record a finding you are not fixing, or to refresh after a mypy upgrade:
     #   mypy | mypy-baseline sync
     # and commit mypy-baseline.txt in the same PR.
+    # The stub packages are pinned like mypy itself: they are part of what the run
+    # sees, so an unpinned upgrade would change the findings without a code change.
     - name: Type check against baseline
       run: |
-        pip install 'mypy==1.13.0' 'mypy-baseline==0.7.4'
+        pip install 'mypy==1.13.0' 'mypy-baseline==0.7.4' 'types-requests==2.33.0.20260712' 'types-PyYAML==6.0.12.20260815'
         mypy | mypy-baseline filter
