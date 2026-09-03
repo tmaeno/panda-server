@@ -81,25 +81,26 @@ class AdderSimplePlugin(AdderPluginBase):
                     is_fatal = False
                     is_failed = False
                     registration_start = naive_utcnow()
+                    error_message = ""
                     try:
                         self.logger.debug(f"registerFilesInDatasets {str(destination_id_map)}")
                         out = rucioAPI.register_files_in_dataset(destination_id_map, {})
                     except FileRegistrationError as e:
-                        out = str(e)
+                        error_message = str(e)
                         is_fatal = e.fatal
                         is_failed = True
                         if is_fatal:
                             # keep the traceback for fatal errors; verification failures stay clean
-                            out += "\n" + traceback.format_exc()
+                            error_message += "\n" + traceback.format_exc()
                     except Exception as e:
                         # unknown errors
                         is_failed = True
-                        out = f"failed with unknown error: {str(e)}\n {traceback.format_exc()}"
+                        error_message = f"failed with unknown error: {str(e)}\n {traceback.format_exc()}"
                         if (
-                            "value too large for column" in out
-                            or "unique constraint (ATLAS_RUCIO.DIDS_GUID_IDX) violate" in out
-                            or "unique constraint (ATLAS_RUCIO.DIDS_PK) violated" in out
-                            or "unique constraint (ATLAS_RUCIO.ARCH_CONTENTS_PK) violated" in out
+                            "value too large for column" in error_message
+                            or "unique constraint (ATLAS_RUCIO.DIDS_GUID_IDX) violate" in error_message
+                            or "unique constraint (ATLAS_RUCIO.DIDS_PK) violated" in error_message
+                            or "unique constraint (ATLAS_RUCIO.ARCH_CONTENTS_PK) violated" in error_message
                         ):
                             is_fatal = True
                         else:
@@ -109,14 +110,14 @@ class AdderSimplePlugin(AdderPluginBase):
 
                     # failed
                     if is_failed or is_fatal:
-                        self.logger.error(f"{out}")
+                        self.logger.error(f"{error_message}")
                         if (attempt_number + 1) == max_attempt or is_fatal:
                             self.job.ddmErrorCode = ErrorCode.EC_Adder
                             # extract important error string
-                            extracted_error = DataServiceUtils.extractImportantError(out)
+                            extracted_error = DataServiceUtils.extractImportantError(error_message)
                             err_msg = "Could not add files to DDM: "
                             if extracted_error == "":
-                                self.job.ddmErrorDiag = err_msg + out.split("\n")[-1]
+                                self.job.ddmErrorDiag = err_msg + error_message.split("\n")[-1]
                             else:
                                 self.job.ddmErrorDiag = err_msg + extracted_error
                             if is_fatal:

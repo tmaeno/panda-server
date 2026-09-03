@@ -450,11 +450,11 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                     break
                 except Exception:
                     error_type, error_value = sys.exc_info()[:2]
-                    out = f"failed to close : {error_type} {error_value}"
+                    close_error = f"failed to close : {error_type} {error_value}"
                     time.sleep(10)
             if not status:
-                tmp_logger.error(out)
-                disp_error[dispatch_data_block] = f"setupper.setup_source() could not freeze dispatch_data_block with {out}"
+                tmp_logger.error(close_error)
+                disp_error[dispatch_data_block] = f"setupper.setup_source() could not freeze dispatch_data_block with {close_error}"
                 continue
 
             # get VUID
@@ -666,7 +666,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                                     job.lockedby == "jedi" and job.getDdmBackEnd() == "rucio" and job.prodSourceLabel in ["panda", "user"]
                                 ) or DataServiceUtils.getDistributedDestination(file.destinationDBlockToken, ignore_empty=False) is not None:
                                     # skip registerDatasetLocations
-                                    status, out = True, ""
+                                    status, location_error = True, ""
                                 elif (
                                     name == original_name
                                     or tmp_src_ddm != tmp_dst_ddm
@@ -705,29 +705,29 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                                             break
                                         for _ in range(3):
                                             try:
-                                                out = rucioAPI.register_dataset_location(
+                                                location_out = rucioAPI.register_dataset_location(
                                                     name,
                                                     [ddm_id],
                                                     lifetime=rep_life_time,
                                                     activity=activity,
                                                     grouping=grouping,
                                                 )
-                                                tmp_logger.debug(out)
+                                                tmp_logger.debug(location_out)
                                                 status = True
                                                 break
                                             except Exception:
                                                 error_type, error_value = sys.exc_info()[:2]
-                                                out = f"{error_type}:{error_value}"
-                                                tmp_logger.error(f"register_dataset_location : failed with {out}")
+                                                location_error = f"{error_type}:{error_value}"
+                                                tmp_logger.error(f"register_dataset_location : failed with {location_error}")
                                                 time.sleep(10)
                                         # failed
                                         if not status:
                                             break
                                 else:
                                     # skip registerDatasetLocations
-                                    status, out = True, ""
+                                    status, location_error = True, ""
                                 if not status:
-                                    dest_error[dest] = f"Could not register location : {name} {out.splitlines()[-1]}"
+                                    dest_error[dest] = f"Could not register location : {name} {location_error.splitlines()[-1]}"
                                     break
                         # already failed
                         if dest_error[dest] != "" and name == original_name:
@@ -1313,16 +1313,16 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         # replica map returned by get_list_dataset_replicas below
         out: Union[Dict[str, Any], str] = ""
         for _ in range(3):
-            datasets, out = rucioAPI.list_datasets_in_container(container)
+            datasets, container_error = rucioAPI.list_datasets_in_container(container)
             if datasets is None:
                 time.sleep(10)
             else:
                 break
         if datasets is None:
-            tmp_logger.error(out)
+            tmp_logger.error(container_error)
             if get_map:
-                return False, out
-            return 1, out
+                return False, container_error
+            return 1, container_error
 
         # loop over all datasets
         all_rep_map: dict[str, Any] = {}
@@ -1371,7 +1371,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
     # get list of replicas for a dataset
     @overload
-    def get_list_dataset_replicas(self, dataset: str, get_map: Literal[True] = True) -> Tuple[bool, Union[Dict[str, Any], str]]: ...
+    def get_list_dataset_replicas(self, dataset: str, get_map: Literal[True] = True) -> Tuple[bool, Dict[str, Any]]: ...
 
     @overload
     def get_list_dataset_replicas(self, dataset: str, get_map: Literal[False]) -> Tuple[int, str]: ...
@@ -1382,7 +1382,8 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
         The get_map flag switches both halves of the return value, which is why this has
         overloads: with it the status is a bool and the second element is the replica map,
-        without it the status is a return code and the map is stringified.
+        without it the status is a return code and the map is stringified. Every failure
+        path returns an empty map rather than a message, so the map half is always a dict.
 
         :param dataset: The dataset to get the list of replicas from.
         :param get_map: Whether to get the map. Defaults to True.
@@ -1645,10 +1646,10 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                                 break
                             except Exception:
                                 error_type, error_value = sys.exc_info()[:2]
-                                out = f"failed to close : {error_type} {error_value}"
+                                close_error = f"failed to close : {error_type} {error_value}"
                                 time.sleep(10)
                         if not status:
-                            tmp_logger.error(out)
+                            tmp_logger.error(close_error)
                             continue
                         # register location
                         is_ok = False
@@ -1656,7 +1657,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                         max_attempt = 3
                         for attempt in range(max_attempt):
                             try:
-                                out = rucioAPI.register_dataset_location(
+                                location_out = rucioAPI.register_dataset_location(
                                     dis_dispatch_block,
                                     [tmp_location],
                                     7,
@@ -1664,7 +1665,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                                     scope="panda",
                                     grouping="NONE",
                                 )
-                                tmp_logger.debug(out)
+                                tmp_logger.debug(location_out)
                                 is_ok = True
                                 break
                             except Exception:

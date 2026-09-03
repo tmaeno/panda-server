@@ -15,6 +15,7 @@ from pandacommon.pandalogger.PandaLogger import PandaLogger
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
 from pandaserver.taskbuffer.DatasetSpec import DatasetSpec
+from pandaserver.taskbuffer.JobSpec import JobSpec
 
 # logger
 _logger = PandaLogger().getLogger("finisher")
@@ -42,7 +43,7 @@ class Finisher(threading.Thread):
     """
 
     # constructor
-    def __init__(self, taskBuffer, dataset: DatasetSpec, job: str | None = None, site: str | None = None):
+    def __init__(self, taskBuffer, dataset: DatasetSpec, job: JobSpec | None = None, site: str | None = None):
         """
         Constructs all the necessary attributes for the Finisher object.
 

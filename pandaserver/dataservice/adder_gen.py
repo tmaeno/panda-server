@@ -7,7 +7,6 @@ import datetime
 import json
 import re
 import sys
-import time
 import traceback
 from typing import TYPE_CHECKING, Any
 
@@ -80,12 +79,14 @@ class AdderGen:
         self.attempt_nr = attempt_nr
         self.pid = pid
         self.prelock_pid = prelock_pid
-        self.data = None
+        # the output report and the plugin built from it, all installed by run() before
+        # the methods below read them
+        self.data: str | None = None
         self.lock_pool = lock_pool
-        self.report_dict = None
-        self.adder_plugin = None
-        self.add_result = None
-        self.adder_plugin_class = None
+        self.report_dict: dict[str, Any] = {}
+        self.adder_plugin: Any = None
+        self.add_result: Any = None
+        self.adder_plugin_class: Any = None
         # logger
         self.logger = LogWrapper(_logger, str(self.job_id))
 
@@ -284,7 +285,7 @@ class AdderGen:
                         file.status = "merging"
                 self.job.jobStatus = "merging"
                 # propagate transition to prodDB
-                self.job.stateChangeTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+                self.job.stateChangeTime = naive_utcnow()
             elif self.add_result is not None and self.add_result.transferring_files != []:
                 # set status for transferring
                 for file in self.job.Files:
@@ -293,7 +294,7 @@ class AdderGen:
                 self.job.jobStatus = "transferring"
                 self.job.jobSubStatus = None
                 # propagate transition to prodDB
-                self.job.stateChangeTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+                self.job.stateChangeTime = naive_utcnow()
             else:
                 self.job.jobStatus = "finished"
 
@@ -743,7 +744,7 @@ class AdderGen:
         guid_map = {}
 
         try:
-            json_dict = json.loads(self.data)
+            json_dict = json.loads(self.data or "{}")
             for lfn in json_dict:
                 file_data = json_dict[lfn]
                 lfn = str(lfn)

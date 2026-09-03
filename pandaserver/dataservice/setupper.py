@@ -36,7 +36,7 @@ class Setupper(threading.Thread):
     def __init__(
         self,
         taskBuffer,
-        jobs: List[object],
+        jobs: List[Any],
         resubmit: bool = False,
         first_submission: bool = True,
     ):
@@ -134,7 +134,7 @@ class Setupper(threading.Thread):
             tmp_log.error(f"failed with {str(error)} {traceback.format_exc()}")
 
     #  update jobs
-    def update_jobs(self, job_list: List[object], tmp_log: LogWrapper) -> None:
+    def update_jobs(self, job_list: List[Any], tmp_log: LogWrapper) -> None:
         """
         This method is responsible for updating the status of jobs in the PanDA server.
         It sorts the jobs by their status into different categories: failed, waiting, no input, and normal jobs.

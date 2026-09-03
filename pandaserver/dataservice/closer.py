@@ -47,7 +47,7 @@ class Closer:
         self.panda_id = job.PandaID
         self.site_mapper = None
         self.dataset_map: Dict[str, DatasetSpec] = dataset_map if dataset_map is not None else {}
-        self.all_subscription_finished = None
+        self.all_subscription_finished: bool | None = None
 
     def check_sub_datasets_in_jobset(self) -> bool:
         """
@@ -65,11 +65,11 @@ class Closer:
         checked_dataset = set()
         for job_spec in jobs:
             # collect all sub datasets
-            sub_datasets = set()
+            sub_dataset_set = set()
             for file_spec in job_spec.Files:
                 if file_spec.type == "output":
-                    sub_datasets.add(file_spec.destinationDBlock)
-            sub_datasets = sorted(sub_datasets)
+                    sub_dataset_set.add(file_spec.destinationDBlock)
+            sub_datasets = sorted(sub_dataset_set)
             if len(sub_datasets) > 0:
                 # use the first sub dataset
                 sub_dataset = sub_datasets[0]

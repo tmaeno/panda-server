@@ -25,7 +25,7 @@ class AdderResult:
         Initialize the AdderResult with default values.
         """
         # result of interactions with data management system (DMS)
-        self.status_code = None
+        self.status_code: int | None = None
 
         # list of files which are being transferred by DMS
         self.transferring_files: list[Any] = []
