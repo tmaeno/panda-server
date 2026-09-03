@@ -1235,22 +1235,23 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         # rucioAPI.list_files_in_dataset returns an lfn-keyed map; the empty value here
         # is only a placeholder for the paths that return an error message instead
         items: Dict[str, Any] = {}
+        error_message = ""
         for _ in range(3):
             try:
                 tmp_logger.debug(f"list_files_in_dataset {dataset}")
                 items, _ = rucioAPI.list_files_in_dataset(dataset, file_list=file_list)
                 status = 0
                 break
-            except DataIdentifierNotFound:
+            except DataIdentifierNotFound as e:
                 status = -1
+                error_message = f"{type(e)} {e}"
                 break
-            except Exception:
+            except Exception as e:
                 status = -2
+                error_message = f"{type(e)} {e}"
 
         if status != 0:
-            error_type, error_value = sys.exc_info()[:2]
-            out = f"{error_type} {error_value}"
-            return status, out
+            return status, error_message
         # keep to avoid redundant lookup
         self.lfn_dataset_map[dataset] = items
         return status, items
