@@ -7,10 +7,9 @@ Inherits from AdderPluginBase.
 import datetime
 import gc
 import re
-import sys
 import time
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set, Tuple
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
@@ -160,9 +159,8 @@ class AdderAtlasPlugin(AdderPluginBase):
             # succeeded
             self.result.set_succeeded()
             self.logger.debug("end plugin")
-        except Exception:
-            error_type, error_value = sys.exc_info()[:2]
-            err_str = f"execute() : {error_type} {error_value}"
+        except Exception as e:
+            err_str = f"execute() : {type(e)} {e}"
             err_str += traceback.format_exc()
             self.logger.debug(err_str)
             # set fatal error code
@@ -353,9 +351,8 @@ class AdderAtlasPlugin(AdderPluginBase):
                 if file.fsize not in ["NULL", "", 0]:
                     try:
                         fsize = int(file.fsize)
-                    except Exception:
-                        error_type, error_value, _ = sys.exc_info()
-                        self.logger.error(f"{self.job_id} : {error_type} {error_value}")
+                    except Exception as e:
+                        self.logger.error(f"{self.job_id} : {type(e)} {e}")
                 # use top-level dataset name for alternative stage-out
                 if file.lfn not in self.job.altStgOutFileList():
                     file_destination_dispatch_block = file.destinationDBlock
@@ -688,9 +685,8 @@ class AdderAtlasPlugin(AdderPluginBase):
             if self.job.registerEsFiles():
                 try:
                     self.register_event_service_files()
-                except Exception:
-                    err_type, err_value = sys.exc_info()[:2]
-                    self.logger.error(f"failed to register ES files with {err_type}:{err_value}")
+                except Exception as e:
+                    self.logger.error(f"failed to register ES files with {type(e)}:{e}")
                     self.result.set_temporary()
                     return 1
 
@@ -711,11 +707,12 @@ class AdderAtlasPlugin(AdderPluginBase):
         """
         if not dest_id_map and not zip_files and not cont_zip_map:
             self.logger.debug("no files to register")
-            return
+            return None
         max_attempt = 3
         for attempt_number in range(max_attempt):
             is_fatal = False
             is_failed = False
+            error_message = ""
             reg_start = naive_utcnow()
             try:
                 if self.add_to_top_only:
@@ -728,36 +725,35 @@ class AdderAtlasPlugin(AdderPluginBase):
                 self.logger.debug(f"registerFilesInDatasets {str(dest_id_map)} zip={str(cont_zip_map)}")
                 out = rucioAPI.register_files_in_dataset(dest_id_map, cont_zip_map, files_to_skip_validation=log_files)
             except FileRegistrationError as e:
-                out = f"{str(e)} : {self.job.prodSourceLabel} in {self.job.jobStatus}"
+                error_message = f"{str(e)} : {self.job.prodSourceLabel} in {self.job.jobStatus}"
                 is_fatal = e.fatal
                 is_failed = True
                 if is_fatal:
                     # keep the traceback for fatal errors; verification failures stay clean
-                    out += "\n" + traceback.format_exc()
-            except Exception:
+                    error_message += "\n" + traceback.format_exc()
+            except Exception as e:
                 # unknown errors
-                err_type, err_value = sys.exc_info()[:2]
-                out = f"{err_type} : {err_value}"
-                out += traceback.format_exc()
+                error_message = f"{type(e)} : {e}"
+                error_message += traceback.format_exc()
                 is_fatal = (
-                    "value too large for column" in out
-                    or "unique constraint (ATLAS_RUCIO.DIDS_GUID_IDX) violate" in out
-                    or "unique constraint (ATLAS_RUCIO.DIDS_PK) violated" in out
-                    or "unique constraint (ATLAS_RUCIO.ARCH_CONTENTS_PK) violated" in out
+                    "value too large for column" in error_message
+                    or "unique constraint (ATLAS_RUCIO.DIDS_GUID_IDX) violate" in error_message
+                    or "unique constraint (ATLAS_RUCIO.DIDS_PK) violated" in error_message
+                    or "unique constraint (ATLAS_RUCIO.ARCH_CONTENTS_PK) violated" in error_message
                 )
                 is_failed = True
             reg_time = naive_utcnow() - reg_start
             self.logger.debug(f"{reg_msg_str} took {reg_time.seconds}.{reg_time.microseconds // 1000:03d} sec")
             # failed
             if is_failed or is_fatal:
-                self.logger.error(f"{out}")
+                self.logger.error(f"{error_message}")
                 if (attempt_number + 1) == max_attempt or is_fatal:
                     self.job.ddmErrorCode = ErrorCode.EC_Adder
                     # extract important error string
-                    extracted_err_str = DataServiceUtils.extractImportantError(out)
+                    extracted_err_str = DataServiceUtils.extractImportantError(error_message)
                     err_msg = "Could not add files to DDM: "
                     if extracted_err_str == "":
-                        self.job.ddmErrorDiag = err_msg + out.split("\n")[-1]
+                        self.job.ddmErrorDiag = err_msg + error_message.split("\n")[-1]
                     else:
                         self.job.ddmErrorDiag = err_msg + extracted_err_str
                     if is_fatal:
@@ -774,16 +770,16 @@ class AdderAtlasPlugin(AdderPluginBase):
         # no branch above produced a value, which the return type covers as None
         return None
 
-    def process_subscriptions(self, sub_map: Dict[str, str], sub_to_ds_map: Dict[str, List[str]], dist_datasets: List[str], sub_activity: str):
+    def process_subscriptions(self, sub_map: Dict[str, List[Tuple[str, Any, Any]]], sub_to_ds_map: Dict[str, str], dist_datasets: Set[str], sub_activity: str):
         """
         Process the subscriptions for the job.
 
         This method handles the processing of subscriptions, including keeping subscriptions,
         collecting transferring jobs, and sending requests to DaTRI.
 
-        :param sub_map: A dictionary mapping subscription names to their values.
-        :param sub_to_ds_map: A dictionary mapping subscriptions to datasets.
-        :param dist_datasets: A list of distributed datasets.
+        :param sub_map: A dictionary mapping each subscription name to its (DDM endpoint, sub option, source option) tuples.
+        :param sub_to_ds_map: A dictionary mapping each subscription to its top-level dataset name.
+        :param dist_datasets: The set of distributed datasets.
         :param sub_activity: The subscription activity type.
         """
         if self.job.prodSourceLabel not in ["user"]:
@@ -807,17 +803,15 @@ class AdderAtlasPlugin(AdderPluginBase):
                                 )
                                 out = "OK"
                                 break
-                            except SubscriptionRegistrationError:
+                            except SubscriptionRegistrationError as e:
                                 status = False
-                                err_type, err_value = sys.exc_info()[:2]
-                                out = f"{err_type} {err_value}"
+                                out = f"{type(e)} {e}"
                                 is_failed = True
                                 self.job.ddmErrorCode = ErrorCode.EC_Subscription
                                 break
-                            except Exception:
+                            except Exception as e:
                                 status = False
-                                err_type, err_value = sys.exc_info()[:2]
-                                out = f"{err_type} {err_value}"
+                                out = f"{type(e)} {e}"
                                 is_failed = True
                                 # retry for temporary errors
                                 time.sleep(10)
@@ -853,10 +847,9 @@ class AdderAtlasPlugin(AdderPluginBase):
                                     )
                                     out = "OK"
                                     break
-                                except Exception:
+                                except Exception as e:
                                     status = False
-                                    err_type, err_value = sys.exc_info()[:2]
-                                    out = f"{err_type} {err_value}"
+                                    out = f"{type(e)} {e}"
                                     is_failed = True
                                     # retry for temporary errors
                                     time.sleep(10)
@@ -946,11 +939,11 @@ class AdderAtlasPlugin(AdderPluginBase):
                     # set dataset status
                     for tmp_name in sub_map:
                         self.dataset_map[tmp_name].status = "running"
-                except DatasetLocationError as err_type:
-                    tmp_msg = f"Rucio rejected to transfer files to {','.join(user_endpoints)} since {err_type}"
+                except DatasetLocationError as e:
+                    tmp_msg = f"Rucio rejected to transfer files to {','.join(user_endpoints)} since {e}"
                     self.logger.error(tmp_msg)
                     self.job.ddmErrorCode = ErrorCode.EC_Adder
-                    self.job.ddmErrorDiag = f"Rucio failed with {err_type}"
+                    self.job.ddmErrorDiag = f"Rucio failed with {e}"
                     # set dataset status
                     for tmp_name in sub_map:
                         self.dataset_map[tmp_name].status = "running"
@@ -965,12 +958,11 @@ class AdderAtlasPlugin(AdderPluginBase):
                         else:
                             tmp_sm = self.send_email(to_adder, tmp_msg, self.job.jediTaskID)
                             self.logger.debug(f"sent warning with {tmp_sm}")
-                except Exception:
-                    err_type, err_value = sys.exc_info()[:2]
-                    tmp_msg = f"registerDatasetLocation failed with {err_type} {err_value}"
+                except Exception as e:
+                    tmp_msg = f"registerDatasetLocation failed with {type(e)} {e}"
                     self.logger.error(tmp_msg)
                     self.job.ddmErrorCode = ErrorCode.EC_Adder
-                    self.job.ddmErrorDiag = f"Rucio failed with {err_type} {err_value}"
+                    self.job.ddmErrorDiag = f"Rucio failed with {type(e)} {e}"
 
     # decompose idMap
     def decompose_id_map(self, id_map, dataset_destination_map, map_for_alt_stage_out, sub_to_dataset_map, alt_staged_files):
@@ -1091,9 +1083,8 @@ class AdderAtlasPlugin(AdderPluginBase):
             if id_map:
                 self.logger.debug(f"adding ES files {str(id_map)}")
                 rucioAPI.register_files_in_dataset(id_map, ignore_missing_data_identifier=True)
-        except Exception:
-            err_type, err_value = sys.exc_info()[:2]
-            err_str = f" : {err_type} {err_value}"
+        except Exception as e:
+            err_str = f" : {type(e)} {e}"
             err_str += traceback.format_exc()
             self.logger.error(err_str)
             raise
