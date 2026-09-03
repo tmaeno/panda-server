@@ -241,26 +241,26 @@ class SetupperAtlasPlugin(SetupperPluginBase):
             max_jobs = 20
             max_files = 20
 
-            iJob = 0
-            fileList: list[Any] = []
+            n_jobs_in_bunch = 0
+            file_list: list[Any] = []
             # the SiteSpec chosen for the current bunch, and None while there is no site to
             # choose one from
             chosen_panda_queue: Any = None
-            prodDBlock = None
-            computingSite = None
-            dispatchDBlock = None
-            previousCloud = None
-            prevProType = None
-            prevSourceLabel = None
-            prevDirectAcc = None
-            prevIsJEDI = None
-            prevHasPresetSite = None
+            prod_dblock = None
+            computing_site = None
+            dispatch_dblock = None
+            previous_cloud = None
+            prev_pro_type = None
+            prev_source_label = None
+            prev_direct_acc = None
+            prev_is_jedi = None
+            prev_has_preset_site = None
 
-            indexJob = 0
+            job_index = 0
 
             # loop over all jobs + terminator(None)
             for job in self.jobs + [None]:
-                indexJob += 1
+                job_index += 1
 
                 # ignore failed jobs
                 if job and job.jobStatus == "failed":
@@ -268,63 +268,63 @@ class SetupperAtlasPlugin(SetupperPluginBase):
 
                 # whether the site was picked for the job before it got here. Bunches are cut when
                 # this changes, which is what comparing the old special-brokerage site lists did
-                hasPresetSite = bool(job and job.computingSite != "NULL" and job.prodSourceLabel in ("test", "managed"))
+                has_preset_site = bool(job and job.computingSite != "NULL" and job.prodSourceLabel in ("test", "managed"))
 
-                overwriteSite = False
+                overwrite_site = False
 
                 # check JEDI
-                isJEDI = False
+                is_jedi = False
                 if job and job.lockedby == "jedi":
-                    isJEDI = True
+                    is_jedi = True
 
                 # new bunch or terminator
                 if (
                     job is None
-                    or len(fileList) >= max_files
-                    or (dispatchDBlock is None and job.homepackage.startswith("AnalysisTransforms"))
-                    or prodDBlock != job.prodDBlock
-                    or job.computingSite != computingSite
-                    or iJob > max_jobs
-                    or previousCloud != job.getCloud()
-                    or prevDirectAcc != job.transferType
-                    or prevProType != job.processingType
-                    or prevHasPresetSite != hasPresetSite
-                    or prevIsJEDI != isJEDI
+                    or len(file_list) >= max_files
+                    or (dispatch_dblock is None and job.homepackage.startswith("AnalysisTransforms"))
+                    or prod_dblock != job.prodDBlock
+                    or job.computingSite != computing_site
+                    or n_jobs_in_bunch > max_jobs
+                    or previous_cloud != job.getCloud()
+                    or prev_direct_acc != job.transferType
+                    or prev_pro_type != job.processingType
+                    or prev_has_preset_site != has_preset_site
+                    or prev_is_jedi != is_jedi
                 ):
-                    if indexJob > 1:
+                    if job_index > 1:
                         tmp_logger.debug("new bunch")
-                        tmp_logger.debug(f"  iJob           {iJob}")
-                        tmp_logger.debug(f"  cloud          {previousCloud}")
-                        tmp_logger.debug(f"  sourceLabel    {prevSourceLabel}")
-                        tmp_logger.debug(f"  prodDBlock     {prodDBlock}")
-                        tmp_logger.debug(f"  computingSite  {computingSite}")
-                        tmp_logger.debug(f"  processingType {prevProType}")
-                        tmp_logger.debug(f"  transferType   {prevDirectAcc}")
+                        tmp_logger.debug(f"  nJobs          {n_jobs_in_bunch}")
+                        tmp_logger.debug(f"  cloud          {previous_cloud}")
+                        tmp_logger.debug(f"  sourceLabel    {prev_source_label}")
+                        tmp_logger.debug(f"  prodDBlock     {prod_dblock}")
+                        tmp_logger.debug(f"  computingSite  {computing_site}")
+                        tmp_logger.debug(f"  processingType {prev_pro_type}")
+                        tmp_logger.debug(f"  transferType   {prev_direct_acc}")
 
                     # terminate
                     if job is None:
                         break
-                    # reset iJob
-                    iJob = 0
+                    # reset the job counter
+                    n_jobs_in_bunch = 0
                     # reset file list
-                    fileList = []
+                    file_list = []
                     # create new dispDBlock
                     if job.prodDBlock != "NULL":
                         # get datatype
                         try:
-                            tmpDataType = job.prodDBlock.split(":")[-1].split(".")[-2]
+                            tmp_data_type = job.prodDBlock.split(":")[-1].split(".")[-2]
                         except Exception:
                             # default
-                            tmpDataType = "GEN"
-                        if len(tmpDataType) > 20:
+                            tmp_data_type = "GEN"
+                        if len(tmp_data_type) > 20:
                             # avoid too long name
-                            tmpDataType = "GEN"
-                        transferType = "transfer"
+                            tmp_data_type = "GEN"
+                        transfer_type = "transfer"
                         if job.useInputPrestaging():
-                            transferType = "prestaging"
-                        dispatchDBlock = f"panda.{job.taskID}.{time.strftime('%m.%d')}.{tmpDataType}.{transferType}.{str(uuid.uuid4())}_dis{job.PandaID}"
-                        tmp_logger.debug(f"New dispatchDBlock: {dispatchDBlock}")
-                    prodDBlock = job.prodDBlock
+                            transfer_type = "prestaging"
+                        dispatch_dblock = f"panda.{job.taskID}.{time.strftime('%m.%d')}.{tmp_data_type}.{transfer_type}.{str(uuid.uuid4())}_dis{job.PandaID}"
+                        tmp_logger.debug(f"New dispatchDBlock: {dispatch_dblock}")
+                    prod_dblock = job.prodDBlock
                     # already define computingSite
                     if job.computingSite != "NULL":
                         # instantiate KnownSite
@@ -334,25 +334,25 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                         if job.homepackage.startswith("AnalysisTransforms"):
                             if chosen_panda_queue.sitename == panda_config.def_sitename:
                                 chosen_panda_queue = self.site_mapper.getSite(panda_config.def_queue)
-                                overwriteSite = True
+                                overwrite_site = True
                     else:
                         # default for Analysis jobs
                         if job.homepackage.startswith("AnalysisTransforms"):
                             chosen_panda_queue = self.site_mapper.getSite(panda_config.def_queue)
-                            overwriteSite = True
+                            overwrite_site = True
                         else:
                             # nothing picks a site here any more, so the bunch has none to run on
                             chosen_panda_queue = None
-                # increment iJob
-                iJob += 1
+                # increment the job counter
+                n_jobs_in_bunch += 1
                 # reserve computingSite and cloud
-                computingSite = job.computingSite
-                previousCloud = job.getCloud()
-                prevProType = job.processingType
-                prevSourceLabel = job.prodSourceLabel
-                prevDirectAcc = job.transferType
-                prevHasPresetSite = hasPresetSite
-                prevIsJEDI = isJEDI
+                computing_site = job.computingSite
+                previous_cloud = job.getCloud()
+                prev_pro_type = job.processingType
+                prev_source_label = job.prodSourceLabel
+                prev_direct_acc = job.transferType
+                prev_has_preset_site = has_preset_site
+                prev_is_jedi = is_jedi
 
                 # no site to run on. Letting the job through would give it a dispatch data block
                 # that subscribe_dispatch_data_block skips for want of a site, so the input would
@@ -372,54 +372,54 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                     job.cloud = chosen_panda_queue.cloud
 
                 # set destinationSE
-                destSE = job.destinationSE
+                dest_se = job.destinationSE
                 if self.site_mapper.checkCloud(job.getCloud()):
                     # use cloud dest for non-existing sites
                     if job.prodSourceLabel != "user" and job.destinationSE not in self.site_mapper.siteSpecList and job.destinationSE != "local":
                         if DataServiceUtils.checkJobDestinationSE(job):
-                            destSE = DataServiceUtils.checkJobDestinationSE(job)
-                        job.destinationSE = destSE
+                            dest_se = DataServiceUtils.checkJobDestinationSE(job)
+                        job.destinationSE = dest_se
 
-                if overwriteSite:
+                if overwrite_site:
                     # overwrite SE for analysis jobs which set non-existing sites
-                    destSE = job.computingSite
-                    job.destinationSE = destSE
+                    dest_se = job.computingSite
+                    job.destinationSE = dest_se
 
                 # set dispatchDBlock and destinationSE
                 first = True
-                for file in job.Files:
+                for file_spec in job.Files:
                     # Set dispatch data block for pre-stating jobs too
-                    if file.type == "input" and file.dispatchDBlock == "NULL" and file.status not in ["ready", "missing", "cached"]:
+                    if file_spec.type == "input" and file_spec.dispatchDBlock == "NULL" and file_spec.status not in ["ready", "missing", "cached"]:
                         if first:
                             first = False
-                            job.dispatchDBlock = dispatchDBlock
-                        file.dispatchDBlock = dispatchDBlock
-                        file.status = "pending"
-                        if file.lfn not in fileList:
-                            fileList.append(file.lfn)
+                            job.dispatchDBlock = dispatch_dblock
+                        file_spec.dispatchDBlock = dispatch_dblock
+                        file_spec.status = "pending"
+                        if file_spec.lfn not in file_list:
+                            file_list.append(file_spec.lfn)
 
                     # destinationSE
-                    if file.type in ["output", "log"] and destSE != "":
-                        if job.prodSourceLabel == "user" and job.computingSite == file.destinationSE:
+                    if file_spec.type in ["output", "log"] and dest_se != "":
+                        if job.prodSourceLabel == "user" and job.computingSite == file_spec.destinationSE:
                             pass
-                        elif job.prodSourceLabel == "user" and prevIsJEDI is True and file.destinationSE not in ["", "NULL"]:
+                        elif job.prodSourceLabel == "user" and prev_is_jedi is True and file_spec.destinationSE not in ["", "NULL"]:
                             pass
-                        elif destSE == "local":
+                        elif dest_se == "local":
                             pass
-                        elif DataServiceUtils.getDistributedDestination(file.destinationDBlockToken):
+                        elif DataServiceUtils.getDistributedDestination(file_spec.destinationDBlockToken):
                             pass
                         else:
-                            file.destinationSE = destSE
+                            file_spec.destinationSE = dest_se
 
                     # pre-assign GUID to log
-                    if file.type == "log":
+                    if file_spec.type == "log":
                         # generate GUID
-                        file.GUID = str(uuid.uuid4())
+                        file_spec.GUID = str(uuid.uuid4())
 
             tmp_logger.debug("finished")
 
         except Exception as e:
-            tmp_logger.error(f"schedule : {str(e)} {traceback.format_exc()}")
+            tmp_logger.error(f"assign_dispatch_data_blocks : {str(e)} {traceback.format_exc()}")
 
     # make dispatchDBlocks, insert prod/dispatchDBlock to database
     def setup_source(self) -> None:
