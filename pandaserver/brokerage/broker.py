@@ -1,5 +1,4 @@
 import datetime
-import functools
 import time
 import traceback
 import uuid
@@ -13,33 +12,6 @@ from pandaserver.config import panda_config
 from pandaserver.dataservice import DataServiceUtils
 
 _log = PandaLogger().getLogger("broker")
-
-# all known sites
-_allSites = []
-
-# processingType to skip brokerage
-skipBrokerageProTypes = ["prod_test"]
-
-
-# comparison function for sort
-def _compFunc(job_a, job_b):
-    # This comparison helps in sorting the jobs based on the order of their computing sites in the _allSites list.
-    # append site if not in list
-    if job_a.computingSite not in _allSites:
-        _allSites.append(job_a.computingSite)
-    if job_b.computingSite not in _allSites:
-        _allSites.append(job_b.computingSite)
-
-    # compare site indices
-    index_a = _allSites.index(job_a.computingSite)
-    index_b = _allSites.index(job_b.computingSite)
-
-    if index_a > index_b:
-        return 1
-    elif index_a < index_b:
-        return -1
-    else:
-        return 0
 
 
 def schedule(jobs, siteMapper):
@@ -57,8 +29,8 @@ def schedule(jobs, siteMapper):
 
         iJob = 0
         fileList: list[Any] = []
-        # the SiteSpec chosen for the current bunch, or the "TOBEDONE" marker while the
-        # choice is deferred, and None before the first bunch
+        # the SiteSpec chosen for the current bunch, and None while there is no site to
+        # choose one from
         chosen_panda_queue: Any = None
         prodDBlock = None
         computingSite = None
@@ -68,12 +40,9 @@ def schedule(jobs, siteMapper):
         prevSourceLabel = None
         prevDirectAcc = None
         prevIsJEDI = None
-        prevBrokerageSiteList = None
+        prevHasPresetSite = None
 
         indexJob = 0
-
-        # sort jobs by siteID. Some jobs may already define computingSite
-        jobs = sorted(jobs, key=functools.cmp_to_key(_compFunc))
 
         # loop over all jobs + terminator(None)
         for job in jobs + [None]:
@@ -83,12 +52,9 @@ def schedule(jobs, siteMapper):
             if job and job.jobStatus == "failed":
                 continue
 
-            # list of sites for special brokerage
-            specialBrokerageSiteList: list[Any] = []
-
-            # manually set site
-            if job and job.computingSite != "NULL" and job.prodSourceLabel in ("test", "managed") and specialBrokerageSiteList == []:
-                specialBrokerageSiteList = [job.computingSite]
+            # whether the site was picked for the job before it got here. Bunches are cut when
+            # this changes, which is what comparing the old special-brokerage site lists did
+            hasPresetSite = bool(job and job.computingSite != "NULL" and job.prodSourceLabel in ("test", "managed"))
 
             overwriteSite = False
 
@@ -106,10 +72,9 @@ def schedule(jobs, siteMapper):
                 or job.computingSite != computingSite
                 or iJob > max_jobs
                 or previousCloud != job.getCloud()
-                or (prevProType in skipBrokerageProTypes and iJob > 0)
                 or prevDirectAcc != job.transferType
                 or prevProType != job.processingType
-                or prevBrokerageSiteList != specialBrokerageSiteList
+                or prevHasPresetSite != hasPresetSite
                 or prevIsJEDI != isJEDI
             ):
                 if indexJob > 1:
@@ -121,47 +86,6 @@ def schedule(jobs, siteMapper):
                     tmp_log.debug(f"  computingSite  {computingSite}")
                     tmp_log.debug(f"  processingType {prevProType}")
                     tmp_log.debug(f"  transferType   {prevDirectAcc}")
-
-                if (iJob != 0 and chosen_panda_queue == "TOBEDONE") or prevBrokerageSiteList not in [None, []]:
-                    # load balancing
-                    minSites = {}
-                    if prevBrokerageSiteList:
-                        # special brokerage
-                        scanSiteList = prevBrokerageSiteList
-                    else:
-                        if siteMapper.checkCloud(previousCloud):
-                            # use cloud sites
-                            scanSiteList = siteMapper.getCloud(previousCloud)["sites"]
-
-                    # loop over all sites
-                    for site in scanSiteList:
-                        tmp_log.debug(f"calculate weight for site:{site}")
-                        # _allSites may contain NULL after sort()
-                        if site == "NULL":
-                            tmp_log.debug("site is NULL")
-                            continue
-
-                        winv = 1
-
-                        tmp_log.debug(f"Site:{site} 1/Weight:{winv}")
-
-                        # choose largest nMinSites weights
-                        minSites[site] = winv
-
-                    # choose site
-                    tmp_log.debug(f"Min Sites:{minSites}")
-                    if len(fileList) == 0 or prevIsJEDI is True:
-                        # choose min 1/weight
-                        minSite = list(minSites)[0]
-                        chosen_panda_queue = siteMapper.getSite(minSite)
-
-                    # set job spec
-                    tmp_log.debug(f"indexJob      : {indexJob}")
-
-                    for tmpJob in jobs[indexJob - iJob - 1 : indexJob - 1]:
-                        # set computingSite
-                        tmpJob.computingSite = chosen_panda_queue.sitename
-                        tmp_log.debug(f"PandaID:{tmpJob.PandaID} -> site:{tmpJob.computingSite}")
 
                 # terminate
                 if job is None:
@@ -203,8 +127,8 @@ def schedule(jobs, siteMapper):
                         chosen_panda_queue = siteMapper.getSite(panda_config.def_queue)
                         overwriteSite = True
                     else:
-                        # set chosen_panda_queue
-                        chosen_panda_queue = "TOBEDONE"
+                        # nothing picks a site here any more, so the job keeps not having one
+                        chosen_panda_queue = None
             # increment iJob
             iJob += 1
             # reserve computingSite and cloud
@@ -213,11 +137,11 @@ def schedule(jobs, siteMapper):
             prevProType = job.processingType
             prevSourceLabel = job.prodSourceLabel
             prevDirectAcc = job.transferType
-            prevBrokerageSiteList = specialBrokerageSiteList
+            prevHasPresetSite = hasPresetSite
             prevIsJEDI = isJEDI
 
             # assign site
-            if chosen_panda_queue != "TOBEDONE":
+            if chosen_panda_queue is not None:
                 job.computingSite = chosen_panda_queue.sitename
                 tmp_log.debug(f"PandaID:{job.PandaID} -> preset site:{chosen_panda_queue.sitename}")
                 # set cloud
