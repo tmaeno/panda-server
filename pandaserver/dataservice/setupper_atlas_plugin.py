@@ -171,7 +171,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
             else:
                 # make one sub dataset per job so that each job doesn't have to wait for others to be done
                 # Special jobs for SW installation and HC seem to be above 6000
-                if self.jobs != [] and self.jobs[0].prodSourceLabel in ["user", "panda"] and self.jobs[-1].currentPriority > 6000:
+                if self.jobs != [] and self.jobs[0].prodSourceLabel in ["user", "panda"] and self.jobs[-1].currentPriority > 6000:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                     for i_bunch in range(len(self.jobs)):
                         self.setup_destination(start_idx=i_bunch, n_jobs_in_loop=1)
                 else:
@@ -328,7 +328,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                                 file_list[job.dispatchDBlock]["md5sums"].append(f"md5:{file.md5sum}")
 
         # register dispatch dataset
-        disp_list = self.register_dispatch_datasets(file_list, use_zip_to_pin_map, ds_task_map, tmp_logger, disp_error, jedi_task_id)
+        disp_list = self.register_dispatch_datasets(file_list, use_zip_to_pin_map, ds_task_map, tmp_logger, disp_error, jedi_task_id)  # type: ignore[arg-type]  # "NULL" sentinel, see spec_column.py
         # insert datasets to DB
         self.task_buffer.insertDatasets(prod_list + disp_list)
         # job status
@@ -793,12 +793,12 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                     )
                     # increment number of files
                     if new_dest in dataset_list:
-                        dataset_list[new_dest].numberfiles = dataset_list[new_dest].numberfiles + 1
+                        dataset_list[new_dest].numberfiles = dataset_list[new_dest].numberfiles + 1  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
         # dump
-        for dataset_name, dataset in dataset_list.items():
-            # Ensure dataset_name is a string
-            if isinstance(dataset_name, tuple):
-                dataset_name = dataset_name[0]
+        for dataset_key, dataset in dataset_list.items():
+            # the map is keyed by (destinationDBlock, destinationSE, computingSite) above,
+            # but the callers below build it with the dataset name alone
+            dataset_name = dataset_key[0] if isinstance(dataset_key, tuple) else dataset_key
             if DataServiceUtils.is_sub_dataset(dataset_name):
                 tmp_logger.debug(f"made sub:{dataset_name} for nFiles={dataset.numberfiles}")
         # insert datasets to DB
@@ -837,7 +837,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                 option_activity = "Production Input"
                 if job.prodSourceLabel in ["user", "panda"]:
                     option_activity = "Analysis Input"
-                elif job.processingType == "urgent" or job.currentPriority > 1000:
+                elif job.processingType == "urgent" or job.currentPriority > 1000:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                     option_activity = "Express"
 
                 # taskID
@@ -1124,7 +1124,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                     if tmp_file.type == "input" and (not tmp_file.dataset.startswith("ddo")) and not tmp_file.lfn.endswith(".lib.tgz"):
                         tmp_job.nInputDataFiles += 1
                         if tmp_file.fsize not in ["NULL", None, 0, "0"]:
-                            tmp_job.inputFileBytes += tmp_file.fsize
+                            tmp_job.inputFileBytes += tmp_file.fsize  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                         # get input type and project
                         if tmp_input_file_project is None:
                             tmp_input_items = tmp_file.dataset.split(".")
@@ -1872,13 +1872,13 @@ class SetupperAtlasPlugin(SetupperPluginBase):
         return
 
     # make sub dataset name
-    def make_sub_dataset_name(self, original_name: str, serial_number: int, task_id: int) -> str:
+    def make_sub_dataset_name(self, original_name: str, serial_number: int, task_id: int | str) -> str:
         """
         Make sub dataset name method for running the setup process.
 
         :param original_name: The original name of the dataset.
         :param serial_number: The serial number.
-        :param task_id: The task ID.
+        :param task_id: The task ID, as read from a job spec, so it may be the "NULL" sentinel.
         :return: The sub dataset name.
         """
         try:

@@ -1146,7 +1146,7 @@ class JobGeneratorThread(WorkerThread):
                     elif taskSpec.useEventService(siteSpec) and not inputChunk.isMerging:
                         # set max attempt for event service
                         if taskSpec.getMaxAttemptEsJob() is None:
-                            jobSpec.maxAttempt = jobSpec.attemptNr + EventServiceUtils.defMaxAttemptEsJob
+                            jobSpec.maxAttempt = jobSpec.attemptNr + EventServiceUtils.defMaxAttemptEsJob  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                         else:
                             jobSpec.maxAttempt = jobSpec.attemptNr + taskSpec.getMaxAttemptEsJob()
                     else:
@@ -1552,12 +1552,12 @@ class JobGeneratorThread(WorkerThread):
                         instantiateTmpl = False
                     # multiply maxCpuCount by total master size
                     try:
-                        if jobSpec.maxCpuCount > 0:
-                            jobSpec.maxCpuCount *= totalMasterSize
+                        if jobSpec.maxCpuCount > 0:  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
+                            jobSpec.maxCpuCount *= totalMasterSize  # type: ignore[assignment]  # "NULL" sentinel, see spec_column.py
                             jobSpec.maxCpuCount = int(jobSpec.maxCpuCount)
                         else:
                             # negative cpu count to suppress looping job detection
-                            jobSpec.maxCpuCount *= -1
+                            jobSpec.maxCpuCount *= -1  # type: ignore[assignment]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                     except Exception:
                         pass
                     # maxWalltime
@@ -1566,11 +1566,11 @@ class JobGeneratorThread(WorkerThread):
                     # multiply maxDiskCount by total master size or # of events
                     try:
                         if inputChunk.isMerging:
-                            jobSpec.maxDiskCount *= totalFileSize
+                            jobSpec.maxDiskCount *= totalFileSize  # type: ignore[assignment]  # "NULL" sentinel, see spec_column.py
                         elif not taskSpec.outputScaleWithEvents():
-                            jobSpec.maxDiskCount *= totalMasterSize
+                            jobSpec.maxDiskCount *= totalMasterSize  # type: ignore[assignment]  # "NULL" sentinel, see spec_column.py
                         else:
-                            jobSpec.maxDiskCount *= totalMasterEvents
+                            jobSpec.maxDiskCount *= totalMasterEvents  # type: ignore[assignment]  # "NULL" sentinel, see spec_column.py
                     except Exception:
                         pass
                     # add offset to maxDiskCount
@@ -1583,9 +1583,9 @@ class JobGeneratorThread(WorkerThread):
                         pass
                     # add input size
                     if not CoreUtils.use_direct_io_for_job(taskSpec, siteSpec, inputChunk):
-                        jobSpec.maxDiskCount += totalFileSize
+                        jobSpec.maxDiskCount += totalFileSize  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                     # maxDiskCount in MB
-                    jobSpec.maxDiskCount /= 1024 * 1024
+                    jobSpec.maxDiskCount /= 1024 * 1024  # type: ignore[assignment, operator]  # "NULL" sentinel, see spec_column.py
                     jobSpec.maxDiskCount = int(jobSpec.maxDiskCount)
                     # cap not to go over site limit
                     if siteSpec.maxwdir and jobSpec.maxDiskCount and siteSpec.maxwdir < jobSpec.maxDiskCount:
@@ -1934,7 +1934,7 @@ class JobGeneratorThread(WorkerThread):
             if siteSpec.maxrss:
                 jobSpec.minRamCount = min(2000 * jobSpec.coreCount, siteSpec.maxrss)
             else:
-                jobSpec.minRamCount = 2000 * jobSpec.coreCount
+                jobSpec.minRamCount = 2000 * jobSpec.coreCount  # type: ignore[assignment]  # "NULL" sentinel, see spec_column.py
 
             try:
                 jobSpec.resource_type = JobUtils.get_resource_type_job(self.resource_types, jobSpec)

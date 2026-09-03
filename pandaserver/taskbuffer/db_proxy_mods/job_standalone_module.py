@@ -302,7 +302,7 @@ class JobStandaloneModule(BaseModule):
             sqlD = "DELETE FROM ATLAS_PANDA.jobsDefined4 WHERE PandaID=:PandaID"
             self.cur.execute(sqlD + comment, varMap)
             # increase priority
-            if job.jobStatus == "activated" and job.currentPriority < 100:
+            if job.jobStatus == "activated" and job.currentPriority < 100:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                 job.currentPriority = 100
             # reset computing site and dispatchDBlocks
             job.jobStatus = "defined"

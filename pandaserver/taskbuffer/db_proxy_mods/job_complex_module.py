@@ -2858,7 +2858,7 @@ class JobComplexModule(BaseModule):
                     # pass in/out map for merging via metadata. the column is a CLOB,
                     # but this borrows the attribute as an in-memory carrier for the
                     # merge job and never reaches the database in this form
-                    job.metadata = [mergeInputOutputMap, mergeFileObjStoreMap]  # type: ignore[assignment]
+                    job.metadata = [mergeInputOutputMap, mergeFileObjStoreMap]
 
                 # read task parameters
                 if job.lockedby == "jedi":
@@ -3937,13 +3937,13 @@ class JobComplexModule(BaseModule):
                     job.prodSourceLabel in ["user", "panda"] + JobUtils.list_ptest_prod_sources
                     and "pilotErrorCode" in param
                     and param["pilotErrorCode"].startswith("-")
-                    and job.maxAttempt > job.attemptNr
+                    and job.maxAttempt > job.attemptNr  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                     and (not job.processingType.startswith("gangarobot") or job.processingType == "gangarobot-rctest")
                     and not job.processingType.startswith("hammercloud")
                 ):
                     usePilotRetry = True
                 # retry for ES merge
-                if recoverableEsMerge and EventServiceUtils.isEventServiceMerge(job) and job.maxAttempt > job.attemptNr:
+                if recoverableEsMerge and EventServiceUtils.isEventServiceMerge(job) and job.maxAttempt > job.attemptNr:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                     usePilotRetry = True
                 # check if it's analysis job # FIXME once pilot retry works correctly the conditions below will be cleaned up
                 if (
@@ -3954,7 +3954,7 @@ class JobComplexModule(BaseModule):
                         and "pilotErrorCode" in param
                         and param["pilotErrorCode"] in ["1200", "1201", "1213"]
                         and (not job.computingSite.startswith("ANALY_LONG_"))
-                        and job.attemptNr < 2
+                        and job.attemptNr < 2  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                     )
                     or failedInActive
                     or usePilotRetry
@@ -3982,9 +3982,9 @@ class JobComplexModule(BaseModule):
                         job.jobStatus = "activated"
                         job.startTime = None
                         job.modificationTime = naive_utcnow()
-                        job.attemptNr = job.attemptNr + 1
+                        job.attemptNr = job.attemptNr + 1  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                         if usePilotRetry:
-                            job.currentPriority -= 10
+                            job.currentPriority -= 10  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                         job.endTime = None
                         job.transExitCode = None
                         job.batchID = None

@@ -302,8 +302,11 @@ class AdderGen:
         Handle failed job status.
         """
         # First of all: check if job failed and in this case take first actions according to error table
-        source, error_code, error_diag = None, None, None
-        errors = []
+        # the code is an int for the pilot/exe/DDM sources and a str for transExitCode
+        source: str | None = None
+        error_code: Any = None
+        error_diag: Any = None
+        errors: list[dict[str, Any]] = []
         if self.job.pilotErrorCode:
             source = "pilotErrorCode"
             error_code = self.job.pilotErrorCode
@@ -438,7 +441,7 @@ class AdderGen:
 
         # endtime
         if self.job.endTime == "NULL":
-            self.job.endTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+            self.job.endTime = naive_utcnow()
         # output size and # of outputs
         self.job.nOutputDataFiles = 0
         self.job.outputFileBytes = 0
@@ -446,7 +449,7 @@ class AdderGen:
             if tmp_file.type == "output":
                 self.job.nOutputDataFiles += 1
                 try:
-                    self.job.outputFileBytes += tmp_file.fsize
+                    self.job.outputFileBytes += tmp_file.fsize  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                 except Exception:
                     pass
         # protection
@@ -833,7 +836,7 @@ class AdderGen:
             self.extract_cross_section(json_dict)
 
         # use nEvents and GUIDs reported by the pilot if no job report
-        if self.job.metadata == "NULL" and self.job_status == "finished" and self.job.nEvents > 0 and self.job.prodSourceLabel in ["managed"]:
+        if self.job.metadata == "NULL" and self.job_status == "finished" and self.job.nEvents > 0 and self.job.prodSourceLabel in ["managed"]:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
             for file in self.job.Files:
                 if file.type == "output":
                     n_events_map[file.lfn] = self.job.nEvents

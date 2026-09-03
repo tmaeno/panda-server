@@ -373,7 +373,7 @@ def generate_offline_run_script(job_spec: "JobSpec") -> str:
             cmt_config = ""
         script_str += f"asetup --platform={job_spec.cmtConfig.split('@')[0]} {','.join(atlas_tags)}\n"
         # athenaMP
-        if job_spec.coreCount not in ["NULL", None] and job_spec.coreCount > 1:
+        if job_spec.coreCount not in ["NULL", None] and job_spec.coreCount > 1:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
             script_str += f"export ATHENA_PROC_NUMBER={job_spec.coreCount}\n"
             script_str += f"export ATHENA_CORE_NUMBER={job_spec.coreCount}\n"
         # add double quotes for zsh

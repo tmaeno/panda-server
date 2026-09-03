@@ -207,7 +207,9 @@ class JobSpec(object):
     computingSite: SpecColumn[str]
     computingElement: SpecColumn[str]
     jobParameters: SpecColumn[str]
-    metadata: SpecColumn[str]
+    # a CLOB on the way to and from the DB, but set_task_attribute() and the ES merge
+    # bookkeeping keep a list in it while the job is in memory, so the read type is Any
+    metadata: SpecColumn[Any]
     prodDBlock: SpecColumn[str]
     dispatchDBlock: SpecColumn[str]
     destinationDBlock: SpecColumn[str]
@@ -805,16 +807,16 @@ class JobSpec(object):
         if self.prodSourceLabel not in ["managed", "test"]:
             return
         try:
-            if self.inputFileBytes / self.maxWalltime > 5000:
+            if self.inputFileBytes / self.maxWalltime > 5000:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                 return
         except Exception:
             return
         try:
-            if self.coreCount <= 1:
+            if self.coreCount <= 1:  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
                 return
         except Exception:
             return
-        if self.currentPriority > 250:
+        if self.currentPriority > 250:  # type: ignore[operator]  # unset spec column reads back as the "NULL" sentinel; see spec_column.py
             return
         self.jobExecutionID = 1
 
