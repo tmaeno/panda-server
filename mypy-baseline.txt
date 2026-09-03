@@ -516,7 +516,6 @@ pandaserver/taskbuffer/db_proxy_mods/metrics_module.py:0: error: Bracketed expre
 pandaserver/taskbuffer/db_proxy_mods/metrics_module.py:0: error: Dict entry 1 has incompatible type "str": "str"; expected "str": "int"  [dict-item]
 pandaserver/taskbuffer/db_proxy_mods/metrics_module.py:0: error: Dict entry 2 has incompatible type "str": "str"; expected "str": "int"  [dict-item]
 pandaserver/taskbuffer/db_proxy_mods/misc_standalone_module.py:0: error: Argument 1 to "append" of "list" has incompatible type "tuple[Any, Any, Any, Any]"; expected "tuple[Any, Any, Any]"  [arg-type]
-pandaserver/taskbuffer/db_proxy_mods/task_complex_module.py:0: error: Not all arguments converted during string formatting  [str-format]
 pandaserver/taskbuffer/db_proxy_mods/task_event_module.py:0: error: Argument 1 to "list" has incompatible type "Collection[str] | None"; expected "Iterable[str]"  [arg-type]
 pandaserver/taskbuffer/db_proxy_mods/task_event_module.py:0: error: Argument 1 to "list" has incompatible type "Collection[str] | None"; expected "Iterable[str]"  [arg-type]
 pandaserver/taskbuffer/db_proxy_mods/task_event_module.py:0: error: Argument 1 to "loads" has incompatible type "Any | None"; expected "str | bytes | bytearray"  [arg-type]

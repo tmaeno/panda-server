@@ -4431,7 +4431,7 @@ class TaskComplexModule(BaseModule):
                             sqlTU += "SET status=:status,"
                         else:
                             if taskOldStatus is None:
-                                tmpLog.error("jediTaskID={0} has oldStatus=None and status={1} for ".format(jediTaskID, taskStatus, commandStr))
+                                tmpLog.error(f"jediTaskID={jediTaskID} has oldStatus=None and status={taskStatus} for {commandStr}")
                                 isOK = False
                             sqlTU += "SET status=oldStatus,"
                         if taskStatus in ["paused"] or sync_action_only:
