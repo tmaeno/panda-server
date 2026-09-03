@@ -26,6 +26,7 @@ from pandaserver.taskbuffer.db_proxy_mods.worker_module import get_worker_module
 from pandaserver.taskbuffer.FileSpec import FileSpec
 from pandaserver.taskbuffer.JediTaskSpec import JediTaskSpec
 from pandaserver.taskbuffer.JobSpec import JobSpec, get_task_queued_time
+from pandaserver.taskbuffer.spec_column import Null
 from pandaserver.taskbuffer.SupErrors import SupErrors
 
 # maximum number of task IDs excluded from job dispatch due to hardware mismatch
@@ -563,7 +564,7 @@ class JobComplexModule(BaseModule):
                     sqlJediFJ = "SELECT /*+ INDEX_RS_ASC(JEDI_DATASET_CONTENTS (JEDI_DATASET_CONTENTS.JEDITASKID JEDI_DATASET_CONTENTS.DATASETID JEDI_DATASET_CONTENTS.FILEID)) */ 1 FROM ATLAS_PANDA.JEDI_Dataset_Contents "
                     sqlJediFJ += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID AND fileID=:fileID "
                     sqlJediFJ += "AND attemptNr=:attemptNr AND status=:status AND keepTrack=:keepTrack "
-                    datasetContentsStat = {}
+                    datasetContentsStat: dict[Any, dict[str, Any]] = {}
                     # loop over all files
                     for file in job.Files:
                         sqlF = f"UPDATE ATLAS_PANDA.filesTable4 SET {file.bindUpdateChangesExpression()}" + "WHERE row_ID=:row_ID"
@@ -3143,7 +3144,8 @@ class JobComplexModule(BaseModule):
                 jobsetID = 0
             else:
                 jobsetID = job.jobsetID
-            jobsetID = "%06d" % jobsetID
+            # the $JOBSETID placeholder takes the padded form, not the number
+            jobsetID_str = "%06d" % jobsetID
             try:
                 strJediTaskID = str(job.jediTaskID)
             except Exception:
@@ -3180,7 +3182,7 @@ class JobComplexModule(BaseModule):
                 file.lfn = re.sub("\$PANDAID", "%05d" % job.PandaID, file.lfn)
                 # replace $JOBSETID with real jobsetID
                 if job.prodSourceLabel not in ["managed"]:
-                    file.lfn = re.sub("\$JOBSETID", jobsetID, file.lfn)
+                    file.lfn = re.sub("\$JOBSETID", jobsetID_str, file.lfn)
                     try:
                         file.lfn = re.sub("\$JEDITASKID", strJediTaskID, file.lfn)
                     except Exception:
@@ -3508,7 +3510,7 @@ class JobComplexModule(BaseModule):
                 tmp_log.debug(f"{job.PandaID} inserted meta jediTaskID:{job.jediTaskID}")
             # job parameters
             if job.prodSourceLabel not in ["managed"]:
-                job.jobParameters = re.sub("\$JOBSETID", jobsetID, job.jobParameters)
+                job.jobParameters = re.sub("\$JOBSETID", jobsetID_str, job.jobParameters)
                 try:
                     job.jobParameters = re.sub("\$JEDITASKID", strJediTaskID, job.jobParameters)
                 except Exception:
@@ -5037,7 +5039,7 @@ class JobComplexModule(BaseModule):
             # 9 : closed in bad job status
             # 10 : generated a merge job but didn't process any events by itself
             # None : fatal error
-            retValue = 1, None
+            retValue: tuple[int, "int | Null | None"] = 1, None
             # begin transaction
             if useCommit:
                 self.conn.begin()
@@ -5703,7 +5705,7 @@ class JobComplexModule(BaseModule):
                         if doMerging:
                             fileSpec.lfn = re.sub(
                                 f"\\.{pandaID}$",
-                                "".format(jobSpec.PandaID),
+                                "",
                                 fileSpec.lfn,
                             )
                         else:
