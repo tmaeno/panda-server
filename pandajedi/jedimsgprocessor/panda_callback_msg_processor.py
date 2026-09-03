@@ -1,5 +1,6 @@
 import re
 import traceback
+from typing import Any
 
 import yaml
 from pandacommon.pandalogger import LogWrapper, logger_utils
@@ -17,7 +18,8 @@ class PandaCallbackMsgProcPlugin(BaseMsgProcPlugin):
         super().__init__(**params)
         self.activities_with_file_callback = []
         self.component_action_map = []
-        self.site_mapper = None
+        # installed by initialize() before any callback is processed
+        self.site_mapper: Any = None
         self.verbose = False
 
     def initialize(self, in_collective=False, **params):

@@ -97,10 +97,13 @@ def _structured_result_response(req_row: Dict[str, Any], results: list) -> Dict[
     """
     result_row = next((row for row in results if row["machine_name"] == ANY_MACHINE), None)
 
+    # the stored payload, which exists only once a machine has produced a terminal result
+    result_json = None
     if result_row is None:
         # not claimed by any machine yet
         async_meta = {"status": "pending", "attempts": 0, "started_at": None, "finished_at": None, "error_msg": None}
     else:
+        result_json = result_row["result"]
         async_meta = {
             "status": result_row["status"],
             "attempts": result_row["attempts"],
@@ -118,7 +121,7 @@ def _structured_result_response(req_row: Dict[str, Any], results: list) -> Dict[
         response = generate_response(False, "request failed before producing a result")
     else:
         try:
-            payload = json.loads(result_row["result"] or "{}")
+            payload = json.loads(result_json or "{}")
         except json.JSONDecodeError as e:
             return generate_response(False, f"failed to decode stored result : {e}")
         # a payload missing its success key must never look unfinished

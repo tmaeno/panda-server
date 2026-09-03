@@ -29,7 +29,9 @@ if __name__ == "__main__":
 
     # print the current grid status
     print("--------------CURRENT GRID STATUS---------------")
-    print(proxyS.tree.pretty_print_hs_distribution(proxyS._DBProxy__hs_distribution))
+    # the attribute is private to EntityModule, so it is reached under its mangled name
+    hs_distribution = getattr(proxyS, "_EntityModule__hs_distribution")
+    print(proxyS.tree.pretty_print_hs_distribution(hs_distribution))
 
     # check a couple of shares if they are valid leave names
     share_name = "wrong_share"

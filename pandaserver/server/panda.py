@@ -16,6 +16,7 @@ import sys
 import tempfile
 import traceback
 from collections import defaultdict
+from typing import Any
 from urllib.parse import parse_qsl
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
@@ -264,7 +265,7 @@ def parse_script_name(environ):
 
 
 def module_mapping(version, api_module):
-    mapping = {
+    mapping: dict[str, dict[str, dict[str, Any]]] = {
         "v0": {"panda": {"module": None, "allowed_methods": allowed_methods}},  # legacy API uses globals instead of a particular module
         "v1": {
             "async_process": {"module": async_process_api_v1, "allowed_methods": async_process_api_v1_methods},

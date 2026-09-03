@@ -10,8 +10,9 @@ from .Interaction import CommandReceiveInterface
 
 logger = PandaLogger().getLogger(__name__.split(".")[-1])
 
-# use customized proxy pool
-TaskBuffer.DBProxyPool = JediDBProxyPool.DBProxyPool
+# use customized proxy pool. The module attribute is deliberately rebound to the JEDI
+# subclass, which is what TaskBuffer.init() then instantiates
+TaskBuffer.DBProxyPool = JediDBProxyPool.DBProxyPool  # type: ignore[misc,assignment]
 
 
 class JediTaskBuffer(TaskBuffer.TaskBuffer, CommandReceiveInterface):

@@ -39,7 +39,7 @@ class DDMHandler(threading.Thread):
     """
 
     # constructor
-    def __init__(self, task_buffer, vuid: str, site: str | None = None, dataset: str | None = None, scope: str | None = None):
+    def __init__(self, task_buffer, vuid: str | None, site: str | None = None, dataset: str | None = None, scope: str | None = None):
         """
         Constructs all the necessary attributes for the DDMHandler object.
 

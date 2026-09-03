@@ -4,6 +4,7 @@ import os
 import time
 import unittest
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from unittest import mock
 
@@ -242,9 +243,9 @@ class TestDataCarouselIddsSubmission(unittest.TestCase):
 
     def test_thread_pool_is_bounded(self):
         sizes = []
-        real_pool = data_carousel_ops.ThreadPoolExecutor
 
-        class RecordingPool(real_pool):
+        # data_carousel_ops.ThreadPoolExecutor is this very class, captured before the patch below
+        class RecordingPool(ThreadPoolExecutor):
             def __init__(self, max_workers=None, **kwargs):
                 sizes.append(max_workers)
                 super().__init__(max_workers=max_workers, **kwargs)

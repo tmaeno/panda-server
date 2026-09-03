@@ -245,7 +245,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
         if site_trr_map is None:
             return available_sites_dict
         # record for excluded site reasons
-        excluded_sites_dict = {
+        excluded_sites_dict: dict[str, set] = {
             "not_online": set(),
             "has_minrss": set(),
             "es_jobseed": set(),
@@ -365,7 +365,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
         # threshold of time duration in second that the queue keeps empty to trigger preassigning
         empty_duration_threshold = 1800
         # return map
-        ret_map = {
+        ret_map: dict[str, dict] = {
             "to_reassign": {},
         }
         # loop
@@ -474,10 +474,10 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
                 site_corecount = tmpSiteSpec.coreCount
                 site_capability = str(tmpSiteSpec.capability).lower()
                 # make sql parameters of rses
-                available_rses = list(available_rses)
+                available_rse_list = list(available_rses)
                 rse_params_list = []
                 rse_params_map = {}
-                for j, rse in enumerate(available_rses):
+                for j, rse in enumerate(available_rse_list):
                     rse_param = f":rse_{j + 1}"
                     rse_params_list.append(rse_param)
                     rse_params_map[rse_param] = rse

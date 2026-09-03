@@ -52,8 +52,7 @@ def main(argv=tuple(), **kwargs):
                 if not os.access(tmpFile, os.W_OK):
                     continue
                 # check time stamp
-                timeStamp = os.path.getmtime(tmpFile)
-                timeStamp = datetime.datetime.fromtimestamp(timeStamp)
+                timeStamp = datetime.datetime.fromtimestamp(os.path.getmtime(tmpFile))
                 if timeStamp > timeLimit:
                     continue
                 # remove

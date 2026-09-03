@@ -171,6 +171,10 @@ class WorkerThread(threading.Thread):
             self.threadPool.add(self)
         self.logger = logger
 
+    # the real work, implemented by every subclass
+    def runImpl(self):
+        raise NotImplementedError("runImpl is not implemented")
+
     # main loop
     def run(self):
         # get slot

@@ -77,13 +77,15 @@ def submit_workflow_raw_request(req: PandaRequest, params: dict | str) -> dict:
 
     if isinstance(params, str):
         try:
-            params = json.loads(params)
+            request_params = json.loads(params)
         except Exception as exc:
             message = f"Failed to parse params: {params} {str(exc)}"
             tmp_logger.error(message)
             return generate_response(success, message, data)
+    else:
+        request_params = params
 
-    workflow_id = global_wfif.register_workflow(prodsourcelabel, user_dn, raw_request_params=params)
+    workflow_id = global_wfif.register_workflow(prodsourcelabel, user_dn, raw_request_params=request_params)
 
     if workflow_id is not None:
         success = True

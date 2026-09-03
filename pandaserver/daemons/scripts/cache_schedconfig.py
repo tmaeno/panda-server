@@ -33,7 +33,8 @@ class cacheSchedConfig:
 
     def __init__(self, tbuf):
         self.tbuf = tbuf
-        self.queueData = None
+        # the queue rows, read by getQueueData() before anything dumps them
+        self.queueData: Any = None
         self.cloudStatus = None
         # Define this here, but could be more flexible...
         self.queueDataFields = {

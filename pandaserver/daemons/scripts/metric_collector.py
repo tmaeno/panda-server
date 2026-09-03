@@ -275,11 +275,12 @@ class MetricsDB(object):
             return
         # key type default
         if key_type is None:
-            key = {x[0]: x[1] for x in metric_list}.get(metric, "both")
+            key_type = {x[0]: x[1] for x in metric_list}.get(metric, "both")
         # return map
         ret_map = {}
         for computingSite, gshare, value_json in res:
-            key = (computingSite, gshare)
+            # the key is the site, the gshare, both of them, or nothing, per key_type
+            key: Any = (computingSite, gshare)
             if key_type == "site":
                 key = computingSite
             elif key_type == "gshare":

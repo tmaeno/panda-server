@@ -1085,7 +1085,8 @@ class MiscStandaloneModule(BaseModule):
         if getVersion:
             sqlLock += ",version=:version"
         sqlLock += " WHERE vuid=:vuid AND transferStatus=:transferStatus"
-        retList = []
+        # the rows, with the version appended when it was asked for
+        retList: list[tuple] = []
         try:
             # begin transaction
             self.conn.begin()

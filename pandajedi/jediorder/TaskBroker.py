@@ -64,8 +64,8 @@ class TaskBroker(JediKnight, FactoryBase):
                                     # make workers
                                     nWorker = jedi_config.taskbroker.nWorkers
                                     for iWorker in range(nWorker):
-                                        thr = TaskCheckerThread(taskList, threadPool, self.taskBufferIF, self.ddmIF, self, vo, prodSourceLabel)
-                                        thr.start()
+                                        checker_thr = TaskCheckerThread(taskList, threadPool, self.taskBufferIF, self.ddmIF, self, vo, prodSourceLabel)
+                                        checker_thr.start()
                                     # join
                                     threadPool.join()
                                 # get the list of tasks to assign

@@ -2,6 +2,7 @@ import argparse
 import copy
 import os
 import sys
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.thread_utils import GenericThread
@@ -59,7 +60,9 @@ def print_msg(message: str, log_stream: LogWrapper | None, is_error: bool = Fals
 
 
 # main
-def main(taskBuffer=None, exec_options=None, log_stream=None, args_list=None):
+# taskBuffer is a TaskBuffer, which cannot be named here since the module is imported inside
+# the function on purpose, hence Any
+def main(taskBuffer: Any = None, exec_options=None, log_stream=None, args_list=None):
     # options
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -149,14 +152,15 @@ def main(taskBuffer=None, exec_options=None, log_stream=None, args_list=None):
 
     if taskBuffer is None:
         # instantiate TB
-        from pandaserver.taskbuffer.TaskBuffer import taskBuffer
+        from pandaserver.taskbuffer.TaskBuffer import taskBuffer as default_task_buffer
 
-        taskBuffer.init(
+        default_task_buffer.init(
             panda_config.dbhost,
             panda_config.dbpasswd,
             nDBConnection=1,
             requester=requester_id,
         )
+        taskBuffer = default_task_buffer
 
     # set options from dict
     if exec_options is None:
