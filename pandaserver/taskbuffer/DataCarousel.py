@@ -412,7 +412,9 @@ class DataCarouselInterface(object):
         self.tape_rses = []
         self.datadisk_rses = []
         self.disk_rses = []
-        self.dc_config_map = None
+        # every field of the config defaults to empty, so an unread or unreadable config
+        # reads back as "nothing configured" rather than raising on every access
+        self.dc_config_map = DataCarouselMainConfig()
         self._last_update_ts_dict = {}
         # full pid
         self.full_pid = f"{socket.getfqdn().split('.')[0]}-{os.getpgrp()}-{os.getpid()}"
@@ -911,7 +913,7 @@ class DataCarouselInterface(object):
         # tmp_log.debug(f"{ret}")
         return ret
 
-    def _get_filtered_replicas(self, dataset: str) -> tuple[dict, (str | None), bool]:
+    def _get_filtered_replicas(self, dataset: str) -> tuple[dict[str, list], (dict | None), bool, dict]:
         """
         Get filtered replicas of a dataset and the staging rule and whether all replicas are without rules
 
@@ -920,7 +922,7 @@ class DataCarouselInterface(object):
 
         Returns:
             dict : filtered replicas map (rules considered)
-            str | None : staging rule, None if not existing
+            dict | None : staging rule as returned by DDM, None if not existing
             bool : whether all replicas on datadisk are without rules
             dict : original replicas map
         """
@@ -935,7 +937,7 @@ class DataCarouselInterface(object):
                     staging_rule = rule
                 else:
                     rse_expression_list.append(rule["rse_expression"])
-        filtered_replicas_map = {"tape": [], "datadisk": []}
+        filtered_replicas_map: dict[str, list] = {"tape": [], "datadisk": []}
         has_datadisk_replica = len(replicas_map["datadisk"]) > 0
         has_disk_replica = len(replicas_map["disk"]) > 0
         for replica in replicas_map["tape"]:
@@ -1023,6 +1025,10 @@ class DataCarouselInterface(object):
         tmp_log = LogWrapper(logger, f"_get_active_source_tapes")
         try:
             active_source_tapes = self._get_active_source_tapes()
+            if active_source_tapes is None:
+                # a config that cannot be read means no tape is active, which is what the
+                # per-RSE test below reached anyway, one logged traceback at a time
+                active_source_tapes = set()
             active_source_rses_set = set()
             for rse, rse_config in self.dc_config_map.source_rses_config.items():
                 try:
@@ -1040,9 +1046,7 @@ class DataCarouselInterface(object):
         else:
             return active_source_rses_set
 
-    def _get_source_type_of_dataset(
-        self, dataset: str, active_source_rses_set: set | None = None
-    ) -> tuple[(str | None), (set | None), (str | None), bool, list]:
+    def _get_source_type_of_dataset(self, dataset: str, active_source_rses_set: set | None = None) -> tuple[(str | None), set, (dict | None), bool, list]:
         """
         Get source type and permanent (tape or datadisk) RSEs of a dataset
 
@@ -1052,8 +1056,8 @@ class DataCarouselInterface(object):
 
         Returns:
             str | None : source type of the dataset, "datadisk" if replica on any datadisk, "tape" if replica only on tapes, None if not found
-            set | None : set of permanent RSEs, otherwise None
-            str | None : staging rule if existing, otherwise None
+            set : set of permanent RSEs, empty if none was found
+            dict | None : staging rule as returned by DDM if existing, otherwise None
             bool : whether to pin the dataset
             list : list of suggested destination RSEs; currently only datadisks with full replicas to pin
         """
@@ -1105,7 +1109,7 @@ class DataCarouselInterface(object):
             # other unexpected errors
             raise e
 
-    def _choose_tape_source_rse(self, dataset: str, rse_set: set, staging_rule, no_cern: bool = True) -> tuple[str, (str | None), (str | None)]:
+    def _choose_tape_source_rse(self, dataset: str, rse_set: set, staging_rule: dict | None, no_cern: bool = True) -> tuple[str, (str | None), (str | None)]:
         """
         Choose a TAPE source RSE
         If with existing staging rule, then get source RSE from it
@@ -1187,16 +1191,18 @@ class DataCarouselInterface(object):
             # other unexpected errors
             raise e
 
-    def _get_source_tape_from_rse(self, source_rse: str) -> str:
+    def _get_source_tape_from_rse(self, source_rse: str | None) -> str | None:
         """
         Get the source tape of a source RSE
 
         Args:
-            source_rse (str): name of the source RSE
+            source_rse (str|None): name of the source RSE, which is unset on a request whose source has not been chosen
 
         Returns:
-            str : source tape
+            str | None : source tape, or source_rse itself when it is already a physical tape or unset
         """
+        if source_rse is None:
+            return None
         try:
             # source_rse is RSE
             source_tape = self.dc_config_map.source_rses_config[source_rse].tape
@@ -1232,7 +1238,8 @@ class DataCarouselInterface(object):
             expanded_dsname_set = set()
             # set of required dataset names for fast membership tests
             dsname_set = set(dsname_list) if dsname_list is not None else None
-            ret_map = {
+            num_given_dsnames = len(dsname_list) if dsname_list is not None else 0
+            ret_map: dict[str, list] = {
                 "pseudo_coll_list": [],
                 "unfound_coll_list": [],
                 "empty_coll_list": [],
@@ -1282,7 +1289,7 @@ class DataCarouselInterface(object):
             all_input_datasets_set |= jobparam_datasets_set
             if dsname_set is not None:
                 # tmp_log.debug(f"dsname_list={dsname_list} ; expanded_dsname_set={sorted(expanded_dsname_set)}")
-                tmp_log.debug(f"dsname_list_len={len(dsname_list)} ; expanded_dsname_set_len={len(expanded_dsname_set)}")
+                tmp_log.debug(f"dsname_list_len={num_given_dsnames} ; expanded_dsname_set_len={len(expanded_dsname_set)}")
                 # dsname_list is given; filter out extra container slash
                 master_datasets_set = set([dsname for dsname in dsname_set if not dsname.endswith("/")])
                 # extra dataset not in job parameters when task resubmitted/rerefined
@@ -1424,7 +1431,11 @@ class DataCarouselInterface(object):
             return False
 
     def submit_data_carousel_requests(
-        self, task_id: int, prestaging_list: list[tuple[str, str | None, str | None]], options: dict | None = None, submit_idds_request: bool = True
+        self,
+        task_id: int,
+        prestaging_list: list[tuple[str, str | None, str | None, bool, list | None]],
+        options: dict | None = None,
+        submit_idds_request: bool = True,
     ) -> bool | None:
         """
         Submit data carousel requests for a task
@@ -1556,12 +1567,12 @@ class DataCarouselInterface(object):
         source_rses_config_df = pl.DataFrame(tmp_list)
         return source_rses_config_df
 
-    def _get_source_tape_stats_dataframe(self) -> pl.DataFrame | None:
+    def _get_source_tape_stats_dataframe(self) -> tuple[pl.DataFrame, pl.DataFrame] | None:
         """
         Get statistics of source tapes as dataframe
 
         Returns:
-            polars.DataFrame : dataframe of statistics of source tapes if successful, or None if failed
+            tuple[polars.DataFrame, polars.DataFrame] : dataframes of the statistics per source tape and per source RSE and gshare, or None if failed
         """
         # get Data Carousel requests dataframe of staging requests
         dc_req_df = self._get_dc_requests_table_dataframe()
@@ -1647,12 +1658,12 @@ class DataCarouselInterface(object):
         # return
         return gshare_dict
 
-    def _queued_requests_tasks_to_dataframe(self, queued_requests: list | None) -> pl.DataFrame:
+    def _queued_requests_tasks_to_dataframe(self, queued_requests: list) -> pl.DataFrame:
         """
         Transfrom Data Carousel queue requests and their tasks into dataframe
 
         Args:
-            queued_requests (list|None): list of tuples in form of (queued_request, [taskspec1, taskspec2, ...])
+            queued_requests (list): list of tuples in form of (queued_request, [taskspec1, taskspec2, ...])
 
         Returns:
             polars.DataFrame : dataframe of queued requests
@@ -1732,7 +1743,11 @@ class DataCarouselInterface(object):
             tmp_log.debug(f"no requests to stage or to pin ; skipped")
             return ret_list
         # get stats of tapes
-        source_tape_stats_df, source_rse_gshare_stats_df = self._get_source_tape_stats_dataframe()
+        source_tape_stats = self._get_source_tape_stats_dataframe()
+        if source_tape_stats is None:
+            tmp_log.debug(f"failed to get stats of source tapes ; skipped")
+            return ret_list
+        source_tape_stats_df, source_rse_gshare_stats_df = source_tape_stats
         # tmp_log.debug(f"source_tape_stats_df: \n{source_tape_stats_df}")
         tmp_log.debug(f"source_rse_gshare_stats_df: \n{source_rse_gshare_stats_df.select(['source_tape', 'init_task_gshare', 'total_files', 'staging_files'])}")
         source_tape_stats_dict_list = source_tape_stats_df.to_dicts()
@@ -1798,6 +1813,12 @@ class DataCarouselInterface(object):
                         unchosen_queued_df = per_gshare_df.clear()
                     fair_share_queued_df.extend(per_gshare_df.filter(pl.col("cum_tot_files_in_gshare") <= fair_share_quota_per_gshare))
                     unchosen_queued_df.extend(per_gshare_df.filter(pl.col("cum_tot_files_in_gshare") > fair_share_quota_per_gshare))
+                if fair_share_queued_df is None or unchosen_queued_df is None:
+                    # to_stage_gshare_list is never empty: a gshare is dropped from it only
+                    # when it already has the virtual quota staging, and those quotas sum
+                    # to more than the staging files they are compared against
+                    tmp_log.warning(f"source_tape={source_tape} has no gshare to stage ; skipped")
+                    continue
                 # remaining fair share quota to distribute again
                 n_fair_share_files_to_stage = fair_share_queued_df.select("total_files").sum().to_dict()["total_files"][0]
                 fair_share_remaining_quota = fair_share_init_quota - n_fair_share_files_to_stage
@@ -1960,6 +1981,10 @@ class DataCarouselInterface(object):
         except Exception:
             # other unexpected errors
             tmp_log.error(f"got error ; {traceback.format_exc()}")
+            return None
+        if source_tape is None:
+            # the request has no source RSE yet, so there is no tape config to look up
+            tmp_log.warning(f"source RSE is not set; skipped")
             return None
         # parameters about this tape source from DC config
         try:
@@ -2361,7 +2386,7 @@ class DataCarouselInterface(object):
         ret = False
         # check if the rule is valid
         is_valid, ddm_rule_id, the_rule = self._check_ddm_rule_of_request(dc_req_spec, by=by)
-        if not is_valid:
+        if not is_valid or ddm_rule_id is None or the_rule is None:
             # rule not valid; skipped
             tmp_log.error(f"ddm_rule_id={ddm_rule_id} rule not valid; skipped")
             return ret
@@ -2886,6 +2911,10 @@ class DataCarouselInterface(object):
             orig_dc_req_spec = locked_spec
             # dummy spec to resubmit
             dummy_dc_req_spec_to_resubmit = get_resubmit_request_spec(orig_dc_req_spec, exclude_prev_dst)
+            if dummy_dc_req_spec_to_resubmit is None:
+                err_msg = f"failed to make a spec to resubmit request_id={orig_dc_req_spec.request_id}; skipped"
+                tmp_log.warning(err_msg)
+                return None, err_msg
             # check and choose available destination RSE
             destination_rse = self._choose_destination_rse_for_request(dummy_dc_req_spec_to_resubmit)
             if destination_rse is None:
