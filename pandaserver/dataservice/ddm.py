@@ -10,7 +10,7 @@ import re
 import threading
 import time
 import traceback
-from typing import Any, Dict, List
+from typing import Any, Dict, List, NoReturn
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -409,7 +409,7 @@ class RucioAPI:
         return file
 
     # raise a clean fatal file-registration error, chaining the original exception
-    def _raise_fatal_registration_error(self, exc):
+    def _raise_fatal_registration_error(self, exc) -> NoReturn:
         raise FileRegistrationError(f"{type(exc).__name__}: {exc}", fatal=True) from exc
 
     # register files in dataset

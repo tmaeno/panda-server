@@ -392,6 +392,8 @@ def get_resubmit_request_spec(dc_req_spec: DataCarouselRequestSpec, exclude_prev
         return dc_req_spec_to_resubmit
     except Exception:
         tmp_log.error(f"got error ; {traceback.format_exc()}")
+    # no branch above produced a value, which the return type covers as None
+    return None
 
 
 # ==============================================================
@@ -538,6 +540,8 @@ class DataCarouselInterface(object):
         else:
             tmp_log.warning("no request found; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def get_request_by_dataset(self, dataset: str) -> DataCarouselRequestSpec | None:
         """
@@ -571,6 +575,8 @@ class DataCarouselInterface(object):
         else:
             tmp_log.warning("no reusable request; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     # @contextmanager
     # def request_transaction_by_id(self, request_id: int):

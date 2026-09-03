@@ -57,6 +57,8 @@ class WorkflowModule(BaseModule):
         else:
             tmp_log.warning("no workflow found; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def get_child_workflows(self, parent_id: int) -> list:
         """
@@ -110,6 +112,8 @@ class WorkflowModule(BaseModule):
         else:
             tmp_log.warning("no step found; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def get_workflow_data(self, data_id: int) -> WFDataSpec | None:
         """
@@ -138,6 +142,8 @@ class WorkflowModule(BaseModule):
         else:
             tmp_log.warning("no data found; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def get_workflow_data_by_name(self, name: str, workflow_id: int | None) -> WFDataSpec | None:
         """
@@ -171,6 +177,8 @@ class WorkflowModule(BaseModule):
         else:
             tmp_log.warning("no data found; skipped")
             return None
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def get_steps_of_workflow(self, workflow_id: int, status_filter_list: list | None = None, status_exclusion_list: list | None = None) -> list[WFStepSpec]:
         """
@@ -418,6 +426,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to lock workflow: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def unlock_workflow(self, workflow_id: int, locked_by: str) -> bool | None:
         """
@@ -455,6 +465,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to unlock workflow: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def lock_workflow_step(self, step_id: int, locked_by: str, lock_expiration_sec: int = 120) -> bool | None:
         """
@@ -502,6 +514,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to lock workflow step: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def unlock_workflow_step(self, step_id: int, locked_by: str) -> bool | None:
         """
@@ -539,6 +553,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to unlock workflow step: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def lock_workflow_data(self, data_id: int, locked_by: str, lock_expiration_sec: int = 120) -> bool | None:
         """
@@ -586,6 +602,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to lock workflow data: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def unlock_workflow_data(self, data_id: int, locked_by: str) -> bool | None:
         """
@@ -623,6 +641,8 @@ class WorkflowModule(BaseModule):
                     return True
         except Exception as e:
             tmp_log.error(f"failed to unlock workflow data: {e}")
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def insert_workflow(self, workflow_spec: WorkflowSpec) -> int | None:
         """

@@ -771,6 +771,8 @@ class AdderAtlasPlugin(AdderPluginBase):
             else:
                 self.logger.debug(f"{str(out)}")
                 break
+        # no branch above produced a value, which the return type covers as None
+        return None
 
     def process_subscriptions(self, sub_map: Dict[str, str], sub_to_ds_map: Dict[str, List[str]], dist_datasets: List[str], sub_activity: str):
         """
