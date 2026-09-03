@@ -311,7 +311,7 @@ def getEffectiveFileSize(fsize, startEvent, endEvent, nEvents):
     inMB = 1024 * 1024
     if fsize in [None, 0]:
         # use dummy size for pseudo input
-        effectiveFsize = inMB
+        effectiveFsize: float = inMB
     elif nEvents is not None and startEvent is not None and endEvent is not None:
         # take event range into account
         effectiveFsize = int(float(fsize) * float(endEvent - startEvent + 1) / float(nEvents))
@@ -344,7 +344,7 @@ def getMemoryUsage():
         t = open(f"/proc/{os.getpid()}/status")
         v = t.read()
         t.close()
-        value = 0
+        value: float = 0
         for line in v.split("\n"):
             if line.startswith("VmRSS"):
                 items = line.split()

@@ -541,7 +541,7 @@ class AtlasProdTaskBrokerThread(WorkerThread):
                         self.prioRW.acquire()
                         nucleusRW = self.prioRW[taskSpec.currentPriority]
                         self.prioRW.release()
-                        totalWeight = 0
+                        totalWeight: float = 0
                         nucleusweights = []
                         for tmpNucleus, tmpNucleusSpec in nucleusList.items():
                             if tmpNucleus not in nucleusRW:

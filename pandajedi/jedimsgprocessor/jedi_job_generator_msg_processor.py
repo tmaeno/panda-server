@@ -30,11 +30,11 @@ class JediJobGeneratorMsgProcPlugin(BaseMsgProcPlugin):
         # cache heavy metadata objects with short TTL to reduce allocation churn
         self._cache_ttl_sec = 300
         self._site_mapper = None
-        self._site_mapper_ts = 0
+        self._site_mapper_ts: float = 0
         self._work_queue_mapper = None
-        self._work_queue_mapper_ts = 0
+        self._work_queue_mapper_ts: float = 0
         self._resource_types = None
-        self._resource_types_ts = 0
+        self._resource_types_ts: float = 0
         self._params_to_get_tasks = {}
         # memory limit to trigger early cleanup to avoid OOM killer. This is not a hard limit, just a threshold to trigger early cleanup.
         self._mem_usage_threshold_mb = 1500

@@ -5,7 +5,7 @@ class SiteCandidate(object):
         # unified name
         self.unifiedName = unifiedName
         # the weight for the brokerage
-        self.weight = 0
+        self.weight: float = 0
         # the list of files copied from SE disk
         self.localDiskFiles = set()
         # the list of files copied from SE tape

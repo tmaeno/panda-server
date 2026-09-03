@@ -2049,7 +2049,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 # main weight, for User Analysis, determined by number of jobs to submit to each site class
                 main_weight_site_class_dict = {1: weight_epsilon_init, 0: weight_epsilon_init, -1: weight_epsilon_init}
                 if taskSpec.gshare in ["User Analysis", "Express Analysis"]:
-                    n_jobs_to_submit_rem = min(n_jobs_to_submit, total_rem_q_len)
+                    n_jobs_to_submit_rem: float = min(n_jobs_to_submit, total_rem_q_len)
                     if task_class_value == -1:
                         # C-task
                         main_weight_site_class_dict[-1] = n_jobs_to_submit_rem
@@ -2076,11 +2076,11 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 for site in weight_comparison_avail_sites:
                     bw_map = basic_weight_compar_map[site]
                     # main weight by site & task class for User Analysis, and constant for group shares
-                    nbw_main = n_jobs_to_submit
+                    nbw_main: float = n_jobs_to_submit
                     if taskSpec.gshare in ["User Analysis", "Express Analysis"]:
                         nbw_main = main_weight_site_class_dict[bw_map["class"]]
                     # secondary weight proportional to remaining queue length
-                    nbw_sec = 1
+                    nbw_sec: float = 1
                     if taskSpec.gshare in ["User Analysis", "Express Analysis"]:
                         _nbw_numer = max(bw_map["rem_q_len"] - nbw_main / site_class_n_site_dict[bw_map["class"]], nbw_main * 0.001)
                         reduced_site_class_rem_q_len = site_class_rem_q_len_dict[bw_map["class"]] - nbw_main

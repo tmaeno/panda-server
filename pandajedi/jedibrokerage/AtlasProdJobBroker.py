@@ -1492,7 +1492,7 @@ class AtlasProdJobBroker(JobBrokerBase):
             for tmpSiteName in self.get_unified_sites(scanSiteList):
                 tmpSiteSpec = self.siteMapper.getSite(tmpSiteName)
                 # check at the site
-                nPilot = 0
+                nPilot: float = 0
                 if tmpSiteName in nWNmap:
                     nPilot = nWNmap[tmpSiteName]["getJob"] + nWNmap[tmpSiteName]["updateJob"]
                 # skip no pilot sites unless the task and the site use jumbo jobs or the site is standby

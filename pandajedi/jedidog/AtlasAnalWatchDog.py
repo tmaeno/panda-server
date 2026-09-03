@@ -442,7 +442,7 @@ class AtlasAnalWatchDog(TypicalWatchDogBase):
                         continue
 
                     # set weight
-                    totalW = 0
+                    totalW: float = 0
                     defaultW = 100
                     for _ in toBeBoostedSites:
                         totalW += defaultW

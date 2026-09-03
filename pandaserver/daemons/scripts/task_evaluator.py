@@ -249,8 +249,8 @@ class FetchData(object):
                 n_files_finished = 0
                 n_files_failed = 0
                 n_files_remaining = 0
-                pct_finished = 0
-                pct_failed = 0
+                pct_finished: float = 0
+                pct_failed: float = 0
                 n_jobs = 0
                 n_jobs_remaining = 0
                 # get dataset info of each task

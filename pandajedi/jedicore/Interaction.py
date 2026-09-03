@@ -123,7 +123,7 @@ class ProcessClass(object):
                 t = open(f"/proc/{self.pid}/status")
                 v = t.read()
                 t.close()
-                value = 0
+                value: float = 0
                 for line in v.split("\n"):
                     if line.startswith("VmRSS"):
                         items = line.split()

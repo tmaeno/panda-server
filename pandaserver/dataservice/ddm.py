@@ -737,7 +737,7 @@ class RucioAPI:
             if preset_scope is not None:
                 scope = preset_scope
             if grace_period is not None:
-                value = grace_period * 60 * 60
+                value: float = grace_period * 60 * 60
             else:
                 value = 0.0001
             client.set_metadata(scope=scope, name=dataset_name, key="lifetime", value=value)

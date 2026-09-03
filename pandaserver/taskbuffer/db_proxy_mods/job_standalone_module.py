@@ -684,7 +684,7 @@ class JobStandaloneModule(BaseModule):
             # check quota
             rRet = True
             rRetStr = ""
-            rQuota = 0
+            rQuota: float = 0
             if len(activeExpressU) >= jobCreditU:
                 rRetStr += f"The number of queued runXYZ exceeds the limit = {jobCreditU}. "
                 rRet = False

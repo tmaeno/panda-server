@@ -745,7 +745,7 @@ class TaskUtilsModule(BaseModule):
                     coreCountMap[pandaID] = coreCount
 
                     # output size
-                    tmpWorkSize = 0
+                    tmpWorkSize: float = 0
                     if not is_event_service:
                         try:
                             try:
@@ -763,7 +763,7 @@ class TaskUtilsModule(BaseModule):
                                 if preOutputScaleWithEvents:
                                     # scale with events
                                     if pandaID in inEventsMap and inEventsMap[pandaID] > 0:
-                                        tmpVal = int(math.ceil(float(outputFileBytes) / inEventsMap[pandaID]))
+                                        tmpVal: float = int(math.ceil(float(outputFileBytes) / inEventsMap[pandaID]))
                                     if pandaID not in inEventsMap or inEventsMap[pandaID] >= 10:
                                         outSizeList.append(tmpVal)
                                         outSizeDict[tmpVal] = pandaID
