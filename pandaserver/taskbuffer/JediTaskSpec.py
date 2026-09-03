@@ -1431,9 +1431,13 @@ class JediTaskSpec(object):
             architecture = encoded_platform
         else:
             architecture = self.architecture
-        if architecture is None or "@" not in architecture:
+        if architecture is None:
             return None
+        # the group matches the empty string, so the search fails exactly when there is no
+        # "@" in the platform
         m = re.search("@([^#&]*)", architecture)
+        if m is None:
+            return None
         img = m.group(1)
         if img == "":
             img = None
@@ -1470,14 +1474,16 @@ class JediTaskSpec(object):
         try:
             if not architecture:
                 return None
-            if "#" not in architecture:
+            # the group matches the empty string, so the search fails exactly when there is
+            # no "#" in the platform, which is the case the branch below handles
+            m = re.search(r"#([^\^@&]*)", architecture)
+            if m is None:
                 if re.search(r"^[\^@&]", architecture):
                     return None
                 arch = architecture.split("-")[0]
                 if arch:
                     return [{"arch": arch, "vendor": "*", "instr": "*"}]
                 return None
-            m = re.search(r"#([^\^@&]*)", architecture)
             spec_strs = m.group(1)
             if not spec_strs:
                 return None
@@ -1517,9 +1523,13 @@ class JediTaskSpec(object):
         except Exception:
             pass
         try:
-            if self.architecture is None or "&" not in self.architecture:
+            if self.architecture is None:
                 return None
+            # the group matches the empty string, so the search fails exactly when there is
+            # no "&" in the platform
             m = re.search(r"&([^\^@#]*)", self.architecture)
+            if m is None:
+                return None
             spec_str = m.group(1)
             if not spec_str:
                 return None

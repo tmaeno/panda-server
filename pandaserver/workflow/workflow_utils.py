@@ -300,6 +300,10 @@ class Node(object):
                     dict_inputs["opt_args"] += f" --outputs {results_json}"
                 else:
                     m = re.search("(--outputs)( +|=)([^ ]+)", dict_inputs["opt_args"])
+                    if m is None:
+                        # --outputs appears in the string but carries no value, so there is
+                        # nothing to append results.json to
+                        raise ValueError(f"""--outputs has no value in opt_args '{dict_inputs["opt_args"]}'""")
                     if results_json not in m.group(3):
                         tmp_dst = m.group(1) + "=" + m.group(3) + "," + results_json
                         dict_inputs["opt_args"] = re.sub(m.group(0), tmp_dst, dict_inputs["opt_args"])
@@ -410,10 +414,16 @@ class Node(object):
             # outputs
             for tmp_item in task_params["jobParameters"]:
                 if tmp_item["type"] == "template" and tmp_item["param_type"] == "output":
+                    # the output type is the tail of the dataset name for a regex output and
+                    # the suffix of the filename template otherwise
                     if tmp_item["value"].startswith("regex|"):
-                        self.output_types.append(re.search(r"_([^_]+)/$", tmp_item["dataset"]).group(1))
+                        source, pattern = tmp_item["dataset"], r"_([^_]+)/$"
                     else:
-                        self.output_types.append(re.search(r"}\.(.+)$", tmp_item["value"]).group(1))
+                        source, pattern = tmp_item["value"], r"}\.(.+)$"
+                    tmp_match = re.search(pattern, source)
+                    if tmp_match is None:
+                        raise ValueError(f"cannot extract the output type from '{source}'")
+                    self.output_types.append(tmp_match.group(1))
             # add a dummy output if empty. this is to allow association to downstream steps which is described through outputs
             if not self.output_types:
                 self.output_types.append("dummy")

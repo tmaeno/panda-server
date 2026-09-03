@@ -752,8 +752,11 @@ class TaskUtilsModule(BaseModule):
                                 # add size of intermediate files
                                 if jobMetrics is not None:
                                     tmpMatch = re.search("workDirSize=(\d+)", jobMetrics)
-                                    tmpWorkSize = int(tmpMatch.group(1))
-                                    tmpWorkSize /= 1024 * 1024
+                                    # the pilot omits workDirSize for some job types, which
+                                    # the enclosing except used to absorb as a non-match
+                                    if tmpMatch is not None:
+                                        tmpWorkSize = int(tmpMatch.group(1))
+                                        tmpWorkSize /= 1024 * 1024
                             except Exception:
                                 pass
                             if preOutDiskUnit is None or "Fixed" not in preOutDiskUnit:
@@ -864,13 +867,19 @@ class TaskUtilsModule(BaseModule):
                                     memSizeList.append(tmpPSS)
                                     memSizeDict[tmpPSS] = pandaID
                             else:
+                                tmpMEM = None
                                 if maxPSS > 0:
                                     tmpMEM = maxPSS
                                 else:
                                     tmpMatch = re.search("vmPeakMax=(\d+)", jobMetrics)
-                                    tmpMEM = int(tmpMatch.group(1))
-                                memSizeList.append(tmpMEM)
-                                memSizeDict[tmpMEM] = pandaID
+                                    # jobMetrics carries no vmPeakMax for some job types. The
+                                    # enclosing except absorbed that, dropping this job's
+                                    # sample, which is what the None check keeps doing.
+                                    if tmpMatch is not None:
+                                        tmpMEM = int(tmpMatch.group(1))
+                                if tmpMEM is not None:
+                                    memSizeList.append(tmpMEM)
+                                    memSizeDict[tmpMEM] = pandaID
                         except Exception:
                             pass
 

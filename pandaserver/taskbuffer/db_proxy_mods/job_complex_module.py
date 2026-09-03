@@ -2842,16 +2842,21 @@ class JobComplexModule(BaseModule):
                 elif EventServiceUtils.isEventServiceMerge(job):
                     try:
                         origJobParameters = job.jobParameters
+                        # both tags are written together when the merge job is built, so
+                        # a missing first tag used to skip the second one as well through
+                        # the enclosing except -- the nesting keeps that
                         tmpMatch = re.search(
                             "<PANDA_ESMERGE_JOBP>(.*)</PANDA_ESMERGE_JOBP>",
                             origJobParameters,
                         )
-                        job.jobParameters = tmpMatch.group(1)
-                        tmpMatch = re.search(
-                            "<PANDA_ESMERGE_TRF>(.*)</PANDA_ESMERGE_TRF>",
-                            origJobParameters,
-                        )
-                        job.transformation = tmpMatch.group(1)
+                        if tmpMatch is not None:
+                            job.jobParameters = tmpMatch.group(1)
+                            tmpMatch = re.search(
+                                "<PANDA_ESMERGE_TRF>(.*)</PANDA_ESMERGE_TRF>",
+                                origJobParameters,
+                            )
+                            if tmpMatch is not None:
+                                job.transformation = tmpMatch.group(1)
                     except Exception:
                         pass
                     # pass in/out map for merging via metadata. the column is a CLOB,
@@ -5568,17 +5573,21 @@ class JobComplexModule(BaseModule):
                     closedInBadStatus = True
             else:
                 # extract parameters for merge
+                # the tags are absent unless the job parameters were built for a merge, which
+                # the enclosing excepts used to absorb as a non-match
                 try:
                     tmpMatch = re.search(
                         "<PANDA_ESMERGE_TRF>(.*)</PANDA_ESMERGE_TRF>",
                         jobSpec.jobParameters,
                     )
-                    jobSpec.transformation = tmpMatch.group(1)
+                    if tmpMatch is not None:
+                        jobSpec.transformation = tmpMatch.group(1)
                 except Exception:
                     pass
                 try:
                     tmpMatch = re.search("<PANDA_EVSMERGE>(.*)</PANDA_EVSMERGE>", jobSpec.jobParameters)
-                    jobSpec.jobParameters = tmpMatch.group(1)
+                    if tmpMatch is not None:
+                        jobSpec.jobParameters = tmpMatch.group(1)
                 except Exception:
                     pass
                 # use siteid of jumbo jobs to generate merge jobs for fake co-jumbo

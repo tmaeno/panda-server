@@ -289,7 +289,13 @@ class Parser(object):
             not_list = True
         else:
             not_list = False
-        items = [re.search(r"[^/]+#.+$", s).group(0) for s in job_id]
+        items = []
+        for s in job_id:
+            # the id is a URI whose fragment names the step and the parameter
+            tmp_match = re.search(r"[^/]+#.+$", s)
+            if tmp_match is None:
+                raise ValueError(f"cannot extract an id from '{s}', which has no # fragment")
+            items.append(tmp_match.group(0))
         if not_list:
             return items[0]
         return items

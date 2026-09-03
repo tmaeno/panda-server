@@ -169,6 +169,8 @@ node["xml"] = xml
 url = f"{baseURLSSL}/updateJob"
 
 match = re.search("[^:/]+://([^/]+)(/.+)", url)
+if match is None:
+    sys.exit(f"cannot extract the host and the path from the server URL {url}")
 host = match.group(1)
 path = match.group(2)
 
