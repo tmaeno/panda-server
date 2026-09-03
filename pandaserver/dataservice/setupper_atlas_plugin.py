@@ -341,7 +341,7 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                             chosen_panda_queue = self.site_mapper.getSite(panda_config.def_queue)
                             overwriteSite = True
                         else:
-                            # nothing picks a site here any more, so the job keeps not having one
+                            # nothing picks a site here any more, so the bunch has none to run on
                             chosen_panda_queue = None
                 # increment iJob
                 iJob += 1
@@ -354,13 +354,22 @@ class SetupperAtlasPlugin(SetupperPluginBase):
                 prevHasPresetSite = hasPresetSite
                 prevIsJEDI = isJEDI
 
+                # no site to run on. Letting the job through would give it a dispatch data block
+                # that subscribe_dispatch_data_block skips for want of a site, so the input would
+                # never arrive and the job would sit in assigned for ever. Fail it instead
+                if chosen_panda_queue is None:
+                    job.jobStatus = "failed"
+                    job.ddmErrorCode = ErrorCode.EC_Setupper
+                    job.ddmErrorDiag = "no computing site was set and none could be chosen for the job"
+                    tmp_logger.error(f"PandaID:{job.PandaID} failed : {job.ddmErrorDiag}")
+                    continue
+
                 # assign site
-                if chosen_panda_queue is not None:
-                    job.computingSite = chosen_panda_queue.sitename
-                    tmp_logger.debug(f"PandaID:{job.PandaID} -> preset site:{chosen_panda_queue.sitename}")
-                    # set cloud
-                    if job.cloud in ["NULL", None, ""]:
-                        job.cloud = chosen_panda_queue.cloud
+                job.computingSite = chosen_panda_queue.sitename
+                tmp_logger.debug(f"PandaID:{job.PandaID} -> preset site:{chosen_panda_queue.sitename}")
+                # set cloud
+                if job.cloud in ["NULL", None, ""]:
+                    job.cloud = chosen_panda_queue.cloud
 
                 # set destinationSE
                 destSE = job.destinationSE
