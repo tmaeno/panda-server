@@ -403,7 +403,6 @@ pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Incompatibl
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Incompatible types in assignment (expression has type "tuple[int, int | None]", variable has type "tuple[int, None]")  [assignment]
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Incompatible types in assignment (expression has type "tuple[int, int | None]", variable has type "tuple[int, None]")  [assignment]
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Incompatible types in assignment (expression has type "tuple[int, int | None]", variable has type "tuple[int, None]")  [assignment]
-pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Module has no attribute "error_codes"  [attr-defined]
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: No overload variant of "sub" matches argument types "str", "int", "Any"  [call-overload]
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: No overload variant of "sub" matches argument types "str", "int", "str"  [call-overload]
 pandaserver/taskbuffer/db_proxy_mods/job_complex_module.py:0: error: Not all arguments converted during string formatting  [str-format]

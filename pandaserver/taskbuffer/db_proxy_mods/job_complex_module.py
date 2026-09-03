@@ -13,13 +13,7 @@ from pandacommon.pandautils.PandaUtils import get_sql_IN_bind_variables, naive_u
 from pandaserver.config import panda_config
 from pandaserver.srvcore import CoreUtils, srv_msg_utils
 from pandaserver.srvcore.hardware_matching import match_gpu_spec
-from pandaserver.taskbuffer import (
-    ErrorCode,
-    EventServiceUtils,
-    JobUtils,
-    PrioUtil,
-    SupErrors,
-)
+from pandaserver.taskbuffer import ErrorCode, EventServiceUtils, JobUtils, PrioUtil
 from pandaserver.taskbuffer.db_proxy_mods.base_module import (
     BaseModule,
     SQL_QUEUE_TOPIC_async_dataset_update,
@@ -32,6 +26,7 @@ from pandaserver.taskbuffer.db_proxy_mods.worker_module import get_worker_module
 from pandaserver.taskbuffer.FileSpec import FileSpec
 from pandaserver.taskbuffer.JediTaskSpec import JediTaskSpec
 from pandaserver.taskbuffer.JobSpec import JobSpec, get_task_queued_time
+from pandaserver.taskbuffer.SupErrors import SupErrors
 
 # maximum number of task IDs excluded from job dispatch due to hardware mismatch
 MAX_EXCLUDED_TASK_IDS = 500
