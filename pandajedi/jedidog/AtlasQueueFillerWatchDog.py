@@ -310,7 +310,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
             excluded_sites_str = ",".join(sorted(sites_set))
             tmp_log.debug(f"excluded sites due to {reason} : {excluded_sites_str}")
         included_sites_str = ",".join(sorted([x[0] for x in available_sites_list]))
-        tmp_log.debug("included sites : {sites}".format(reason=reason, sites=included_sites_str))
+        tmp_log.debug("included sites : {sites}".format(sites=included_sites_str))
         # return
         return available_sites_list
 
@@ -695,7 +695,7 @@ class AtlasQueueFillerWatchDog(WatchDogBase):
                             "AND NOT ( "
                             "t.status IN ('ready','running') "
                             "AND EXISTS ( "
-                            "SELECT d.datasetID FROM {0}.JEDI_Datasets d "
+                            "SELECT d.datasetID FROM {jedi_schema}.JEDI_Datasets d "
                             "WHERE t.jediTaskID=d.jediTaskID AND d.type='input' "
                             "AND d.nFilesToBeUsed-d.nFilesUsed>=:min_files_ready AND d.nFiles-d.nFilesUsed>=:min_files_remaining "
                             ") "

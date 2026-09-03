@@ -602,7 +602,7 @@ class FetchData(object):
                     else:
                         tmp_log.warning(
                             ("site={site} none value, skipped : w_cl95upp={w_cl95upp} long_q_mean={long_q_mean} ").format(
-                                w_cl95upp=v["w_cl95upp"], long_q_mean=v["long_q_mean"]
+                                site=site, w_cl95upp=v["w_cl95upp"], long_q_mean=v["long_q_mean"]
                             )
                         )
                         continue

@@ -252,7 +252,7 @@ class TaskUtilsModule(BaseModule):
             if nJumbo > maxJumbo:
                 tmpLog.debug(f"False since nJumbo={nJumbo} > maxJumbo={maxJumbo}")
                 return False
-            tmpLog.debug("True since nJumbo={0} < maxJumbo={1} and nEvents={0} > minEventsJumbo={1}".format(nJumbo, maxJumbo, nEvents, minEvents))
+            tmpLog.debug("True since nJumbo={0} < maxJumbo={1} and nEvents={2} > minEventsJumbo={3}".format(nJumbo, maxJumbo, nEvents, minEvents))
             return True
         except Exception:
             # roll back

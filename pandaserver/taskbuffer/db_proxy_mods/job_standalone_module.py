@@ -2097,7 +2097,7 @@ class JobStandaloneModule(BaseModule):
                         break
                     elif resC[0] != "merging":
                         # not in merging
-                        tmp_log.debug("pre-merge job in {0} != merging".format(tmpPandaID, resC[0]))
+                        tmp_log.debug("pre-merge job {0} in {1} != merging".format(tmpPandaID, resC[0]))
                         retVal = False
                         retMsg = tmpPandaID
                         break

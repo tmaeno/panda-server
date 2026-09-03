@@ -1245,7 +1245,7 @@ class TaskStandaloneModule(BaseModule):
                                     nRowP = self.cur.rowcount
                                     tmpLog.debug(f"deleted param for jediTaskID={jediTaskID} with {nRowP}")
                                     sqlDelJT = f"DELETE FROM {panda_config.schemaJEDI}.JEDI_Tasks "
-                                    sqlDelJT += "WHERE jediTaskID=:jediTaskID ".format(panda_config.schemaJEDI)
+                                    sqlDelJT += "WHERE jediTaskID=:jediTaskID "
                                     varMap = {}
                                     varMap[":jediTaskID"] = jediTaskID
                                     self.cur.execute(sqlDelJT + comment, varMap)
@@ -1850,7 +1850,7 @@ class TaskStandaloneModule(BaseModule):
                     self.cur.execute(sqlTD + comment, varMap)
                     nRow = self.cur.rowcount
                     if nRow > 0:
-                        tmpLog.debug("jediTaskID={0} back to defined".format(jediTaskID, nRow))
+                        tmpLog.debug("jediTaskID={0} back to defined".format(jediTaskID))
                         nTasks += 1
                 if nRow > 0 and is_msg_driven(splitRule):
                     # added msg driven tasks
@@ -2888,7 +2888,7 @@ class TaskStandaloneModule(BaseModule):
                     numThrottled += 1
                     throttledTime = naive_utcnow()
                     releaseTime = throttledTime + datetime.timedelta(minutes=waitTime * numThrottled * numThrottled)
-                    errorDialog = "#ATM #KV action=throttle jediTaskID={0} due to reason=many_attempts {0} > {1}x{2} ".format(
+                    errorDialog = "#ATM #KV action=throttle jediTaskID={0} due to reason=many_attempts {1} > {2}x{3} ".format(
                         jediTaskID, largestAttemptNr, numThrottled, attemptInterval
                     )
                     errorDialog += f"from {throttledTime.strftime('%Y/%m/%d %H:%M:%S')} "

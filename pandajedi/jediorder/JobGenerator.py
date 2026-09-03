@@ -924,7 +924,7 @@ class JobGeneratorThread(WorkerThread):
                         tmpLog.debug(main_stop_watch.get_elapsed_time(""))
                         tmpLog.info(f"done. took cycle_t={regTime.seconds} sec")
             except Exception as e:
-                logger.error("%s.runImpl() failed with {} lastJediTaskID={} {}".format(self.__class__.__name__, str(e), lastJediTaskID, traceback.format_exc()))
+                logger.error("{}.runImpl() failed with {} lastJediTaskID={} {}".format(self.__class__.__name__, str(e), lastJediTaskID, traceback.format_exc()))
 
     # read task parameters
     def readTaskParams(self, taskSpec, taskParamMap, tmpLog):
@@ -2011,7 +2011,7 @@ class JobGeneratorThread(WorkerThread):
             tmpStat, fileIdMap = self.taskBufferIF.insertBuildFileSpec_JEDI(jobSpec, reusedDatasetID, simul)
             # failed
             if not tmpStat:
-                tmpLog.error("failed to insert libDS for jediTaskID={0} siteName={0}".format(taskSpec.jediTaskID, siteName))
+                tmpLog.error("failed to insert libDS for jediTaskID={0} siteName={1}".format(taskSpec.jediTaskID, siteName))
                 return failedRet
             # set attributes
             for tmpFile in jobSpec.Files:

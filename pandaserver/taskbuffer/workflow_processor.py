@@ -100,7 +100,7 @@ class WorkflowProcessor(object):
                                 mailBody = f"Hello,\n\nWorkflow:{ops['data']['outDS']} has been accepted with RequestID:{request_id}\n\n"
                             else:
                                 mailSubject = f"PANDA WARNING for Workflow={ops['data']['outDS']}"
-                                mailBody = "Hello,\n\nWorkflow {} was not accepted\n\n".format(ops["data"]["outDS"], request_id)
+                                mailBody = "Hello,\n\nWorkflow {} was not accepted\n\n".format(ops["data"]["outDS"])
                                 mailBody += f"Reason : {dump_str}\n"
                             # send
                             tmpSM = MailUtils().send(toAdder, mailSubject, mailBody)

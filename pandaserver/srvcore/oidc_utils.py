@@ -32,7 +32,7 @@ def get_jwk(kid, jwks):
     for jwk in jwks.get("keys", []):
         if jwk.get("kid") == kid:
             return jwk
-    raise InvalidTokenError("JWK not found for kid={0}".format(kid, str(jwks)))
+    raise InvalidTokenError("JWK not found for kid={0}".format(kid))
 
 
 # token decoder
