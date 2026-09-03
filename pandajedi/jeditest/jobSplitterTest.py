@@ -24,6 +24,7 @@ ddmIF = DDMInterface()
 ddmIF.setupInterface()
 
 jediTaskID = int(sys.argv[1])
+datasetID: list[int] | None
 try:
     datasetID = [int(sys.argv[2])]
 except Exception:

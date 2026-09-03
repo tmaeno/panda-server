@@ -362,6 +362,9 @@ class Node(object):
                         dict_inputs["opt_args"] = re.sub(tmp_src, tmp_dst, dict_inputs["opt_args"])
             com += ["--exec", dict_inputs["opt_exec"]]
             com += ["--outDS", task_name]
+            # argv-shaped, but the branch below puts a None where the image name would be,
+            # hence the bare list type
+            parse_com: list
             if container_image:
                 com += ["--containerImage", container_image]
                 parse_com = copy.copy(com[1:])
@@ -761,7 +764,8 @@ def resolve_nodes(node_list, root_inputs, data, serial_id, parent_ids, out_ds_na
                     scatters = [{item: v} for v in node.inputs[item]["value"]]
                 else:
                     [i.update({item: v}) for i, v in zip(scatters, node.inputs[item]["value"])]
-            for idx, item in enumerate(scatters):
+            # scatters is filled by the loop above, which runs since node.scatter is not empty
+            for idx, item in enumerate(scatters or []):
                 sc_node = copy.deepcopy(node)
                 for k, v in item.items():
                     sc_node.inputs[k]["value"] = v

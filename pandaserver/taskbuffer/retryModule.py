@@ -46,7 +46,7 @@ def safe_match(pattern, message):
     """
     tmp_log = LogWrapper(_logger, f"safe_match")
 
-    matches = False
+    matches: re.Match | None = None
     try:
         matches = re.match(pattern, message, flags=re.DOTALL)
     except ReError:

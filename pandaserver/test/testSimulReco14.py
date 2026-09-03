@@ -6,6 +6,8 @@ from pandaserver.taskbuffer.FileSpec import FileSpec
 from pandaserver.taskbuffer.JobSpec import JobSpec
 from pandaserver.userinterface import Client
 
+site: str | None
+cloud: str | None
 if len(sys.argv) > 1:
     site = sys.argv[1]
     cloud = None

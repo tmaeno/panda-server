@@ -39,7 +39,7 @@ class SiteMapper:
             self.worldCloudSpec: dict[str, Any] = {}
             self.nuclei = {}
             self.satellites = {}
-            self.endpoint_to_sites_map = {"input": {}, "output": {}}
+            self.endpoint_to_sites_map: dict[str, dict[str, list[str]]] = {"input": {}, "output": {}}
 
             # get resource types
             resource_types = taskBuffer.load_resource_types()

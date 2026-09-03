@@ -5,9 +5,11 @@ import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
+
 from pandaserver.taskbuffer import FileSpec, JobSpec
 
 JobSpec.reserveChangedState = True
@@ -75,6 +77,10 @@ class TaskBufferInterfaceChild:
 
 # master class
 class TaskBufferInterface:
+    # The TaskBuffer this interface serves, installed by launch() before the child process
+    # runs. Its type is Any since launch() takes it untyped from the caller
+    taskBuffer: Any
+
     # constructor
     def __init__(self):
         # make manager to create shared objects
@@ -127,7 +133,8 @@ class TaskBufferInterface:
     # launcher
     def launch(self, taskBuffer):
         # shared objects
-        self.childlock = multiprocessing.Queue()
+        # the queue holds the index of each free child, handed out one at a time
+        self.childlock: multiprocessing.Queue[int] = multiprocessing.Queue()
         self.commDict = dict()
         self.comLock = dict()
         self.resLock = dict()

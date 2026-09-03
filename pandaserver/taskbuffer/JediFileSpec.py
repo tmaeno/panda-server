@@ -274,6 +274,8 @@ class JediFileSpec(object):
     # extract fields string
     def extractFieldsStr(self, fieldNumList):
         tmpFieldStr = ""
+        if self.lfn is None:
+            return tmpFieldStr
         try:
             tmpMidStrList = re.split("\.|_tid\d+", self.lfn)
             for tmpFieldNum in fieldNumList:

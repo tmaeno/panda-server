@@ -295,7 +295,9 @@ def decode_split_rule(split_rules: str) -> str:
     # A token starts a new rule when it matches "XX=..." where XX is a known
     # two-letter tag.  Otherwise, it is appended to the current rule's value.
     tokens = split_rules.split(",")
-    rules = []  # list of [tag, value_parts...]
+    # list of [tag, value_parts...]. The tag is None for a token kept verbatim, so the entries
+    # are not uniformly typed
+    rules: list[list[Any]] = []
     for token in tokens:
         # Check whether this token begins a new TAG=value entry
         eq_pos = token.find("=")

@@ -1136,11 +1136,9 @@ class JobSpec(object):
                 out_types.add(tmp_type)
         # set types
         if in_types:
-            in_types = sorted(list(in_types))
-            self.inputFileType = ",".join(in_types)[: self._limitLength["inputFileType"]]
+            self.inputFileType = ",".join(sorted(in_types))[: self._limitLength["inputFileType"]]
         if out_types:
-            out_types = sorted(list(out_types))
-            self.outputFileType = ",".join(out_types)[: self._limitLength["outputFileType"]]
+            self.outputFileType = ",".join(sorted(out_types))[: self._limitLength["outputFileType"]]
 
     # set task queued time
     def set_task_queued_time(self, queued_time):

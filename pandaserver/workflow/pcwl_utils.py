@@ -139,9 +139,7 @@ def parse_workflow_file(workflow_file, log_stream, in_loop=False):
                     node.add_parent(parent_id)
                     parent_ids.append(parent_id)
             if parent_ids:
-                if is_str:
-                    parent_ids = parent_ids[0]
-                tmp_data["parent_id"] = parent_ids
+                tmp_data["parent_id"] = parent_ids[0] if is_str else parent_ids
 
     # sort
     node_list = top_sort(node_list, set())
@@ -214,7 +212,8 @@ def resolve_nodes(node_list, root_inputs, data, serial_id, parent_ids, out_ds_na
                     scatters = [{item: v} for v in node.inputs[item]["value"]]
                 else:
                     [i.update({item: v}) for i, v in zip(scatters, node.inputs[item]["value"])]
-            for idx, item in enumerate(scatters):
+            # scatters is filled by the loop above, which runs since node.scatter is not empty
+            for idx, item in enumerate(scatters or []):
                 sc_node = copy.deepcopy(node)
                 for k, v in item.items():
                     sc_node.inputs[k]["value"] = v

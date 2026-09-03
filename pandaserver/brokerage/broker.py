@@ -57,7 +57,9 @@ def schedule(jobs, siteMapper):
 
         iJob = 0
         fileList: list[Any] = []
-        chosen_panda_queue = None
+        # the SiteSpec chosen for the current bunch, or the "TOBEDONE" marker while the
+        # choice is deferred, and None before the first bunch
+        chosen_panda_queue: Any = None
         prodDBlock = None
         computingSite = None
         dispatchDBlock = None

@@ -1,6 +1,7 @@
 import sys
 from typing import Any
 
+metaID: str | None
 try:
     metaID = sys.argv[1]
 except Exception:
