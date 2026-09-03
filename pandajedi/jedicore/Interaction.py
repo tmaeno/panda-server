@@ -7,10 +7,15 @@ import time
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
+# reduce_connection is undocumented, so typeshed does not declare it and mypy reports
+# attr-defined on both imports below. Which of the two modules holds it has varied
+# between versions, which is what the fallback is for. The ignores carry no error code
+# because the line would then be long enough for isort to wrap it, and an ignore inside
+# the parentheses of a wrapped import does not apply to the statement
 try:
-    from multiprocessing.connection import reduce_connection
+    from multiprocessing.connection import reduce_connection  # type: ignore
 except ImportError:
-    from multiprocessing.reduction import reduce_connection
+    from multiprocessing.reduction import reduce_connection  # type: ignore
 
 # import multiprocessing
 # logger = multiprocessing.log_to_stderr()
@@ -100,7 +105,8 @@ class ProcessClass(object):
     def __init__(self, pid, connection):
         self.pid = pid
         self.nused = 0
-        self.usedMemory = 0
+        # resident size in MB, which the parse below divides down to
+        self.usedMemory: float = 0
         self.nMemLookup = 20
         # reduce connection to make it picklable
         self.reduced_pipe = reduce_connection(connection)
@@ -255,7 +261,9 @@ class MethodClass(object):
         if ret.statusCode == SC_SUCCEEDED:
             return ret.returnValue
         else:
-            raise retException(f"VO={self.vo} {ret.errorValue}")
+            # a status code other than the three known ones leaves retException unset, so the
+            # error is spelled out here rather than calling None
+            raise JEDITemporaryError(f"VO={self.vo} {ret.errorValue}")
 
 
 # interface class to send command
@@ -264,7 +272,7 @@ class CommandSendInterface(object):
     def __init__(self, vo, maxChild, moduleName, className):
         self.vo = vo
         self.maxChild = maxChild
-        self.connectionQueue = multiprocessing.Queue(maxChild)
+        self.connectionQueue: multiprocessing.Queue = multiprocessing.Queue(maxChild)
         self.moduleName = moduleName
         self.className = className
 

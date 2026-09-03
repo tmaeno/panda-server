@@ -240,6 +240,7 @@ class WorkerModule(BaseModule):
                 return "Queue not served by any harvester ID"
 
             # check CEs
+            ce_list_des_sanitized: str | list
             if ce_list_des == "ALL":
                 ce_list_des_sanitized = "ALL"
             else:
@@ -1291,7 +1292,7 @@ class WorkerModule(BaseModule):
             self.conn.begin()
 
             # Select the GPU to see if it exists in the database
-            var_map = {":site": site, ":host_name": host_name, ":vendor": vendor, ":model": model}
+            var_map: dict[str, Any] = {":site": site, ":host_name": host_name, ":vendor": vendor, ":model": model}
 
             sql = (
                 "SELECT site, host_name, vendor, model "

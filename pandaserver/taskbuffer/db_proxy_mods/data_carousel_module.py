@@ -629,6 +629,11 @@ class DataCarouselModule(BaseModule):
                 # roll back
                 self._rollback()
                 return False
+            if dc_req_spec_to_resubmit is None:
+                tmp_log.warning("failed to make the spec of the new request ; skipped")
+                # roll back
+                self._rollback()
+                return False
             # sql to update old request status (staging to cancelled, done to retired, others intact)
             now_time = naive_utcnow()
             if dc_req_spec.status == DataCarouselRequestStatus.staging:

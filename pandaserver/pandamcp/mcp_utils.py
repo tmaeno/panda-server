@@ -21,12 +21,15 @@ def create_tool(func: Callable, name: str | None = None) -> Tool:
     """
 
     # construct the URL based on the module and function name
-    mod_path = inspect.getfile(inspect.getmodule(func))
+    func_module = inspect.getmodule(func)
+    if func_module is None:
+        raise ValueError(f"cannot find the module defining {func.__name__}")
+    mod_path = inspect.getfile(func_module)
     mod_name = "_".join(os.path.basename(mod_path).split("_")[:-1])
 
     # determine http method based on the docstring
     http_method = None
-    for line in func.__doc__.splitlines():
+    for line in (func.__doc__ or "").splitlines():
         line = line.strip()
         if line.startswith("HTTP Method:"):
             http_method = line.split(":")[1].strip().lower()
@@ -74,7 +77,7 @@ def create_tool(func: Callable, name: str | None = None) -> Tool:
         return output
 
     # set the signature and annotations to the wrapped function to align with the original API call
-    wrapped_func.__signature__ = sig.replace(parameters=params)
+    wrapped_func.__signature__ = sig.replace(parameters=params)  # type: ignore[attr-defined]  # honored by inspect, but not declared on function objects in typeshed
     wrapped_func.__annotations__ = annotations
 
     return Tool.from_function(wrapped_func, name=name or func.__name__, description=func.__doc__)

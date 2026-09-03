@@ -120,7 +120,7 @@ class RucioAPI:
                 raise
 
     # extract scope
-    def extract_scope(self, dataset_name: str, strip_slash: bool = False) -> tuple:
+    def extract_scope(self, dataset_name: str, strip_slash: bool = False) -> tuple[str, str]:
         """
         Extract scope from a given dataset name
 
@@ -135,7 +135,8 @@ class RucioAPI:
             if dataset_name.endswith("/"):
                 dataset_name = re.sub("/$", "", dataset_name)
         if ":" in dataset_name:
-            return dataset_name.split(":")[:2]
+            scope, dataset_name = dataset_name.split(":")[:2]
+            return scope, dataset_name
         scope = dataset_name.split(".")[0]
         if dataset_name.startswith("user") or dataset_name.startswith("group"):
             scope = ".".join(dataset_name.split(".")[0:2])
@@ -192,10 +193,10 @@ class RucioAPI:
             files.append(file)
         # register dataset
         client = self._get_rucio_client()
+        scope, dataset_name = self.extract_scope(dataset_name)
+        if preset_scope is not None:
+            scope = preset_scope
         try:
-            scope, dataset_name = self.extract_scope(dataset_name)
-            if preset_scope is not None:
-                scope = preset_scope
             client.add_dataset(scope=scope, name=dataset_name, meta=metadata)
             if lifetime is not None:
                 client.set_metadata(scope, dataset_name, key="lifetime", value=lifetime * 86400)
@@ -992,19 +993,19 @@ class RucioAPI:
         # add files
         if datasets is not None and len(datasets) > 0:
             try:
-                dataset_names = []
+                dataset_dids = []
                 for dataset in datasets:
-                    dataset_scope, dataset_name = self.extract_scope(dataset)
+                    dataset_scope, dataset_bare_name = self.extract_scope(dataset)
                     if dataset_scope:
-                        dataset_name = {"scope": dataset_scope, "name": dataset_name}
+                        dataset_did = {"scope": dataset_scope, "name": dataset_bare_name}
                     else:
-                        dataset_name = {"scope": scope, "name": dataset}
-                    dataset_names.append(dataset_name)
-                client.add_datasets_to_container(scope=scope, name=container_bare_name, dsns=dataset_names)
+                        dataset_did = {"scope": scope, "name": dataset}
+                    dataset_dids.append(dataset_did)
+                client.add_datasets_to_container(scope=scope, name=container_bare_name, dsns=dataset_dids)
             except DuplicateContent:
-                for dataset in dataset_names:
+                for one_did in dataset_dids:
                     try:
-                        client.add_datasets_to_container(scope=scope, name=container_bare_name, dsns=[dataset])
+                        client.add_datasets_to_container(scope=scope, name=container_bare_name, dsns=[one_did])
                     except DuplicateContent:
                         pass
         return True
@@ -1032,7 +1033,9 @@ class RucioAPI:
             return_value = False
             # get rucio API
             client = self._get_rucio_client()
-            user_info = None
+            # the user record, or the error message when the lookup fails, which is what the
+            # second element of the returned pair means
+            user_info: dict | str | None = None
             return_value = False
             x509_user_name = CoreUtils.get_bare_dn(distinguished_name)
             oidc_user_name = CoreUtils.get_id_from_dn(distinguished_name)
@@ -1276,12 +1279,12 @@ class RucioAPI:
                 if skip_duplicate:
                     # extract base LFN and attempt number
                     baseLFN = re.sub("(\.(\d+))$", "", lfn)
-                    attNr = re.sub(baseLFN + "\.*", "", lfn)
-                    if attNr == "":
+                    attNrStr = re.sub(baseLFN + "\.*", "", lfn)
+                    if attNrStr == "":
                         # without attempt number
                         attNr = -1
                     else:
-                        attNr = int(attNr)
+                        attNr = int(attNrStr)
                     # compare attempt numbers
                     addMap = False
                     if baseLFN in baseLFNmap:

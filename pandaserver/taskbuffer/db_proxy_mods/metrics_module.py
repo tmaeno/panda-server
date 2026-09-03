@@ -187,7 +187,7 @@ class MetricsModule(BaseModule):
         sql_check = (
             f"SELECT status,oldStatus,queuedTime,activatedTime,currentPriority,gshare FROM {panda_config.schemaJEDI}.JEDI_Tasks WHERE jediTaskID=:jediTaskID "
         )
-        var_map = {":jediTaskID": jedi_task_id}
+        var_map: dict[str, Any] = {":jediTaskID": jedi_task_id}
         self.cur.execute(sql_check + comment, var_map)
         res = self.cur.fetchone()
         if not res:
@@ -634,7 +634,7 @@ class MetricsModule(BaseModule):
             return False, {}
 
     # get core statistics with VO and prodSourceLabel
-    def get_core_statistics(self, vo: str, prod_source_label: str) -> [bool, dict]:
+    def get_core_statistics(self, vo: str, prod_source_label: str) -> tuple[bool, dict]:
         comment = " /* DBProxy.get_core_statistics */"
         tmpLog = self.create_tagged_logger(comment, f"vo={vo} label={prod_source_label}")
         tmpLog.debug("start")
@@ -822,7 +822,7 @@ class MetricsModule(BaseModule):
             return False, {}
 
     # gets statistics on the number of jobs with a specific status for each nucleus at each site
-    def get_num_jobs_with_status_by_nucleus(self, vo: str, job_status: str) -> [bool, Dict[str, Dict[str, int]]]:
+    def get_num_jobs_with_status_by_nucleus(self, vo: str, job_status: str) -> tuple[bool, Dict[str, Dict[str, int]]]:
         """
         This function will return the number of jobs with a specific status for each nucleus at each site.
 

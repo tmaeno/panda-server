@@ -714,7 +714,8 @@ class TaskUtilsModule(BaseModule):
                     atlas_site = "NO_SITE"  # in case of no match
                     if site_mapper:
                         atlas_site = site_mapper.getSite(computingSite).pandasite
-                        benchmarks = self.get_cpu_benchmarks_by_host(atlas_site, modificationhost) or []
+                        # provided by WorkerModule, a sibling module of the same DBProxy
+                        benchmarks = self.get_cpu_benchmarks_by_host(atlas_site, modificationhost) or []  # type: ignore[attr-defined]
 
                     vals = [v for _, v in benchmarks]
                     benchmark_specific = next(
@@ -1053,7 +1054,8 @@ class TaskUtilsModule(BaseModule):
         # tag jobs
         if flagJob:
             for tmpPandaID, tmpTags in jobTagMap.items():
-                self.updateJobMetrics_JEDI(jediTaskID, tmpPandaID, jMetricsMap[tmpPandaID], tmpTags)
+                # provided by TaskStandaloneModule, a sibling module of the same DBProxy
+                self.updateJobMetrics_JEDI(jediTaskID, tmpPandaID, jMetricsMap[tmpPandaID], tmpTags)  # type: ignore[attr-defined]
         # reset NG
         taskSpec = JediTaskSpec()
         taskSpec.splitRule = splitRule
@@ -1150,7 +1152,8 @@ class TaskUtilsModule(BaseModule):
         if useCommit:
             # begin transaction
             self.conn.begin()
-        task_params_str = self.getTaskParamsWithID_JEDI(jediTaskID, use_commit=False)
+        # provided by TaskStandaloneModule, a sibling module of the same DBProxy
+        task_params_str = self.getTaskParamsWithID_JEDI(jediTaskID, use_commit=False)  # type: ignore[attr-defined]
         task_params_map = json.loads(task_params_str)
         # set average job data
         scoutSucceeded, scoutData, extraInfo = self.getScoutJobData_JEDI(
@@ -1442,7 +1445,8 @@ class TaskUtilsModule(BaseModule):
                 raise RuntimeError("Commit error")
         # reset the task resource type
         try:
-            self.reset_resource_type_task(jediTaskID, useCommit)
+            # provided by EntityModule, a sibling module of the same DBProxy
+            self.reset_resource_type_task(jediTaskID, useCommit)  # type: ignore[attr-defined]
         except Exception:
             tmpLog.error(f"reset_resource_type_task excepted with: {traceback.format_exc()}")
 
@@ -1937,7 +1941,8 @@ class TaskUtilsModule(BaseModule):
             parent_task_id = None
             if resolve_parent:
                 resolve_status, parent_task_id = self._resolve_parent_task_id(jedi_task_id)
-                if resolve_status != "ok":
+                # the parent id is set whenever the status is ok, which the second test spells out
+                if resolve_status != "ok" or parent_task_id is None:
                     tmp_log.debug(f"resolve_parent failed status={resolve_status} child={jedi_task_id} parent={parent_task_id}")
                     if include_resolve_status:
                         return resolve_status, parent_task_id, None

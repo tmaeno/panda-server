@@ -43,7 +43,7 @@ class Finisher(threading.Thread):
     """
 
     # constructor
-    def __init__(self, taskBuffer, dataset: DatasetSpec, job: JobSpec | None = None, site: str | None = None):
+    def __init__(self, taskBuffer, dataset: DatasetSpec | None, job: JobSpec | None = None, site: str | None = None):
         """
         Constructs all the necessary attributes for the Finisher object.
 
@@ -59,7 +59,7 @@ class Finisher(threading.Thread):
                 The site where the job is to be transferred (default is None)
         """
         threading.Thread.__init__(self)
-        self.dataset: DatasetSpec = dataset
+        self.dataset: DatasetSpec | None = dataset
         self.task_buffer = taskBuffer
         self.job = job
         self.site = site
@@ -155,18 +155,26 @@ class Finisher(threading.Thread):
         # start
         try:
             by_call_back = False
+            dataset = self.dataset
+            # a Finisher is made either for a job or for a dataset, and what it is made for
+            # names it in the start and end messages
             if self.job is not None:
-                tmp_log.debug(f"start: {self.job.PandaID}")
+                label = str(self.job.PandaID)
+                tmp_log.debug(f"start: {label}")
                 panda_ids = [self.job.PandaID]
                 jobs = [self.job]
-            else:
+            elif dataset is not None:
                 by_call_back = True
-                tmp_log.debug(f"start: {self.dataset.name}")
-                panda_ids = self.task_buffer.updateOutFilesReturnPandaIDs(self.dataset.name)
+                label = dataset.name
+                tmp_log.debug(f"start: {label}")
+                panda_ids = self.task_buffer.updateOutFilesReturnPandaIDs(dataset.name)
                 # set flag for T2 cleanup
-                self.dataset.status = "cleanup"
-                self.task_buffer.updateDatasets([self.dataset])
+                dataset.status = "cleanup"
+                self.task_buffer.updateDatasets([dataset])
                 jobs = self.task_buffer.peekJobs(panda_ids, fromDefined=False, fromArchived=False, fromWaiting=False)
+            else:
+                tmp_log.error("neither a job nor a dataset was given")
+                return
 
             tmp_log.debug(f"IDs: {panda_ids}")
             if len(panda_ids) != 0:
@@ -188,10 +196,7 @@ class Finisher(threading.Thread):
                             exc_type, value, _ = sys.exc_info()
                             tmp_log.error(f"Job: {job.PandaID} {exc_type} {value}")
                     tmp_log.debug(f"Job: {job.PandaID} status: {job.jobStatus}")
-            if self.job is None:
-                tmp_log.debug(f"end: {self.dataset.name}")
-            else:
-                tmp_log.debug(f"end: {self.job.PandaID}")
+            tmp_log.debug(f"end: {label}")
         except Exception:
             exc_type, value, _ = sys.exc_info()
             tmp_log.error(f"run() : {exc_type} {value}")

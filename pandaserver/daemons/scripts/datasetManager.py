@@ -339,7 +339,7 @@ def main(tbuf=None, **kwargs):
                                 if EventServiceUtils.isEventServiceMerge(tmpJobs[0]):
                                     self.proxyLock.acquire()
                                     cThr = Closer(taskBuffer, [], tmpJobs[0])
-                                    allFinished = cThr.checkSubDatasetsInJobset()
+                                    allFinished = cThr.check_sub_datasets_in_jobset()
                                     self.proxyLock.release()
                                     _logger.debug(f"closer checked sub datasets in the jobset for {name} : {allFinished}")
                         # no files in filesTable
@@ -992,8 +992,8 @@ def main(tbuf=None, **kwargs):
         if res is None or len(res) == 0:
             break
         # run thread
-        actThr = ActivatorWithRuleThr(activatorLock, activatorProxyLock, res, activatorThreadPool)
-        actThr.start()
+        actRuleThr = ActivatorWithRuleThr(activatorLock, activatorProxyLock, res, activatorThreadPool)
+        actRuleThr.start()
     # wait
     activatorThreadPool.join()
 
@@ -1140,8 +1140,8 @@ def main(tbuf=None, **kwargs):
 
     # release memory. drop the references rather than del them, since both names are
     # read by the nested threads above and del empties the cell they share
-    siteMapper = None
-    deletedDisList = None
+    siteMapper = None  # type: ignore[assignment]  # dropping the reference; nothing reads it after this
+    deletedDisList = None  # type: ignore[assignment]  # dropping the reference; nothing reads it after this
 
     _memoryCheck("end")
 
