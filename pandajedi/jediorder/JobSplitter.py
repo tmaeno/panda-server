@@ -26,8 +26,8 @@ class JobSplitter:
     # split
     def doSplit(self, taskSpec, inputChunk, siteMapper, allow_chunk_size_limit=False):
         # return for failure
-        retFatal = self.SC_FATAL, []
-        retTmpError = self.SC_FAILED, []
+        retFatal: tuple[Any, list] = self.SC_FATAL, []
+        retTmpError: tuple[Any, list] = self.SC_FAILED, []
         # make logger
         tmpLog = MsgWrapper(logger, f"< jediTaskID={taskSpec.jediTaskID} datasetID={inputChunk.masterIndexName} >")
         tmpLog.debug(f"--- start chunk_size_limit={allow_chunk_size_limit}")
@@ -129,9 +129,10 @@ class JobSplitter:
         strict_chunkSize = False
         tmp_ng_list: list[Any] = []
         change_site_for_dist_dataset = False
-        # carried between iterations, set by the first one that picks a site candidate
+        # carried between iterations, set by the first one that picks a site candidate. The
+        # first iteration always enters the branch that sets them, or breaks out of the loop
         siteName = None
-        siteCandidate = None
+        siteCandidate: Any = None
         while True:
             # change site
             if iSubChunks % nSubChunks == 0 or subChunk == [] or change_site_for_dist_dataset:

@@ -9,6 +9,7 @@ pandaserver.asyncprocess.data_carousel_handlers calls the very same functions fr
 async request daemon. Keeping the bodies here is what makes the two paths interchangeable.
 """
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
@@ -327,7 +328,8 @@ def retire_unused(dcif: DataCarouselInterface, request_id: int | str | None = No
 
 
 # operations addressable by name, used by the asynchronous handlers to dispatch on request_type
-OPERATIONS = {
+# the operations differ in what they take beyond the interface, hence the bare parameter list
+OPERATIONS: dict[str, Callable[..., OperationResult]] = {
     "change_staging_destination": change_staging_destination,
     "change_staging_source": change_staging_source,
     "force_to_staging": force_to_staging,

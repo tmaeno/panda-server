@@ -223,7 +223,7 @@ class Configurator(threading.Thread):
             panda_ddm_relation_list = self.get_panda_ddm_relations()
         except Exception:
             # Temporary protection to prevent issues
-            self.log_stream.error(f"get_panda_ddm_relations excepted with {traceback.print_exc()}")
+            self.log_stream.error(f"get_panda_ddm_relations excepted with {traceback.format_exc()}")
             panda_ddm_relation_list = []
 
         # Iterate the site dump
@@ -487,7 +487,7 @@ class Configurator(threading.Thread):
         schedconfig_sites = self.taskBuffer.configurator_read_cric_sites()
         self.log_stream.debug(f"Sites in Schedconfig {schedconfig_sites}")
 
-        all_sites = sorted(filter(None, CRIC_sites | configurator_sites | schedconfig_sites))
+        all_sites: list[Any] = sorted(filter(None, CRIC_sites | configurator_sites | schedconfig_sites))
 
         for site in all_sites:
             missing = []

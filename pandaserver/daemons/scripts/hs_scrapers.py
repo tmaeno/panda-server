@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 import polars as pl
 import requests
@@ -159,7 +160,7 @@ class HS23Ingestor:
         self.task_buffer = task_buffer
 
     def run(self) -> None:
-        max_timestamp = self._select_max_timestamp(None)
+        max_timestamp = self._select_max_timestamp()
         df = self._fetch()
         df = self._transform(df, max_timestamp)
         self._insert(df)
@@ -200,7 +201,9 @@ class HS23Ingestor:
         )
         return out
 
-    def _select_max_timestamp(self, df: pl.DataFrame) -> None:
+    # the newest timestamp already ingested, or a polars epoch expression when there is none,
+    # both of which _transform can compare against
+    def _select_max_timestamp(self) -> Any:
         sql = "SELECT max(timestamp) FROM ATLAS_PANDA.cpu_benchmarks"
         status, res = self.task_buffer.querySQLS(sql, {})
         max_timestamp = res[0][0]

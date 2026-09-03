@@ -1,5 +1,6 @@
 import os
 import socket
+from typing import Any
 
 from pandajedi.jedicore import Interaction
 from pandajedi.jedicore.MsgWrapper import MsgWrapper
@@ -86,7 +87,7 @@ class JobThrottlerBase(object):
             resource_ms = "SCORE"
 
         # Read the WQ config values from the DB
-        config_map = {
+        config_map: dict[str, dict[str, Any]] = {
             NQUEUELIMIT: {"value": None, "level": LEVEL_None, "key": None},
             NRUNNINGCAP: {"value": None, "level": LEVEL_None, "key": None},
             NQUEUECAP: {"value": None, "level": LEVEL_None, "key": None},

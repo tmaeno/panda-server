@@ -39,6 +39,8 @@ def get_dump(url):
                 return json.load(f)
         except Exception:
             return None
+    # ca_certs is the requests verify argument: a CA directory, or False to skip verification
+    ca_certs: str | bool
     if panda_config.configurator_use_cert:
         key_file = os.environ["X509_USER_PROXY"]
         cert_file = os.environ["X509_USER_PROXY"]

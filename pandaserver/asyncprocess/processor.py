@@ -8,6 +8,7 @@ import json
 import os
 import socket
 import subprocess
+from collections.abc import Callable
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -88,7 +89,8 @@ def _run_grep(log_path, pattern, max_matches, tail_bytes):
     # Hand the read end over completely.  Keeping a copy here would leave the
     # matcher's exit at the cap invisible to tail, which would then block on a
     # full pipe instead of being told to stop.
-    tail.stdout.close()
+    if tail.stdout is not None:
+        tail.stdout.close()
     try:
         stdout, stderr = matcher.communicate(timeout=_SUBPROCESS_TIMEOUT)
     except subprocess.TimeoutExpired:
@@ -219,8 +221,9 @@ def _handle_sleep_echo(row, tb, tmp_logger, result_machine):
     )
 
 
-# Register new request types here — no new daemon needed
-HANDLERS = {
+# Register new request types here — no new daemon needed. The handlers take the same four
+# arguments but are otherwise unrelated functions, hence the bare Callable
+HANDLERS: dict[str, Callable] = {
     "grep": _handle_grep,
     "sleep_echo": _handle_sleep_echo,
     # Data Carousel operations, submitted by pandaserver.api.v1.data_carousel_api

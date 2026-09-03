@@ -7,7 +7,7 @@ import re
 import socket
 import time
 import traceback
-from typing import Any
+from typing import Any, Sequence
 from urllib.parse import unquote
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -916,7 +916,7 @@ class JobGeneratorThread(WorkerThread):
                             setOldModTime=setOldModTime,
                         )
                         tmpMsg = f"set task_status={taskSpec.status} oldTask={setOldModTime} with {str(retDB)}"
-                        if taskSpec.errorDialog not in ["", None]:
+                        if taskSpec.errorDialog:
                             tmpMsg += " " + taskSpec.errorDialog
                         tmpLog.sendMsg(tmpMsg, self.msgType)
                         tmpLog.info(tmpMsg)
@@ -970,7 +970,8 @@ class JobGeneratorThread(WorkerThread):
             esIndex = 0
             parallelOutMap: dict[str, Any] = {}
             dddMap = {}
-            fileIDPool = []
+            # a list of ids fetched in bulk, or the range standing in for them in a simulation
+            fileIDPool: Sequence[Any] = []
             if inputChunk.isMerging:
                 confKey = f"MERGE_JOB_MAX_WALLTIME_{taskSpec.prodSourceLabel}"
                 merge_max_walltime = self.taskBufferIF.getConfigValue("jobgen", confKey, "jedi", taskSpec.vo)
@@ -1071,7 +1072,9 @@ class JobGeneratorThread(WorkerThread):
                             datasetToRegister.append(tmp_dataset_spec)
                     if not simul:
                         try:
-                            fileIDPool = fileIDPool[num_outputs_per_job * n_jobs_per_site[site_name] :]
+                            # num_outputs_per_job is None when the task has no output datasets,
+                            # and then the pool was never filled, so an offset of 0 leaves it empty
+                            fileIDPool = fileIDPool[(num_outputs_per_job or 0) * n_jobs_per_site[site_name] :]
                         except Exception:
                             fileIDPool = []
 
@@ -1619,6 +1622,9 @@ class JobGeneratorThread(WorkerThread):
                     # XML config
                     xmlConfigJob = None
                     if xmlConfig is not None:
+                        if boundaryID is None:
+                            tmpLog.error(f"failed to get XML config for N={boundaryID}")
+                            return failedRet
                         try:
                             xmlConfigJob = xmlConfig.jobs[boundaryID]
                         except Exception:
@@ -1668,7 +1674,7 @@ class JobGeneratorThread(WorkerThread):
                     # number of outputs per job
                     if not simul:
                         try:
-                            fileIDPool = fileIDPool[num_outputs_per_job * n_files_per_chunk :]
+                            fileIDPool = fileIDPool[(num_outputs_per_job or 0) * n_files_per_chunk :]
                         except Exception:
                             fileIDPool = []
                     # update parallel output mapping

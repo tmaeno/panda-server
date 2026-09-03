@@ -88,7 +88,8 @@ class _ResultHeartbeat:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self._stop_event.set()
-        self._thread.join(timeout=5)
+        if self._thread is not None:
+            self._thread.join(timeout=5)
         return False
 
 
