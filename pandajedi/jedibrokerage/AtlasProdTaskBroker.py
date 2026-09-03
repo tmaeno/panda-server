@@ -104,7 +104,7 @@ class AtlasProdTaskBrokerThread(WorkerThread):
         self.prioRW = prioRW
         self.numTasks = 0
         self.workQueue = workQueue
-        self.summaryList = None
+        self.summaryList: list[str] = []
 
     # init summary list
     def init_summary_list(self, header, comment, initial_list):

@@ -20,8 +20,10 @@ class JobBrokerBase(object):
         self.useLock = False
         self.testMode = False
         self.refresh()
-        self.task_common = None
-        self.summaryList = None
+        # replaced by set_task_common_dict() with the dict shared across the brokers of
+        # one task; empty until then, so a write before that is not lost to an exception
+        self.task_common: dict = {}
+        self.summaryList: list[str] = []
 
     # set task common dictionary
     def set_task_common_dict(self, task_common):

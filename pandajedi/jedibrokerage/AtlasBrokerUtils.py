@@ -11,7 +11,7 @@ from typing import Any
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
 from pandajedi.jedicore import Interaction
-from pandajedi.jediddm.DDMInterface import DDMInterface
+from pandajedi.jediddm.AtlasDDMClient import AtlasDDMClient
 from pandaserver.brokerage.SiteMapper import SiteMapper
 from pandaserver.dataservice import DataServiceUtils
 from pandaserver.dataservice.DataServiceUtils import select_scope
@@ -115,9 +115,9 @@ def getNucleiWithData(siteMapper, ddmIF, datasetName, candidateNuclei, deepScan=
 def get_sites_with_data(
     site_list: list,
     site_mapper: SiteMapper,
-    ddm_if: DDMInterface,
+    ddm_if: AtlasDDMClient,
     dataset_name: str,
-    element_list: list,
+    element_list: list | None,
     max_missing_input_files: int,
     min_input_completeness: int,
 ) -> tuple[Any, dict | str, bool | None, bool | None, bool | None, bool | None, bool | None, list]:
@@ -133,9 +133,9 @@ def get_sites_with_data(
 
     :param site_list: list of site names to be checked
     :param site_mapper: SiteMapper object
-    :param ddm_if: DDMInterface object
+    :param ddm_if: the VO's DDM client, as DDMInterface.getInterface() returns it
     :param dataset_name: dataset name
-    :param element_list: list of constituent datasets
+    :param element_list: list of constituent datasets, or None when the dataset has none
     :param max_missing_input_files: maximum number of missing files to be regarded as complete
     :param min_input_completeness: minimum completeness (%) to be regarded as complete
 
@@ -409,7 +409,7 @@ def hasZeroShare(site_spec, task_spec, ignore_priority, tmp_log):
                     tmp_priority = re.sub("priority", "", tmp_field)
 
             # check for a matching processing type
-            if tmp_processing_type not in ["any", None]:
+            if tmp_processing_type is not None and tmp_processing_type != "any":
                 if "*" in tmp_processing_type:
                     tmp_processing_type = tmp_processing_type.replace("*", ".*")
                 # if there is no match between the site's fair share policy and the task's processing type,
@@ -418,7 +418,7 @@ def hasZeroShare(site_spec, task_spec, ignore_priority, tmp_log):
                     continue
 
             # check for matching working group
-            if tmp_working_group not in ["any", None]:
+            if tmp_working_group is not None and tmp_working_group != "any":
                 # None causes an exception in re.search, so convert to empty string
                 task_working_group = task_spec.workingGroup or ""
                 if "*" in tmp_working_group:
@@ -430,7 +430,7 @@ def hasZeroShare(site_spec, task_spec, ignore_priority, tmp_log):
 
             # check for matching gshare. Note that this only works for "leave gshares" in the fairsharePolicy,
             # i.e. the ones that have no sub-gshares, since the task only gets "leave gshares" assigned
-            if tmp_gshare not in ["any", None] and task_spec.gshare is not None:
+            if tmp_gshare is not None and tmp_gshare != "any" and task_spec.gshare is not None:
                 # None causes an exception in re.search, so convert to empty string
                 task_gshare = task_spec.gshare or ""
                 if "*" in tmp_gshare:

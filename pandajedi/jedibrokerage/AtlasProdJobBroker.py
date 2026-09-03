@@ -218,7 +218,8 @@ class AtlasProdJobBroker(JobBrokerBase):
                 siteListPreAssigned = True
                 scanSiteList = DataServiceUtils.getSitesShareDDM(self.siteMapper, inputChunk.getPreassignedSite(), JobUtils.PROD_PS, JobUtils.PROD_PS)
                 scanSiteList.append(inputChunk.getPreassignedSite())
-                tmp_msg = (
+                # also the skip reason built for each site further down
+                tmp_msg: str | None = (
                     f"use site={scanSiteList} since they share DDM endpoints with original_site={inputChunk.getPreassignedSite()} "
                     f"which is pre-assigned in masterDS criteria=+premerge"
                 )
@@ -466,7 +467,7 @@ class AtlasProdJobBroker(JobBrokerBase):
                     if nucleus == tmpAtlasSiteName:
                         # nucleus
                         pass
-                    elif nucleus in nucleus_with_storages_unwritable_over_wan:
+                    elif nucleusSpec is not None and nucleus in nucleus_with_storages_unwritable_over_wan:
                         # destination blacklisted
                         reason = (
                             nucleusSpec.get_default_endpoint_out()["ddm_endpoint_name"]
@@ -1121,7 +1122,8 @@ class AtlasProdJobBroker(JobBrokerBase):
                     if minWalltime and minWalltime > siteMaxTime:
                         tmp_msg = f"  skip site={tmpSiteName} due to short site walltime {tmpSiteStr} " f"(site upper limit) less than {strMinWalltime} "
                         toSkip = True
-                if toSkip:
+                # tmp_msg is set wherever toSkip is, in the two branches above
+                if toSkip and tmp_msg is not None:
                     tmp_msg += "criteria=-shortwalltime"
                     msg_map[tmpSiteSpec.get_unified_name()] = tmp_msg
                     continue
@@ -1182,7 +1184,8 @@ class AtlasProdJobBroker(JobBrokerBase):
                         if maxWalltime:
                             tmp_msg += f"and {strMaxWalltime} "
                         toSkip = True
-                if toSkip:
+                # tmp_msg is set wherever toSkip is, in the two branches above
+                if toSkip and tmp_msg is not None:
                     tmp_msg += "criteria=-longwalltime"
                     msg_map[tmpSiteSpec.get_unified_name()] = tmp_msg
                     continue

@@ -418,6 +418,11 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         tmpLog.error(f"fatal error when getting the list of sites where data is available, since {tmpRet}")
                         taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
                         return retFatal
+                    if not isinstance(tmpRet, dict):
+                        # only the error paths handled above return a message in its place
+                        tmpLog.error(f"failed to get the list of sites where data is available, since {tmpRet}")
+                        taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
+                        return retTmpError
                     # append
                     self.dataSiteMap[datasetName] = tmpRet
                     complete_disk_ok[datasetName] = tmp_complete_disk_ok
@@ -523,7 +528,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
         checkDataLocality = False
         scanSiteWoVP: list[Any] = []
         summaryList = []
-        site_list_with_data = None
+        # the sites that had the data in the first loop pass, kept for the ranking below
+        site_list_with_data: set = set()
         overall_site_list = set()
         for i_loop, (scanSiteList, checkDataLocality) in enumerate(scan_site_list_loops):
             useUnionLocality = False
@@ -553,12 +559,15 @@ class AtlasAnalJobBroker(JobBrokerBase):
                     if datasetName in ddsList:
                         datasetSpec.setDistributed()
 
-                # get the list of sites where data is available
-                scanSiteList = None
-                scanSiteListOnDisk = None
-                scanSiteListUnion = None
-                scanSiteListOnDiskUnion = None
-                scanSiteWoVpUnion = None
+                # get the list of sites where data is available. The first dataset seeds
+                # the lists and the rest intersect with them, which is what the flag marks;
+                # with no dataset at all they stay empty and the checks below find nothing
+                scanSiteList = []
+                scanSiteListOnDisk: set = set()
+                scanSiteListUnion: set = set()
+                scanSiteListOnDiskUnion: set = set()
+                scanSiteWoVpUnion: set = set()
+                is_first_dataset = True
 
                 for datasetName, tmpDataSite in self.dataSiteMap.items():
                     # check if incomplete replica is allowed
@@ -583,7 +592,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
                             dataWeight[tmpSiteName] += 0.001
 
                     # first list
-                    if scanSiteList is None:
+                    if is_first_dataset:
+                        is_first_dataset = False
                         scanSiteList = []
                         for tmpSiteName in tmpSiteList:
                             if tmpSiteName not in oldScanUnifiedSiteList:
@@ -1222,8 +1232,10 @@ class AtlasAnalJobBroker(JobBrokerBase):
                                 )
                                 continue
                 # check if blacklisted
-                tmp_msg = AtlasBrokerUtils.check_endpoints_with_blacklist(tmpSiteSpec, scope_input, scope_output, sites_in_nucleus, remote_source_available)
-                if tmp_msg is not None:
+                blacklist_msg = AtlasBrokerUtils.check_endpoints_with_blacklist(
+                    tmpSiteSpec, scope_input, scope_output, sites_in_nucleus, remote_source_available
+                )
+                if blacklist_msg is not None:
                     msg_map[tmpSiteName] = f"  skip site={tmpSiteName} since {tmpSiteSpec.ddm_output[scope_output]} is blacklisted in DDM criteria=-blacklist"
                     continue
                 # local quota
@@ -1758,7 +1770,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             ############
             # loop end
             overall_site_list.update(scanSiteList)
-            if site_list_with_data is None:
+            if not site_list_with_data:
                 # preserve site list with data
                 site_list_with_data = set(scanSiteList)
             if len(overall_site_list) >= taskSpec.getNumSitesPerJob():
