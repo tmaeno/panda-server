@@ -1917,7 +1917,9 @@ class TaskEventModule(BaseModule):
             return None
 
     # enable job cloning
-    def enable_job_cloning(self, jedi_task_id: int, mode: str | None = None, multiplicity: int | None = None, num_sites: int | None = None) -> tuple[bool, str]:
+    def enable_job_cloning(
+        self, jedi_task_id: int, mode: str | None = None, multiplicity: int | None = None, num_sites: int | None = None
+    ) -> tuple[bool, str | None]:
         """
         Enable job cloning for a task
 
@@ -1931,7 +1933,7 @@ class TaskEventModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, f"jediTaskID={jedi_task_id}")
         tmp_log.debug("start")
         try:
-            ret_value = (True, None)
+            ret_value: tuple[bool, str | None] = (True, None)
             # start transaction
             self.conn.begin()
             # get current split rule
@@ -1985,7 +1987,7 @@ class TaskEventModule(BaseModule):
             return False, "failed to enable job cloning"
 
     # disable job cloning
-    def disable_job_cloning(self, jedi_task_id: int) -> tuple[bool, str]:
+    def disable_job_cloning(self, jedi_task_id: int) -> tuple[bool, str | None]:
         """
         Disable job cloning for a task
 
@@ -1996,7 +1998,7 @@ class TaskEventModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, f"jediTaskID={jedi_task_id}")
         tmp_log.debug("start")
         try:
-            ret_value = (True, None)
+            ret_value: tuple[bool, str | None] = (True, None)
             # start transaction
             self.conn.begin()
             # get current split rule
@@ -2867,8 +2869,10 @@ class TaskEventModule(BaseModule):
                     sql_fz = f"SELECT SUM(fsize) FROM {panda_config.schemaPANDA}.filesTable4 "
                     sql_fz += "WHERE PandaID=:PandaID "
                     self.cur.execute(sql_fz + comment, var_map)
-                    (init_gigabytes_per_job,) = self.cur.fetchone()
-                    init_gigabytes_per_job = math.ceil(init_gigabytes_per_job / 1024 / 1024 / 1024)
+                    (total_file_size,) = self.cur.fetchone()
+                    # SUM() is NULL when the job has no files, which the check below reports
+                    if total_file_size is not None:
+                        init_gigabytes_per_job = math.ceil(total_file_size / 1024 / 1024 / 1024)
             if not init_max_files_per_job:
                 set_init_rules = True
                 if current_max_files_per_job:
@@ -2882,7 +2886,15 @@ class TaskEventModule(BaseModule):
                         "AND tabF.PandaID=:PandaID AND tabF.datasetID=tabD.datasetID "
                     )
                     self.cur.execute(sql_fc + comment, var_map)
-                    (init_max_files_per_job,) = self.cur.fetchone()
+                    (num_input_files,) = self.cur.fetchone()
+                    init_max_files_per_job = int(num_input_files)
+
+            # the initial values are read from the current rules or from the job above, so
+            # this only triggers for a job whose input files are gone
+            if init_gigabytes_per_job is None or init_max_files_per_job is None:
+                msg_str = "skipping since the initial job size cannot be determined"
+                tmp_log.debug(msg_str)
+                return False, msg_str
 
             # set target based on attempt number
             if attempt_nr < threshold_middle:
@@ -3102,7 +3114,7 @@ class TaskEventModule(BaseModule):
         if catchAll is None:
             catchAll = ""
         try:
-            if isFakeCJ:
+            if isFakeCJ or objectstores is None:
                 objectstores = []
             else:
                 objectstores = json.loads(objectstores)
@@ -3493,7 +3505,7 @@ class TaskEventModule(BaseModule):
                 sql2 = """ SELECT LAST_INSERT_ID() """
                 self.cur.execute(sql2 + comment, {})
                 (nextval,) = self.cur.fetchone()
-                sqlT += "( :nextval ,".format(schemaDEFT)
+                sqlT += "( :nextval ,"
                 varMap[":nextval"] = nextval
             sqlT += ":status,CURRENT_DATE,:vo,:prodSourceLabel,:userName,:taskName,:param,:priority,:current_priority,"
             if parent_tid is None:
@@ -3838,7 +3850,7 @@ class TaskEventModule(BaseModule):
                 return False, ""
 
         elif com_str == "reassign":
-            tmp_instructions = CoreUtils.parse_reassign_comment(com_comment)
+            tmp_instructions = CoreUtils.parse_reassign_comment(com_comment or "")
             if not tmp_instructions.get("back_to_old_status"):
                 if task_status not in {"defined", "ready", "running", "scouting", "scouted", "pending", "assigning", "exhausted"}:
                     return False, ""
@@ -4050,7 +4062,7 @@ class TaskEventModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, f"jediTaskID={jediTaskID}")
         tmp_log.debug(f"full={fullFlag}")
         try:
-            retDict = {
+            retDict: dict[str, Any] = {
                 "inDS": "",
                 "outDS": "",
                 "statistics": "",
@@ -4294,10 +4306,8 @@ class TaskEventModule(BaseModule):
                     outDSs.add(targetName)
                 else:
                     inDSs.add(targetName)
-            inDSs = sorted(inDSs)
-            retDict["inDS"] = ",".join(inDSs)
-            outDSs = sorted(outDSs)
-            retDict["outDS"] = ",".join(outDSs)
+            retDict["inDS"] = ",".join(sorted(inDSs))
+            retDict["outDS"] = ",".join(sorted(outDSs))
             # get job status
             varMap = {}
             varMap[":jediTaskID"] = jediTaskID
