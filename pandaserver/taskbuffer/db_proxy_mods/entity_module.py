@@ -38,19 +38,34 @@ from pandaserver.taskbuffer.WorkQueueMapper import WorkQueueMapper
 
 # Module class to define methods related to fundamental entities like GlobalShares, Resource Types, CO2, etc
 class EntityModule(BaseModule):
+    # The global shares tree and the caches derived from it. Every method that reads them
+    # calls reload_shares() or reload_resource_spec_mapper() first, so they are declared
+    # non-Optional for the same reason as BaseModule.conn/cur: a read before the first
+    # reload is a bug, not a case to handle. The timestamps beside them are what those
+    # reloads test to decide whether they are due, so those stay Optional.
+    tree: GlobalShares.Share
+    leave_shares: list
+    __hs_distribution: dict[str, Any]
+    __t_update_shares: datetime.datetime | None
+    __t_update_distribution: datetime.datetime | None
+    resource_spec_mapper: ResourceSpecMapper
+    __t_update_resource_type_mapper: datetime.datetime | None
+    job_prio_boost_dict: dict[str, Any] | None
+    job_prio_boost_dict_update_time: datetime.datetime | None
+
     # constructor
     def __init__(self, log_stream: LogWrapper):
         super().__init__(log_stream)
         # global share variables
-        self.tree = None  # Pointer to the root of the global shares tree
-        self.leave_shares = None  # Pointer to the list with leave shares
+        self.tree = None  # type: ignore[assignment]  # Pointer to the root of the global shares tree
+        self.leave_shares = None  # type: ignore[assignment]  # Pointer to the list with leave shares
         self.__t_update_shares = None  # Timestamp when the shares were last updated
-        self.__hs_distribution = None  # HS06s distribution of sites
+        self.__hs_distribution = None  # type: ignore[assignment]  # HS06s distribution of sites
         self.__t_update_distribution = None  # Timestamp when the HS06s distribution was last updated
 
         # resource type mapper
         # if you want to use it, you need to call reload_resource_spec_mapper first
-        self.resource_spec_mapper = None
+        self.resource_spec_mapper = None  # type: ignore[assignment]
         self.__t_update_resource_type_mapper = None
 
         # priority boost
@@ -539,7 +554,7 @@ class EntityModule(BaseModule):
             sql = f"SELECT {ResourceSpec.column_names()} FROM {panda_config.schemaJEDI}.resource_types "
             self.cur.execute(sql + comment)
             resource_list = self.cur.fetchall()
-            resource_spec_list = []
+            resource_spec_list: list[Any] = []
             for row in resource_list:
                 resource_name, mincore, maxcore, minrampercore, maxrampercore = row
                 if formatting == "dict":
@@ -832,7 +847,7 @@ class EntityModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment)
         # return for no criteria
         var_map = {}
-        ret_empty = "", {}
+        ret_empty: tuple[str, dict[str, Any]] = "", {}
 
         try:
             # Get the share leaves sorted by order of under-pledging
@@ -880,7 +895,7 @@ class EntityModule(BaseModule):
         # return for no criteria
         ret_sql = ""
         var_map = {}
-        ret_empty = "", {}
+        ret_empty: tuple[str, dict[str, Any]] = "", {}
 
         try:
             # Only get max_jobs, to avoid getting all activated jobs from the table
@@ -1869,7 +1884,7 @@ class EntityModule(BaseModule):
                             else:
                                 ret.maxwdir = int(queue_data["maxwdir"])
                         except Exception:
-                            if ret.maxinputsize in [0, None]:
+                            if not ret.maxinputsize:
                                 ret.maxwdir = 0
                             else:
                                 try:
@@ -2986,8 +3001,10 @@ class EntityModule(BaseModule):
         comment = " /* DBProxy.checkBanUser */"
         try:
             methodName = "checkBanUser"
-            # set initial values
-            retStatus = True
+            # set initial values. True when the user is allowed and False when banned, or
+            # 1/2 when the users table could not be updated; TaskBuffer tells the first
+            # apart from the last two with `is True`
+            retStatus: bool | int = True
             name = CoreUtils.clean_user_id(dn)
             tmp_log = self.create_tagged_logger(comment, f"name={name}")
             tmp_log.debug(f"start dn={dn} label={sourceLabel} jediCheck={jediCheck}")
@@ -3050,6 +3067,8 @@ class EntityModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment)
         tmp_log.debug(f"get email for {name}")
         # sql
+        # the failure value mirrors the shape of the query selected below
+        failedRet: Any
         if withDN:
             failedRet = "", "", None
             sql = "SELECT email,dn,location FROM ATLAS_PANDAMETA.users WHERE name=:name"

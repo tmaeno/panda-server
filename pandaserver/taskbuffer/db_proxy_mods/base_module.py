@@ -5,6 +5,7 @@ import socket
 import sys
 import time
 import traceback
+from collections.abc import Callable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
@@ -22,6 +23,7 @@ from pandaserver.taskbuffer.JobSpec import (
 if TYPE_CHECKING:
     # imported for annotations only. WrappedCursor imports panda_config, so
     # importing it at runtime here would close an import cycle
+    from pandaserver.taskbuffer.WorkQueueMapper import WorkQueueMapper
     from pandaserver.taskbuffer.wrapped_oracle_conn import WrappedOracleConn
     from pandaserver.taskbuffer.WrappedCursor import WrappedCursor
     from pandaserver.taskbuffer.WrappedPostgresConn import WrappedPostgresConn
@@ -75,6 +77,17 @@ class BaseModule:
     # is declared non-Optional for the same reason as conn/cur above. Its type is Any
     # because pandaserver cannot import pandajedi to name it.
     jedi_config: Any
+
+    # Work queue map, built on demand by EntityModule.refreshWorkQueueMap() together with
+    # the time it was last built, which is what decides whether a rebuild is due
+    workQueueMap: "WorkQueueMapper | None"
+    updateTimeForWorkQueue: datetime.datetime | None
+
+    # Message broker proxies, built on first use. The JEDI one is built by the setter that
+    # set_jedi_attributes() installs, which is why both are unset until then
+    mb_proxy_dict: dict[str, Any] | None
+    jedi_mb_proxy_dict: dict[str, Any] | None
+    jedi_mb_proxy_dict_setter: "Callable[[], dict[str, Any] | None] | None"
 
     # constructor
     def __init__(self, log_stream: LogWrapper):
@@ -844,6 +857,10 @@ class BaseModule:
             }
             msg = json.dumps(msg_dict)
             if self.jedi_mb_proxy_dict is None:
+                if self.jedi_mb_proxy_dict_setter is None:
+                    # only a JediDBProxy installs the setter, see set_jedi_attributes()
+                    tmpLog.debug("No mb_proxy setter for internal MQs. Skipped ")
+                    return
                 self.jedi_mb_proxy_dict = self.jedi_mb_proxy_dict_setter()
                 if self.jedi_mb_proxy_dict is None:
                     tmpLog.debug("Failed to get mb_proxy of internal MQs. Skipped ")
@@ -882,6 +899,10 @@ class BaseModule:
             )
             msg = json.dumps(msg_dict)
             if self.jedi_mb_proxy_dict is None:
+                if self.jedi_mb_proxy_dict_setter is None:
+                    # only a JediDBProxy installs the setter, see set_jedi_attributes()
+                    tmpLog.debug("No mb_proxy setter for internal MQs. Skipped ")
+                    return
                 self.jedi_mb_proxy_dict = self.jedi_mb_proxy_dict_setter()
                 if self.jedi_mb_proxy_dict is None:
                     tmpLog.debug("Failed to get mb_proxy of internal MQs. Skipped ")
