@@ -1176,7 +1176,7 @@ class JediTaskSpec(object):
         if not self.useHS06():
             return None
         try:
-            if self.cpuTimeUnit.startswith("m"):
+            if self.cpuTimeUnit is not None and self.cpuTimeUnit.startswith("m") and self.cpuTime is not None:
                 return float(self.cpuTime) / 1000.0
         except Exception:
             pass
@@ -1394,21 +1394,21 @@ class JediTaskSpec(object):
         val = self.get_host_cpu_spec(encoded_platform)
         if val:
             # remove wildcard entries and empty specs
-            l = [x for x in [{k: v for k, v in d.items() if v != "*"} for d in val] if x]
-            if l:
-                new_dict["cpu_specs"] = l
+            cpu_specs = [x for x in [{k: v for k, v in d.items() if v != "*"} for d in val] if x]
+            if cpu_specs:
+                new_dict["cpu_specs"] = cpu_specs
         val = self.get_host_gpu_spec()
         if val:
             # remove wildcard entries and empty specs
-            l = {k: v for k, v in val.items() if v != "*"}
-            if l:
-                new_dict["gpu_spec"] = l
+            gpu_spec = {k: v for k, v in val.items() if v != "*"}
+            if gpu_spec:
+                new_dict["gpu_spec"] = gpu_spec
         self.architecture = json.dumps(new_dict)
 
     # get SW platform
     def get_sw_platform(self):
         try:
-            d = json.loads(self.architecture)
+            d = json.loads(self.architecture or "{}")
             return d.get("sw_platform", "")
         except Exception:
             pass
@@ -1421,7 +1421,7 @@ class JediTaskSpec(object):
     # get base platform
     def get_base_platform(self, encoded_platform=None):
         try:
-            d = json.loads(self.architecture)
+            d = json.loads(self.architecture or "{}")
             val = d.get("base_platform", None)
             if val is not None or encoded_platform is None:
                 return val
@@ -1456,7 +1456,7 @@ class JediTaskSpec(object):
     # get host CPU spec
     def get_host_cpu_spec(self, encoded_platform=None):
         try:
-            d = json.loads(self.architecture)
+            d = json.loads(self.architecture or "{}")
             specs = d.get("cpu_specs", None)
             if not specs and encoded_platform is None:
                 return None
@@ -1506,7 +1506,7 @@ class JediTaskSpec(object):
 
     def get_host_cpu_preference(self):
         try:
-            d = json.loads(self.architecture)
+            d = json.loads(self.architecture or "{}")
             cpu_pref = d.get("cpu_pref", None)
             return cpu_pref
         except Exception:
@@ -1515,7 +1515,7 @@ class JediTaskSpec(object):
     # get host GPU spec
     def get_host_gpu_spec(self):
         try:
-            d = json.loads(self.architecture)
+            d = json.loads(self.architecture or "{}")
             spec = d.get("gpu_spec", None)
             spec.setdefault("vendor", "*")
             spec.setdefault("model", "*")

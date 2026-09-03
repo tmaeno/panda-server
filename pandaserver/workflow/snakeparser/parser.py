@@ -8,6 +8,7 @@ import re
 from itertools import chain
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 from snakemake.api import (
     OutputSettings,
@@ -51,6 +52,10 @@ class UnknownConditionTokenException(Exception):
 
 # noinspection DuplicatedCode
 class Parser(object):
+    # the snakemake workflow and its DAG, both built from the API in __init__
+    _workflow: Any
+    _dag: Any
+
     def __init__(self, workflow_file, level=None, logger=None):
         self._workflow = None
         self._dag = None
@@ -237,7 +242,8 @@ class Parser(object):
                         raise UnknownConditionTokenException(token)
                     param_left = ConditionItem(param_left, param_right, param_operator)
                 node.condition = param_left
-                self._suppress_inputs(node.condition, node.inputs)
+                if node.condition is not None:
+                    self._suppress_inputs(node.condition, node.inputs)
             node.loop = bool(getattr(job.rule, "loop", False))
             if node.loop or in_loop:
                 node.in_loop = True
@@ -265,9 +271,8 @@ class Parser(object):
                         node.add_parent(parent_id)
                         parent_id_list.append(parent_id)
                 if parent_id_list:
-                    if is_str:
-                        parent_id_list = parent_id_list[0]
-                    data["parent_id"] = parent_id_list
+                    # a single source keeps the bare ID it came from, a list keeps the list
+                    data["parent_id"] = parent_id_list[0] if is_str else parent_id_list
         node_list = self._sort_node_list(node_list, set())
         return node_list, root_inputs
 

@@ -333,7 +333,7 @@ class JediDatasetSpec(object):
 
     # set consistency is checked
     def enableCheckConsistency(self):
-        if self.attributes in [None, ""]:
+        if not self.attributes:
             self.attributes = "cc"
         elif "cc" not in self.attributes.split(","):
             self.attributes += ",cc"
@@ -402,7 +402,7 @@ class JediDatasetSpec(object):
     # get the ratio to master
     def getRatioToMaster(self):
         try:
-            tmpMatch = re.search("ratio=(\d+(\.\d+)*)", self.attributes)
+            tmpMatch = re.search("ratio=(\d+(\.\d+)*)", self.attributes or "")
             if tmpMatch is not None:
                 ratioStr = tmpMatch.group(1)
                 try:
@@ -501,7 +501,7 @@ class JediDatasetSpec(object):
 
     # check if unmerged dataset
     def toMerge(self):
-        if self.type.startswith("trn_"):
+        if self.type is not None and self.type.startswith("trn_"):
             return True
         return False
 
@@ -535,7 +535,7 @@ class JediDatasetSpec(object):
 
     # allow no output
     def allowNoOutput(self):
-        if self.attributes in [None, ""]:
+        if not self.attributes:
             items: list[Any] = []
         else:
             items = self.attributes.split(",")
@@ -587,7 +587,7 @@ class JediDatasetSpec(object):
 
     # set pseudo
     def setPseudo(self):
-        if self.attributes in [None, ""]:
+        if not self.attributes:
             items: list[Any] = []
         else:
             items = self.attributes.split(",")
@@ -598,13 +598,14 @@ class JediDatasetSpec(object):
     # merge only
     def is_merge_only(self):
         try:
-            return self.attrToken["mergeOnly"] in self.attributes.split(",")
+            return self.attrToken["mergeOnly"] in (self.attributes or "").split(",")
         except Exception:
             return False
 
     # sort files by old PandaIDs and move files with no PandaIDs to the end
     def sort_files_by_panda_ids(self):
-        self.Files = sorted([f for f in self.Files if f.PandaID is not None], key=lambda x: x.PandaID) + [f for f in self.Files if f.PandaID is None]
+        # files with no PandaID sort last, and keep the order they came in
+        self.Files = sorted(self.Files, key=lambda x: (x.PandaID is None, x.PandaID or 0))
 
     # set no staging
     def set_no_staging(self, value: bool):

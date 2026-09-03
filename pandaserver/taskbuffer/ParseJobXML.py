@@ -41,7 +41,7 @@ class dom_job:
             sys.exit(0)
         # output files (also, drop duplicates within this job)
         outfiles = set(defaultout)
-        [outfiles.add(dom_parser.text(v)) for v in domjob.getElementsByTagName("output")]
+        outfiles.update(dom_parser.text(v) for v in domjob.getElementsByTagName("output"))
         s.outfiles = list(outfiles)
         # gearing options
         for o in domjob.getElementsByTagName("option"):
@@ -174,6 +174,9 @@ class dom_parser:
 
     def parse(s):
         """loads submission configuration from an xml file"""
+        if s.dom is None:
+            # __init__ parses the document before it calls this
+            raise RuntimeError("parse() called before a document was loaded")
         try:
             # general settings
             if len(s.dom.getElementsByTagName("title")) > 0:
@@ -248,7 +251,8 @@ class dom_parser:
             submission.appendChild(x.createElement("output"))
             submission.childNodes[-1].appendChild(x.createTextNode(outfile))
         submission.appendChild(x.createElement("outds"))
-        submission.childNodes[-1].appendChild(x.createTextNode(s.outds))
+        # parse() always sets outds, from the document or from the default
+        submission.childNodes[-1].appendChild(x.createTextNode(s.outds or ""))
         for job in s.jobs:
             submission.appendChild(job.to_dom())
         return submission

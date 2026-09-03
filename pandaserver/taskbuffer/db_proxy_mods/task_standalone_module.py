@@ -2230,7 +2230,7 @@ class TaskStandaloneModule(BaseModule):
             resDS = self.cur.fetchone()
             if resDS is None:
                 # no random seed
-                retVal = (None, None)
+                retVal: tuple[list[JediFileSpec] | None, JediDatasetSpec | None] = (None, None)
                 tmpLog.debug("no random seed")
             else:
                 datasetSpec = JediDatasetSpec()
@@ -2391,7 +2391,7 @@ class TaskStandaloneModule(BaseModule):
         sqlUD = f"UPDATE {panda_config.schemaJEDI}.JEDI_Datasets "
         sqlUD += "SET nFiles=nFiles+1 "
         sqlUD += "WHERE jediTaskID=:jediTaskID AND datasetID=:datasetID "
-        failedRet = False, None, None
+        failedRet: tuple[bool, JediDatasetSpec | None, JediFileSpec | None] = False, None, None
         retVal = failedRet
         try:
             # begin transaction
@@ -2408,7 +2408,7 @@ class TaskStandaloneModule(BaseModule):
                 datasetSpec = JediDatasetSpec()
                 datasetSpec.pack(resDS)
                 # make file
-                datasetSpec.nFiles = datasetSpec.nFiles + 1
+                datasetSpec.nFiles = (datasetSpec.nFiles or 0) + 1
                 tmpFileSpec = JediFileSpec()
                 tmpFileSpec.jediTaskID = jediTaskID
                 tmpFileSpec.datasetID = datasetSpec.datasetID
@@ -3533,12 +3533,14 @@ class TaskStandaloneModule(BaseModule):
             # commit
             if not self._commit():
                 raise RuntimeError("Commit error")
+            # the estimate is only meaningful when some job actually reported a walltime
+            scaled_walltime: int | None
             if nHasVal != 0:
-                totWalltime = int(totWalltime * (1 + float(nNoVal) / float(nHasVal)))
+                scaled_walltime = int(totWalltime * (1 + float(nNoVal) / float(nHasVal)))
             else:
-                totWalltime = None
-            tmpLog.debug(f"done totWalltime={totWalltime}")
-            return totWalltime
+                scaled_walltime = None
+            tmpLog.debug(f"done totWalltime={scaled_walltime}")
+            return scaled_walltime
         except Exception:
             # roll back
             self._rollback()
@@ -3911,6 +3913,10 @@ class TaskStandaloneModule(BaseModule):
             # commit
             if not self._commit():
                 raise RuntimeError("Commit error")
+            if retVal is None:
+                # neither the live nor the archived job parameters table had the job
+                tmpLog.debug("no job parameters found")
+                return None, outFileMap
             tmpLog.debug(f"get {len(retVal)} bytes")
             return retVal, outFileMap
         except Exception:
@@ -5034,7 +5040,7 @@ class TaskStandaloneModule(BaseModule):
         tmp_log = self.create_tagged_logger(comment, f"jediTaskID={jedi_task_id} {dataset_name} n_files={len(lfns)}")
         tmp_log.debug("start")
         try:
-            dataset_names = []
+            dataset_names: list | None = []
             known_lfns = set()
             # sql to get dataset
             sql_d = (
@@ -5053,7 +5059,7 @@ class TaskStandaloneModule(BaseModule):
                 var_map = {":lfn": lfn, ":type": "output"}
                 self.cur.execute(sql_d + comment, var_map)
                 res = self.cur.fetchone()
-                if res:
+                if res and dataset_names is not None:
                     task_id, dataset_id, dataset_name = res
                     dataset_names.append(dataset_name)
                     # get files

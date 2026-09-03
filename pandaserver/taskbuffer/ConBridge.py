@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 import types
+from typing import Any
 
 from pandacommon.pandalogger.PandaLogger import PandaLogger
 
@@ -62,6 +63,12 @@ class Terminator(threading.Thread):
 # connection bridge with timeout
 class ConBridge(object):
     # constructor
+    # the socket pair for this side of the bridge and the DB proxy behind it, all
+    # installed by connect() before any of the methods below run
+    mysock: Any
+    consock: Any
+    proxy: Any
+
     def __init__(self):
         self.child_pid = 0
         self.isMaster = False
