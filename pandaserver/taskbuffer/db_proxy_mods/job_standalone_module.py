@@ -231,7 +231,6 @@ class JobStandaloneModule(BaseModule):
         self,
         pandaID,
         activeTable=True,
-        keepSite=False,
         getOldSubs=False,
         forPending=True,
     ):
@@ -304,13 +303,12 @@ class JobStandaloneModule(BaseModule):
             # increase priority
             if job.jobStatus == "activated" and job.currentPriority < 100:  # type: ignore[operator]  # "NULL" sentinel, see spec_column.py
                 job.currentPriority = 100
-            # reset computing site and dispatchDBlocks
+            # reset dispatchDBlocks so that the setupper makes a new one. The computing site is
+            # kept: the server no longer brokers, so re-brokerage is JEDI's to do and erasing
+            # the site here would only leave the job without one
             job.jobStatus = "defined"
             if job.prodSourceLabel not in ["user", "panda"]:
                 job.dispatchDBlock = None
-                # erase old assignment
-                if (not keepSite) and job.relocationFlag not in [1, 2]:
-                    job.computingSite = None
                 job.computingElement = None
             # host and time information
             job.modificationHost = self.hostname
