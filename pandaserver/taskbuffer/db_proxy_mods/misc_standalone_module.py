@@ -2755,7 +2755,9 @@ class MiscStandaloneModule(BaseModule):
                     uid = workingGroup if workingGroup is not None else prodUserName
                     transferType = "transfer"
                     try:
-                        if dispatchDBlock.split(".")[4] == "prestaging":
+                        # panda.<taskID>.<month>.<day>.<dataType>.<transferType>.<uuid>_dis<PandaID>,
+                        # so the transfer type is the sixth field and the fifth is the data type
+                        if dispatchDBlock.split(".")[5] == "prestaging":
                             transferType = "prestaging"
                     except Exception:
                         pass
