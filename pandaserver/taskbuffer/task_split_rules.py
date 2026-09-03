@@ -172,7 +172,7 @@ changeable_split_rule_tags = [split_rule_dict[tmp_name] for tmp_name in changeab
 
 
 # extract rules
-def extract_rule_values(split_rules: str, rule_names: list, is_sub_rule: bool = False) -> dict:
+def extract_rule_values(split_rules: str | None, rule_names: list, is_sub_rule: bool = False) -> dict:
     """
     Extract rule values from split rule string
 
@@ -202,7 +202,7 @@ def extract_rule_values(split_rules: str, rule_names: list, is_sub_rule: bool = 
 
 
 # replace a rule
-def replace_rule(split_rules: str, rule_name: str, rule_value: int | str, is_sub_rule=False):
+def replace_rule(split_rules: str | None, rule_name: str, rule_value: int | str, is_sub_rule=False):
     """
     Replace a rule in the split rule string
 
@@ -236,7 +236,7 @@ def replace_rule(split_rules: str, rule_name: str, rule_value: int | str, is_sub
 
 
 # remove a rule
-def remove_rule(split_rules: str, rule_token: str, is_sub_rule: bool = False):
+def remove_rule(split_rules: str | None, rule_token: str, is_sub_rule: bool = False):
     """
     Remove a rule from the split rule string
 

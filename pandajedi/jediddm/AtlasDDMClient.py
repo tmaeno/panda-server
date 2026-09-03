@@ -102,12 +102,12 @@ class AtlasDDMClient(DDMClientBase):
                 if skipDuplicate:
                     # extract base LFN and attempt number
                     baseLFN = re.sub("(\.(\d+))$", "", lfn)
-                    attNr = re.sub(baseLFN + "\.*", "", lfn)
-                    if attNr == "":
+                    attNrStr = re.sub(baseLFN + "\.*", "", lfn)
+                    if attNrStr == "":
                         # without attempt number
                         attNr = -1
                     else:
-                        attNr = int(attNr)
+                        attNr = int(attNrStr)
                     # compare attempt numbers
                     addMap = False
                     if baseLFN in baseLFNmap:
@@ -623,12 +623,12 @@ class AtlasDDMClient(DDMClientBase):
             if dsn.endswith("/"):
                 dsn = dsn[:-1]
             filters["name"] = dsn
-            dsList = set()
+            dsSet = set()
             for name in client.list_dids(scope, filters, "dataset"):
-                dsList.add(f"{scope}:{name}")
+                dsSet.add(f"{scope}:{name}")
             for name in client.list_dids(scope, filters, "container"):
-                dsList.add(f"{scope}:{name}/")
-            dsList = list(dsList)
+                dsSet.add(f"{scope}:{name}/")
+            dsList = list(dsSet)
             # ignore panda internal datasets
             if ignorePandaDS:
                 tmpDsList = []
@@ -774,7 +774,7 @@ class AtlasDDMClient(DDMClientBase):
             # sort by name
             ds_size_map = dict(sorted(ds_size_map.items()))
             # reverse sort by size to have larger datasets first
-            ds_list = [k for k in sorted(ds_size_map, key=ds_size_map.get, reverse=True)]
+            ds_list = [k for k in sorted(ds_size_map, key=lambda k: ds_size_map[k], reverse=True)]
             # return
             tmpLog.debug(f"got {str(ds_list)}")
             return self.SC_SUCCEEDED, ds_list
@@ -1726,7 +1726,9 @@ class AtlasDDMClient(DDMClientBase):
             client = RucioClient()
             # get rules
             ret = client.get_rse(rse)
-            # check availability for write
+            # check availability for write. False means the endpoint is bad and None that the
+            # check itself failed, which the caller tells apart to decide whether to retry
+            result: tuple[bool | None, str | None]
             if ret.get("availability_write") is False:
                 result = False, f"{rse} unavailable for write"
             else:

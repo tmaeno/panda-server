@@ -523,12 +523,13 @@ class TaskRefinerBase(object):
             # look for datasets
             if tmpItem["type"] == "template" and "dataset" in tmpItem:
                 # avoid duplication
-                if tmpItem["dataset"] not in allDsList:
-                    allDsList.append(tmpItem["dataset"])
+                origDatasetName = tmpItem["dataset"]
+                if origDatasetName not in allDsList:
+                    allDsList.append(origDatasetName)
                 else:
                     continue
                 datasetSpec = JediDatasetSpec()
-                datasetSpec.datasetName = tmpItem["dataset"]
+                datasetSpec.datasetName = origDatasetName
                 datasetSpec.jediTaskID = self.taskSpec.jediTaskID
                 datasetSpec.type = tmpItem["param_type"]
                 if "container" in tmpItem:
@@ -584,7 +585,7 @@ class TaskRefinerBase(object):
                     if "expandedList" not in tmpItem:
                         tmpItem["expandedList"] = []
                     # dataset names could be comma-concatenated
-                    datasetNameList = datasetSpec.datasetName.split(",")
+                    datasetNameList = origDatasetName.split(",")
                     # datasets could be added by incexec
                     incexecDS = f"dsFor{datasetSpec.streamName}"
                     # remove /XYZ
@@ -764,7 +765,7 @@ class TaskRefinerBase(object):
                     # make unmerged dataset
                     if "mergeOutput" in taskParamMap and taskParamMap["mergeOutput"] is True:
                         umDatasetSpec = JediDatasetSpec()
-                        umDatasetSpec.datasetName = "panda.um." + datasetSpec.datasetName
+                        umDatasetSpec.datasetName = "panda.um." + origDatasetName
                         umDatasetSpec.jediTaskID = self.taskSpec.jediTaskID
                         umDatasetSpec.storageToken = "TOMERGE"
                         umDatasetSpec.vo = datasetSpec.vo
@@ -988,7 +989,7 @@ class TaskRefinerBase(object):
                 self.taskSpec.splitRule = task_split_rules.remove_rule(self.taskSpec.splitRule, rule_token)
                 return
             tmpStr = f"{rule_token}={key_or_value}"
-        if self.taskSpec.splitRule in [None, ""]:
+        if not self.taskSpec.splitRule:
             self.taskSpec.splitRule = tmpStr
         else:
             tmpMatch = re.search(rule_token + "=(-*\d+)(,-*\d+)*", self.taskSpec.splitRule)
@@ -1012,7 +1013,7 @@ class TaskRefinerBase(object):
             if "transPath" in taskParamMap["esmergeSpec"]:
                 transPath = taskParamMap["esmergeSpec"]["transPath"]
             if "jobParameters" in taskParamMap["esmergeSpec"]:
-                jobParameters = jobParameters["esmergeSpec"]["jobParameters"]
+                jobParameters = taskParamMap["esmergeSpec"]["jobParameters"]
         # return
         return "<PANDA_ESMERGE_TRF>" + transPath + "</PANDA_ESMERGE_TRF>" + "<PANDA_ESMERGE_JOBP>" + jobParameters + "</PANDA_ESMERGE_JOBP>"
 

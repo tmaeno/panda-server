@@ -408,11 +408,9 @@ class JobStandaloneModule(BaseModule):
             self.cur.execute(sql1 + comment, varMap)
             retU = self.cur.rowcount
             # not found
-            updatedFlag = True
             job = None
             if retU == 0:
                 tmp_log.debug("Not found for UPDATE")
-                updatedFlag = False
             else:
                 # select
                 varMap = {}
@@ -451,7 +449,8 @@ class JobStandaloneModule(BaseModule):
                 raise RuntimeError("Commit error")
             # record status change
             try:
-                if updatedFlag:
+                # the job is set only when the update above changed a row
+                if job is not None:
                     self.recordStatusChange(job.PandaID, job.jobStatus, jobInfo=job)
                     self.push_job_status_message(job, job.PandaID, job.jobStatus)
             except Exception:
@@ -2368,7 +2367,8 @@ class JobStandaloneModule(BaseModule):
         tmp_log.debug("start")
         # try to lock
         try:
-            retVal: list[Any] = []
+            # whether the row was locked; the callers only test it for truth
+            retVal = False
             # sql to get lock
             sqlGL = (
                 "SELECT PandaID,attemptNr "
@@ -2435,7 +2435,8 @@ class JobStandaloneModule(BaseModule):
         tmp_log.debug("start")
         # try to lock
         try:
-            retVal: list[Any] = []
+            # whether the row was locked; the callers only test it for truth
+            retVal = False
             # sql to get lock
             sqlGL = (
                 "SELECT PandaID,attemptNr "

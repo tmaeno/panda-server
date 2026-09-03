@@ -4,6 +4,7 @@ work queue specification
 """
 
 import re
+from typing import Any
 
 from pandaserver.taskbuffer.GlobalShares import Share
 
@@ -40,7 +41,10 @@ class WorkQueue(object):
     queue_share: int | None
     queue_order: int | None
     criteria: str | None
-    variables: str | None
+    # a CLOB of "key: value, ..." on the way out of the DB, but pack() replaces it with the
+    # bind-variable map parsed out of it and pack_gs() puts a map there directly, so the read
+    # type is Any
+    variables: Any
     partitionID: int | None
     stretchable: int | None
     status: str | None
@@ -131,7 +135,7 @@ class WorkQueue(object):
         # assign map
         self.variables = tmp_map
         # make a python statement for eval
-        if self.criteria in ["", None]:
+        if not self.criteria:
             # catch all
             self.evalString = "True"
         else:
