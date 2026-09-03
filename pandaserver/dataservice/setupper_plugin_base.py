@@ -11,6 +11,12 @@ class SetupperPluginBase(object):
     Base class for setupper plugins. It separates normal and jumbo jobs and sets parameters.
     """
 
+    # Installed by the params loop in __init__. setupper.py, the only place that builds a
+    # plugin, always passes first_submission, and every plugin puts resubmit in its
+    # default_map, so both are set by the time run() is called.
+    first_submission: bool
+    resubmit: bool
+
     def __init__(self, taskBuffer, jobs: List[JobSpec], logger, params: Dict, default_map: Dict) -> None:
         """
         Constructor for the SetupperPluginBase class.

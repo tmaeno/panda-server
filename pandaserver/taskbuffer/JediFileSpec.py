@@ -6,6 +6,7 @@ file specification for JEDI
 import datetime
 import re
 import types
+from typing import Any
 
 from pandaserver.taskbuffer.FileSpec import FileSpec as JobFileSpec
 
@@ -82,6 +83,11 @@ class JediFileSpec(object):
     _zeroAttrs = ("fsize", "attemptNr", "failedAttempt", "ramCount")
     # mapping between sequence and attr
     _seqAttrMap = {"fileID": "ATLAS_PANDA.JEDI_DATASET_CONT_FILEID_SEQ.nextval"}
+
+    # Bookkeeping attribute installed by __init__ via object.__setattr__, so a type
+    # checker does not see it without this declaration. It maps a column name to the
+    # value last assigned to it.
+    _changedAttrs: dict[str, Any]
 
     # constructor
     def __init__(self):

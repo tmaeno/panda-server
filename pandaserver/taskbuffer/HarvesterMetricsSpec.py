@@ -4,6 +4,7 @@ worker specification
 """
 
 import datetime
+from typing import Any
 
 
 class HarvesterMetricsSpec(object):
@@ -23,6 +24,11 @@ class HarvesterMetricsSpec(object):
     __slots__ = _attributes + ("_changedAttrs",)
     # attributes which have 0 by default
     _zeroAttrs = ()
+
+    # Bookkeeping attribute installed by __init__ via object.__setattr__, so a type
+    # checker does not see it without this declaration. It maps a column name to the
+    # value last assigned to it.
+    _changedAttrs: dict[str, Any]
 
     # constructor
     def __init__(self):

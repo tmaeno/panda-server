@@ -11,6 +11,9 @@ from .adder_result import AdderResult
 if TYPE_CHECKING:
     from pandacommon.pandalogger.LogWrapper import LogWrapper
 
+    from pandaserver.brokerage.SiteMapper import SiteMapper
+    from pandaserver.taskbuffer.TaskBuffer import TaskBuffer
+
 
 class AdderPluginBase:
     """
@@ -22,6 +25,11 @@ class AdderPluginBase:
     # non-Optional because a plugin method running without a logger is a bug either
     # way, and an Optional type would only push a None check onto every log call.
     logger: "LogWrapper"
+    # Installed by the loop below from the params. AdderGen always passes both, and the
+    # site mapper it forwards is the one add_main builds at startup, so neither is None
+    # by the time a plugin method runs.
+    taskBuffer: "TaskBuffer"
+    siteMapper: "SiteMapper"
 
     def __init__(self, job, params):
         """

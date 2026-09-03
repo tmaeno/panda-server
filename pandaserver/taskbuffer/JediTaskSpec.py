@@ -3,9 +3,12 @@ import enum
 import json
 import math
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pandaserver.taskbuffer import task_split_rules
+
+if TYPE_CHECKING:
+    from pandaserver.taskbuffer.JediDatasetSpec import JediDatasetSpec
 
 """
 task specification for JEDI
@@ -253,6 +256,19 @@ class JediTaskSpec(object):
     # enum for order input by
     class OrderInputBy(str, enum.Enum):
         eventsAlignment = "1"
+
+    # Bookkeeping attributes installed by __init__ via object.__setattr__, so a type
+    # checker sees none of them without these declarations.
+    # _changedAttrs maps a column name to the value last assigned to it.
+    _changedAttrs: dict[str, Any]
+    # jobParamsTemplate holds the JSON template used to build job parameters.
+    jobParamsTemplate: str
+    # datasetSpecList is filled by the DB proxy when the task is read with its datasets.
+    datasetSpecList: list["JediDatasetSpec"]
+    # origErrorDialog keeps the full errorDialog before it is truncated by __setattr__.
+    origErrorDialog: str | None
+    # origUserName keeps the requester name before it is overwritten for a retried task.
+    origUserName: str | None
 
     # constructor
     def __init__(self):

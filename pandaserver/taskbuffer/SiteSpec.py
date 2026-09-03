@@ -3,8 +3,11 @@ site specification
 
 """
 
+import datetime
 import re
 from typing import Any
+
+from pandaserver.taskbuffer.DdmSpec import DdmSpec
 
 catchall_keys = {
     k: k
@@ -82,6 +85,70 @@ class SiteSpec(object):
         "maxDiskio",
         "extra_queue_params",
     )
+
+    # Column types. Unlike the other specs these do not come from the panda-database DDL:
+    # the columns are the CRIC schedconfig fields, and the single place that fills them is
+    # DBProxy.getSiteInfo() in db_proxy_mods/entity_module.py, so the types below are read
+    # off that method. The columns are installed by __init__ via setattr, so a type checker
+    # sees none of them without these declarations. They carry no value, which keeps them
+    # out of the class dict. Everything is Optional because __init__ starts them at None
+    # and getSiteInfo() leaves a column None whenever CRIC has no value for it; the ones
+    # declared non-Optional are those getSiteInfo() always assigns unconditionally.
+    sitename: str
+    nickname: str
+    dq2url: str | None
+    cloud: str
+    ddm: str
+    # scope ("default", "user", ...) -> the default endpoint of that scope
+    ddm_input: dict[str, str | None]
+    ddm_output: dict[str, str | None]
+    type: str
+    releases: list[str]
+    memory: int | None
+    maxtime: int | None
+    status: str | None
+    # scope -> {space token -> endpoint name}
+    setokens_input: dict[str, dict[str, str]]
+    setokens_output: dict[str, dict[str, str]]
+    defaulttoken: str | None
+    validatedreleases: list[str]
+    maxinputsize: int | None
+    comment: str | None
+    statusmodtime: datetime.datetime | None
+    pledgedCPU: int
+    coreCount: int
+    reliabilityLevel: int | None
+    iscvmfs: bool
+    transferringlimit: int
+    maxwdir: int
+    fairsharePolicy: str | None
+    mintime: int
+    allowfax: bool
+    pandasite: str
+    corepower: float
+    wnconnectivity: str | None
+    catchall: str | None
+    role: str
+    pandasite_state: str
+    # scope -> endpoints of that scope
+    ddm_endpoints_input: dict[str, DdmSpec]
+    ddm_endpoints_output: dict[str, DdmSpec]
+    maxrss: int | None
+    minrss: int | None
+    direct_access_lan: bool
+    direct_access_wan: bool
+    tier: str | None
+    objectstores: list[Any]
+    is_unified: bool
+    # set by SiteMapper when the queue belongs to a unified queue, None otherwise
+    unified_name: str | None
+    jobseed: str | None
+    capability: str | None
+    # gshare -> {resource type -> number of slots}; both keys are NULL-able in the DB
+    num_slots_map: dict[str | None, dict[str | None, int]]
+    workflow: str | None
+    maxDiskio: float | None
+    extra_queue_params: dict[str, Any]
 
     # constructor
     def __init__(self):

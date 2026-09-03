@@ -15,6 +15,10 @@ class WatchDogBase(object):
     SC_FAILED: Interaction.StatusCode
     SC_FATAL: Interaction.StatusCode
 
+    # Installed by FactoryBase.getImpl() right after the plugin is instantiated, which is
+    # the only way a watchdog is created, so it is always set by the time an action runs.
+    prodSourceLabel: str
+
     # constructor
     def __init__(self, taskBufferIF, ddmIF):
         self.taskBufferIF = taskBufferIF

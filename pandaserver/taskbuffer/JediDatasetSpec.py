@@ -137,6 +137,11 @@ class JediDatasetSpec(object):
         "no_staging": "ns",
     }
 
+    # Bookkeeping attribute installed by __init__ via object.__setattr__, so a type
+    # checker does not see it without this declaration. It maps a column name to the
+    # value last assigned to it.
+    _changedAttrs: dict[str, Any]
+
     # constructor
     def __init__(self):
         # install attributes
