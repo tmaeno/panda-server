@@ -11,12 +11,12 @@ from urllib.parse import urlencode
 
 from pandacommon.pandautils.thread_utils import GenericThread
 
+from pandaserver.api.v1.http_client import api_url_ssl
 from pandaserver.brokerage.SiteMapper import SiteMapper
 from pandaserver.config import panda_config
 from pandaserver.dataservice import DataServiceUtils
 from pandaserver.dataservice.DataServiceUtils import select_scope
 from pandaserver.taskbuffer.TaskBuffer import taskBuffer
-from pandaserver.userinterface.Client import baseURLSSL
 
 # instantiate TB
 requester_id = GenericThread().get_full_id(__name__, sys.modules[__name__].__file__)
@@ -140,33 +140,33 @@ meta = meta[:-1]
 meta += """], "type": "aod" } ] }, "name": "Reco_tf", "reportVersion": "1.0.0", "resource": { "cpuUnit": "seconds", "externalsCpuTime": 24, "memUnit": "kB", "transformCpuTime": 50, "wallTime": 2782 } }"""
 
 node: dict[str, Any] = {}
-node["jobId"] = id
-node["state"] = "finished"
-# node['state']='failed'
-# node['batchID']='aaax'
-node["pilotErrorCode"] = 2
-node["pilotErrorCode"] = 1099
-# node['pilotErrorDiag']='aaaaaaaaaaaaaaaaaaaaaaa'
-# node['metaData']=meta
-node["corruptedFiles"] = "4003029-1800232404-8696089-2-2.zip"
-node["siteName"] = "BNL_ATLAS_test"
-node["attemptNr"] = att
-node["jobMetrics"] = f"aaaaa=2 bbbb=3 alt:{','.join(outFileName)}"
-# node['jobSubStatus']='pilot_killed'
-# node['coreCount']=10
-node["cpuConsumptionTime"] = 12340
-node["maxRSS"] = 1
-node["maxVMEM"] = 2
-node["maxSWAP"] = 3
-node["maxPSS"] = 5 * 1024 * 1024
-node["avgRSS"] = 11
-node["avgVMEM"] = 12
-node["avgSWAP"] = 13
-node["avgPSS"] = 14
-node["rateWCHAR"] = 1400
+node["job_id"] = id
+node["job_status"] = "finished"
+# node['job_status']='failed'
+# node['batch_id']='aaax'
+node["pilot_error_code"] = 2
+node["pilot_error_code"] = 1099
+# node['pilot_error_diag']='aaaaaaaaaaaaaaaaaaaaaaa'
+# node['meta_data']=meta
+node["corrupted_files"] = "4003029-1800232404-8696089-2-2.zip"
+node["site_name"] = "BNL_ATLAS_test"
+node["attempt_nr"] = att
+node["job_metrics"] = f"aaaaa=2 bbbb=3 alt:{','.join(outFileName)}"
+# node['job_sub_status']='pilot_killed'
+# node['core_count']=10
+node["cpu_consumption_time"] = 12340
+node["max_rss"] = 1
+node["max_vmem"] = 2
+node["max_swap"] = 3
+node["max_pss"] = 5 * 1024 * 1024
+node["avg_rss"] = 11
+node["avg_vmem"] = 12
+node["avg_swap"] = 13
+node["avg_pss"] = 14
+node["rate_wchar"] = 1400
 
-node["xml"] = xml
-url = f"{baseURLSSL}/updateJob"
+node["job_output_report"] = xml
+url = f"{api_url_ssl}/pilot/update_job"
 
 match = re.search("[^:/]+://([^/]+)(/.+)", url)
 if match is None:

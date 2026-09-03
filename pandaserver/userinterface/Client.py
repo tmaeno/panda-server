@@ -94,7 +94,7 @@ class HttpClient:
     def _prepare_ssl(self, use_https):
         """Prepare SSL configuration based on HTTPS usage and verification settings."""
         cert = None  # no certificate by default when no HTTS or using oidc headers
-        verify = True  # validate against default system CA certificates
+        verify: bool | str = True  # validate against default system CA certificates
 
         if use_https:
             # oidc tokens are added to the headers, we don't need to provide a certificate

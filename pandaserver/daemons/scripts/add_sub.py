@@ -204,7 +204,7 @@ def main(argv=tuple(), tbuf=None, **kwargs):
                 iJob = 0
                 while iJob < len(jediJobs):
                     tmp_log.debug(f" killing {str(jediJobs[iJob:iJob + nJob])}")
-                    Client.kill_jobs(jediJobs[iJob : iJob + nJob], 51, keepUnmerged=True)
+                    Client.kill_jobs(jediJobs[iJob : iJob + nJob], 51, keep_unmerged=True)
                     iJob += nJob
     except Exception:
         errStr = traceback.format_exc()

@@ -92,7 +92,7 @@ class HttpClient:
     def _prepare_ssl(self, use_https):
         """Prepare SSL configuration based on HTTPS usage and verification settings."""
         cert = None
-        verify = True
+        verify: bool | str = True
         if use_https:
             if not self.oidc and self.ssl_certificate and os.path.isfile(self.ssl_certificate):
                 cert = (self.ssl_certificate, self.ssl_key)

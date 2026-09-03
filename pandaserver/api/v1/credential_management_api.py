@@ -29,6 +29,10 @@ global_dispatch_parameter_cache: CoreUtils.CachedObject = None  # type: ignore[a
 global_proxy_cache = panda_proxy_cache.MyProxyInterface()
 global_token_cache = token_cache.TokenCache()
 
+# Read by init_task_buffer() from the token cacher config, and empty until then. It was
+# only ever created inside that function, so every handler raised NameError before it ran
+global_token_cache_config: dict = {}
+
 global_lock = Lock()
 
 
@@ -69,7 +73,7 @@ def _get_dispatch_parameters():
     return True, parameters
 
 
-def _validate_user_permissions(compact_name, tokenized=False) -> dict:
+def _validate_user_permissions(compact_name, tokenized=False) -> tuple[bool, str]:
     allowed_names = global_dispatch_parameter_cache.get("allowProxy", [])
 
     # The user is allowed to get a proxy or token

@@ -10,14 +10,14 @@ from urllib.parse import parse_qs, urlencode
 
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
-from pandaserver.userinterface.Client import baseURLSSL
+from pandaserver.api.v1.http_client import api_url_ssl
 
 node: dict[str, Any] = {}
-node["siteName"] = sys.argv[1]
-node["mem"] = 1000
+node["site_name"] = sys.argv[1]
+node["memory"] = 1000
 node["node"] = socket.getfqdn()
-# node['prodSourceLabel']='user'
-url = f"{baseURLSSL}/getJob"
+# node['prod_source_label']='user'
+url = f"{api_url_ssl}/pilot/acquire_jobs"
 
 match = re.search("[^:/]+://([^/]+)(/.+)", url)
 if match is None:

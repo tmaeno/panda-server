@@ -157,13 +157,18 @@ class Watcher(threading.Thread):
                                 source = "taskBufferErrorCode"
                                 error_code = job_tmp.taskBufferErrorCode
                                 error_diag = job_tmp.taskBufferErrorDiag
+                                errors = [
+                                    {
+                                        "source": source,
+                                        "error_code": error_code,
+                                        "error_diag": error_diag,
+                                    }
+                                ]
                                 self.logger.debug("Watcher.run 2 will call job_failure_postprocessing")
                                 retryModule.job_failure_postprocessing(
                                     self.taskBuffer,
                                     job_tmp.PandaID,
-                                    source,
-                                    error_code,
-                                    error_diag,
+                                    errors,
                                     job_tmp.attemptNr,
                                 )
                                 self.logger.debug("job_failure_postprocessing 2 is back")

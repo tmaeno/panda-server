@@ -189,8 +189,8 @@ def update_jedi_log(req: PandaRequest, file: FileStorage) -> Dict:
         # stdout name
         log_name = f"{panda_config.cache_dir}/{file.filename.split('/')[-1]}"
 
-        # append to file end
-        with open(log_name, "a") as file_object:
+        # append to file end. The mode is binary since the decompressed content is bytes
+        with open(log_name, "ab") as file_object:
             file_object.write(new_content)
 
     except Exception as e:

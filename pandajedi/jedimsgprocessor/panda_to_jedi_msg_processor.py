@@ -59,8 +59,23 @@ class PandaToJediMsgProcPlugin(BaseMsgProcPlugin):
                         siteMapper = self.tbIF.get_site_mapper()
                         taskSetupper = TaskSetupper(vo, prodSourceLabel)
                         taskSetupper.initializeMods(self.tbIF, self.ddmIF)
+                        resource_types = self.tbIF.load_resource_types()
                         gen = JobGeneratorThread(
-                            inputList, threadPool, self.tbIF, self.ddmIF, siteMapper, True, taskSetupper, self.pid, workQueue, "pjmsg", None, None, None, False
+                            inputList,
+                            threadPool,
+                            self.tbIF,
+                            self.ddmIF,
+                            siteMapper,
+                            True,
+                            taskSetupper,
+                            self.pid,
+                            workQueue,
+                            "pjmsg",
+                            None,
+                            None,
+                            None,
+                            False,
+                            resource_types,
                         )
                         gen.start()
                         gen.join()

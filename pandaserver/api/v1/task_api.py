@@ -3,7 +3,7 @@
 import datetime
 import json
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -111,8 +111,10 @@ def retry(
         if not production_role and ignore_hard_exhausted:
             ignore_hard_exhausted = False
         # get command qualifier
-        qualifier = JediTaskSpec.get_retry_command_qualifiers(no_child_retry, discard_events, disable_staging_mode, keep_gshare_priority, ignore_hard_exhausted)
-        qualifier = " ".join(qualifier)
+        qualifiers = JediTaskSpec.get_retry_command_qualifiers(
+            no_child_retry, discard_events, disable_staging_mode, keep_gshare_priority, ignore_hard_exhausted
+        )
+        qualifier = " ".join(qualifiers)
         # normal retry
         ret = global_task_buffer.sendCommandTaskPanda(
             task_id,
@@ -1239,7 +1241,7 @@ def get_tasks_detailed_info_since(req, since: str | None = None, filters: str | 
 
 
 @request_validation(_logger, secure=True, request_method="GET")
-def get_datasets_and_files(req, task_id, dataset_types: List[str] = ("input", "pseudo_input"), dataset_only: bool = False) -> Dict[str, Any]:
+def get_datasets_and_files(req, task_id, dataset_types: Sequence[str] = ("input", "pseudo_input"), dataset_only: bool = False) -> Dict[str, Any]:
     """
     Get datasets and files
 

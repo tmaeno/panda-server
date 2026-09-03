@@ -178,7 +178,7 @@ def update_single_event_range(
     event_range_status: str,
     core_count: int | None = None,
     cpu_consumption_time: float | None = None,
-    object_store_id: id | None = None,
+    object_store_id: int | None = None,
     timeout: int = 60,
 ):
     """
