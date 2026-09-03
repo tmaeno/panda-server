@@ -161,6 +161,10 @@ class InputChunk:
         if ngSites is None:
             ngSites = []
         ngSites = copy.copy(ngSites)
+        if self.masterDataset is None:
+            # every file and event this method walks comes from the master dataset,
+            # so a chunk built without one has nothing to work on here
+            raise RuntimeError("getOneSiteCandidate() called without a master dataset")
 
         # skip sites for distributed master dataset
         dist_str = ""
@@ -440,6 +444,10 @@ class InputChunk:
         skip_short_output=False,
     ):
         is_short = False
+        if self.masterDataset is None:
+            # every file and event this method walks comes from the master dataset,
+            # so a chunk built without one has nothing to work on here
+            raise RuntimeError("getSubChunk() called without a master dataset")
         # check if there are unused files/events
         if not self.checkUnused():
             return None, is_short
@@ -1054,6 +1062,10 @@ class InputChunk:
 
     # check event continuity
     def check_event_jump_and_sum(self):
+        if self.masterDataset is None:
+            # every file and event this method walks comes from the master dataset,
+            # so a chunk built without one has nothing to work on here
+            raise RuntimeError("check_event_jump_and_sum() called without a master dataset")
         nextStartEvent = None
         eventJump = False
         totalEvents = 0
