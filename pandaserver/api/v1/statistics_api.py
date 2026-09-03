@@ -211,7 +211,7 @@ def job_stats_by_site_share_and_resource_type(req: PandaRequest, time_window: in
 
 
 @request_validation(_logger, secure=False, request_method="GET")
-def get_wn_metrics_by_site(req: PandaRequest, site: str, host: str = None, key: str = None, days: int = 1) -> Dict[str, Any]:
+def get_wn_metrics_by_site(req: PandaRequest, site: str, host: str | None = None, key: str | None = None, days: int = 1) -> Dict[str, Any]:
     """
     Worker node statistics for a site
 
@@ -252,7 +252,7 @@ def get_wn_metrics_by_site(req: PandaRequest, site: str, host: str = None, key: 
 
 
 @request_validation(_logger, secure=False, request_method="GET")
-def get_wn_metrics_by_queue(req: PandaRequest, panda_queue: str, host: str = None, key: str = None, days: int = 1) -> Dict[str, Any]:
+def get_wn_metrics_by_queue(req: PandaRequest, panda_queue: str, host: str | None = None, key: str | None = None, days: int = 1) -> Dict[str, Any]:
     """
     Worker node statistics for a PanDA queue
 
