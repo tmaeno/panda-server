@@ -70,6 +70,12 @@ class BaseModule:
     conn: "WrappedOracleConn | WrappedPostgresConn"
     cur: "WrappedCursor"
 
+    # The pandajedi jedi_config module, installed by set_jedi_attributes() when the proxy
+    # is a JediDBProxy. Only the *_JEDI methods read it and those run nowhere else, so it
+    # is declared non-Optional for the same reason as conn/cur above. Its type is Any
+    # because pandaserver cannot import pandajedi to name it.
+    jedi_config: Any
+
     # constructor
     def __init__(self, log_stream: LogWrapper):
         self._log_stream = log_stream

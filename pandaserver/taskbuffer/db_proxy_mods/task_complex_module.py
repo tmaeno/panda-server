@@ -6,7 +6,7 @@ import os
 import random
 import re
 import traceback
-from typing import Any
+from typing import Any, Literal, overload
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandautils.PandaUtils import (
@@ -378,8 +378,10 @@ class TaskComplexModule(BaseModule):
                     else:
                         unaligned[tmpLFN] = int(tmpFileVar["events"])
                 aligned.sort()
-                unaligned = sorted(unaligned, key=lambda i: unaligned[i], reverse=True)
-                lfnList = aligned + unaligned
+                # sort the unaligned LFNs by event count. The key reads the map, so it must
+                # not be the name the sorted list is bound to
+                unaligned_lfns = sorted(unaligned, key=lambda i: unaligned[i], reverse=True)
+                lfnList = aligned + unaligned_lfns
             elif xmlConfig is None:
                 # sort by LFN
                 lfnList = sorted(filelValMap.keys())
@@ -415,7 +417,9 @@ class TaskComplexModule(BaseModule):
             # make file specs
             fileSpecMap = {}
             uniqueFileKeyList = []
-            nRemEvents = nEventsPerJob
+            # the number of events left in the file being split. Event-level splitting is
+            # only entered when this is a positive number, see the elif below
+            nRemEvents: int = nEventsPerJob
             totalEventNumber = firstEventNumber
             uniqueLfnList: dict[Any, Any] = {}
             totalNumEventsF = 0
@@ -503,18 +507,21 @@ class TaskComplexModule(BaseModule):
                     tmpFileSpecList.append(fileSpec)
                 else:
                     # event-level splitting
-                    tmpStartEvent = 0
+                    splitStartEvent = 0
+                    # the elif above ruled out an unset nEvents, and the copies made below
+                    # inherit it, so read it once here where that is still visible
+                    numEventsInFile = fileSpec.nEvents
                     # change nEventsPerJob if target number is specified
                     if tgtNumEventsPerJob is not None and tgtNumEventsPerJob > 0:
                         # calculate to how many chunks the file is split
-                        tmpItem = divmod(fileSpec.nEvents, tgtNumEventsPerJob)
+                        tmpItem = divmod(numEventsInFile, tgtNumEventsPerJob)
                         nSubChunk = tmpItem[0]
                         if tmpItem[1] > 0:
                             nSubChunk += 1
                         if nSubChunk <= 0:
                             nSubChunk = 1
                         # get nEventsPerJob
-                        tmpItem = divmod(fileSpec.nEvents, nSubChunk)
+                        tmpItem = divmod(numEventsInFile, nSubChunk)
                         nEventsPerJob = tmpItem[0]
                         if tmpItem[1] > 0:
                             nEventsPerJob += 1
@@ -529,10 +536,10 @@ class TaskComplexModule(BaseModule):
                     # make file specs
                     while nRemEvents > 0:
                         splitFileSpec = copy.copy(fileSpec)
-                        if tmpStartEvent + nRemEvents >= splitFileSpec.nEvents:
-                            splitFileSpec.startEvent = tmpStartEvent
-                            splitFileSpec.endEvent = splitFileSpec.nEvents - 1
-                            nRemEvents -= splitFileSpec.nEvents - tmpStartEvent
+                        if splitStartEvent + nRemEvents >= numEventsInFile:
+                            splitFileSpec.startEvent = splitStartEvent
+                            splitFileSpec.endEvent = numEventsInFile - 1
+                            nRemEvents -= numEventsInFile - splitStartEvent
                             if nRemEvents == 0:
                                 nRemEvents = nEventsPerJob
                             if firstEventNumber is not None and (nEventsPerFile is not None or useRealNumEvents):
@@ -541,9 +548,9 @@ class TaskComplexModule(BaseModule):
                             tmpFileSpecList.append(splitFileSpec)
                             break
                         else:
-                            splitFileSpec.startEvent = tmpStartEvent
-                            splitFileSpec.endEvent = tmpStartEvent + nRemEvents - 1
-                            tmpStartEvent += nRemEvents
+                            splitFileSpec.startEvent = splitStartEvent
+                            splitFileSpec.endEvent = splitStartEvent + nRemEvents - 1
+                            splitStartEvent += nRemEvents
                             nRemEvents = nEventsPerJob
                             if firstEventNumber is not None and (nEventsPerFile is not None or useRealNumEvents):
                                 splitFileSpec.firstEvent = totalEventNumber
@@ -809,13 +816,10 @@ class TaskComplexModule(BaseModule):
                                 nPending += 1
                                 pendingFID.append(fileID)
                                 # count number of events for scouts with event-level splitting
-                                if isEventSplit:
-                                    try:
-                                        if nEventsToUseEventSplit < sizePendingEventChunk:
-                                            nEventsToUseEventSplit += endEvent - startEvent + 1
-                                            nFilesToUseEventSplit += 1
-                                    except Exception:
-                                        pass
+                                if isEventSplit and sizePendingEventChunk is not None and nEventsToUseEventSplit < sizePendingEventChunk:
+                                    if startEvent is not None and endEvent is not None:
+                                        nEventsToUseEventSplit += endEvent - startEvent + 1
+                                        nFilesToUseEventSplit += 1
                             elif status == "staging":
                                 nStaging += 1
                                 stagingLB.add(lumiBlockNr)
@@ -881,13 +885,10 @@ class TaskComplexModule(BaseModule):
                             elif fileSpec.nEvents is not None:
                                 nEventsInsert += fileSpec.nEvents
                             # count number of events for scouts with event-level splitting
-                            if isEventSplit:
-                                try:
-                                    if nEventsToUseEventSplit < sizePendingEventChunk:
-                                        nEventsToUseEventSplit += fileSpec.endEvent - fileSpec.startEvent + 1
-                                        nFilesToUseEventSplit += 1
-                                except Exception:
-                                    pass
+                            if isEventSplit and sizePendingEventChunk is not None and nEventsToUseEventSplit < sizePendingEventChunk:
+                                if fileSpec.startEvent is not None and fileSpec.endEvent is not None:
+                                    nEventsToUseEventSplit += fileSpec.endEvent - fileSpec.startEvent + 1
+                                    nFilesToUseEventSplit += 1
                             fileSpecsForInsert.append(fileSpec)
                         # get fileID
                         tmpLog.debug(f"get fileIDs for {nInsert} inputs")
@@ -1081,7 +1082,7 @@ class TaskComplexModule(BaseModule):
                                         toActivateFID = pendingFID[:total_pending_files_to_activate]
                                     else:
                                         diagMap["errMsg"] = "not enough files"
-                                elif isEventSplit:
+                                elif isEventSplit and sizePendingEventChunk is not None:
                                     # enough events are pending
                                     if nEventsToUseEventSplit >= sizePendingEventChunk and nFilesToUseEventSplit > 0:
                                         toActivateFID = pendingFID[: (int(nPending / nFilesToUseEventSplit) * nFilesToUseEventSplit)]
@@ -1095,7 +1096,7 @@ class TaskComplexModule(BaseModule):
                                         diagMap["errMsg"] = f"{nPending} files available, {strSizePendingFileChunk}"
                         else:
                             nReady += nInsert
-                            toActivateFID = orig_pendingFID
+                            toActivateFID = list(orig_pendingFID)
                         tmpLog.debug(f"length of pendingFID {len(orig_pendingFID)} -> {len(toActivateFID)}")
                         for tmpFileID in toActivateFID:
                             if tmpFileID in orig_pendingFID:
@@ -1736,10 +1737,10 @@ class TaskComplexModule(BaseModule):
         attr_name_for_group_by: str | None,
         time_limit: datetime.datetime,
         min_priority: int | None,
-        simulation_with_file_stat: bool,
+        simulation_with_file_stat: bool | None,
         target_datasets: list | None,
         merge_un_throttled: bool | None,
-        resource_name: str,
+        resource_name: str | None,
         target_tasks: list | None,
     ) -> list:
         """
@@ -1871,8 +1872,30 @@ class TaskComplexModule(BaseModule):
         return res_list
 
     # make dictionaries for tasks and datasets with unprocessed inputs
+    @overload
     def _make_dicts_tasks_datasets_with_unprocessed_inputs(
-        self, res_list: list, tmp_log: LogWrapper, work_queue: WorkQueue, is_peeking: bool, super_high_prio_task_ratio: int | None, set_group_by_attr: bool
+        self,
+        res_list: list,
+        tmp_log: LogWrapper,
+        work_queue: WorkQueue,
+        is_peeking: Literal[True],
+        super_high_prio_task_ratio: int,
+        set_group_by_attr: bool,
+    ) -> int: ...
+
+    @overload
+    def _make_dicts_tasks_datasets_with_unprocessed_inputs(
+        self,
+        res_list: list,
+        tmp_log: LogWrapper,
+        work_queue: WorkQueue,
+        is_peeking: Literal[False],
+        super_high_prio_task_ratio: int,
+        set_group_by_attr: bool,
+    ) -> tuple[dict, dict, list, dict, dict, dict]: ...
+
+    def _make_dicts_tasks_datasets_with_unprocessed_inputs(
+        self, res_list: list, tmp_log: LogWrapper, work_queue: WorkQueue, is_peeking: bool, super_high_prio_task_ratio: int, set_group_by_attr: bool
     ) -> tuple[dict, dict, list, dict, dict, dict] | int:
         """
         Make dictionaries for tasks and datasets with unprocessed inputs
@@ -1883,7 +1906,7 @@ class TaskComplexModule(BaseModule):
         :param is_peeking: Whether to peek at the highest priority among waiting tasks without any interventions.
         :param super_high_prio_task_ratio: Ratio for superhigh priority tasks.
         :param set_group_by_attr: Whether to aggregate tasks by an attribute.
-        :return: Various dictionaries of tasks and datasets for later processing.
+        :return: The highest priority in peeking mode, otherwise various dictionaries of tasks and datasets for later processing.
         """
         # make return
         task_dataset_map: dict[str, Any] = {}
@@ -2001,6 +2024,9 @@ class TaskComplexModule(BaseModule):
                                     break
                             else:
                                 break
+        if is_peeking:
+            # only reached with an empty res_list, which the caller answers before calling
+            return 0
         return task_dataset_map, task_status_map, jedi_task_id_list, task_prio_map, task_with_jumbo_map, task_group_by_attr_map
 
     # read a task with unprocessed inputs
@@ -2349,7 +2375,7 @@ class TaskComplexModule(BaseModule):
         dataset_id: int,
         dataset_type: str,
         primary_dataset_id: int,
-        simulation_with_file_stat: bool,
+        simulation_with_file_stat: bool | None,
         orig_n_files_unprocessed: int,
         use_jumbo: bool,
         datasets_with_fake_co_jumbo: set,
@@ -2507,8 +2533,8 @@ class TaskComplexModule(BaseModule):
         dataset_type: str,
         dataset_id_list: list,
         is_dry_run: bool,
-        simulation_with_file_stat: bool,
-        num_avalanche: int,
+        simulation_with_file_stat: bool | None,
+        num_avalanche: int | None,
         read_min_files: bool,
     ) -> tuple[bool, list, list]:
         """
@@ -2574,7 +2600,7 @@ class TaskComplexModule(BaseModule):
                     dataset_spec = JediDatasetSpec()
                     dataset_spec.pack(tmp_res)
                     # change stream name for merging
-                    if dataset_spec.type in JediDatasetSpec.getMergeProcessTypes():
+                    if dataset_spec.type in JediDatasetSpec.getMergeProcessTypes() and dataset_spec.streamName is not None:
                         # change OUTPUT to IN
                         dataset_spec.streamName = re.sub("^OUTPUT", "TRN_OUTPUT", dataset_spec.streamName)
                         # change LOG to INLOG
@@ -2617,7 +2643,7 @@ class TaskComplexModule(BaseModule):
         is_dry_run: bool,
         read_min_files: bool,
         max_files_per_task: int,
-        simulation_with_file_stat: bool,
+        simulation_with_file_stat: bool | None,
         n_files_unprocessed: int,
         primary_dataset_id: int,
         use_jumbo: bool,
@@ -3231,13 +3257,14 @@ class TaskComplexModule(BaseModule):
                 return 0
 
             # make dictionaries with tasks and datasets
-            tmp_ret = self._make_dicts_tasks_datasets_with_unprocessed_inputs(
-                res_list, tmp_log, workQueue, isPeeking, super_high_prio_task_ratio, set_group_by_attr
-            )
             if isPeeking:
-                return tmp_ret
+                return self._make_dicts_tasks_datasets_with_unprocessed_inputs(
+                    res_list, tmp_log, workQueue, True, super_high_prio_task_ratio, set_group_by_attr
+                )
 
-            task_dataset_map, task_status_map, jedi_task_id_list, task_prio_map, task_with_jumbo_map, task_group_by_attr_map = tmp_ret
+            task_dataset_map, task_status_map, jedi_task_id_list, task_prio_map, task_with_jumbo_map, task_group_by_attr_map = (
+                self._make_dicts_tasks_datasets_with_unprocessed_inputs(res_list, tmp_log, workQueue, False, super_high_prio_task_ratio, set_group_by_attr)
+            )
 
             # loop over all tasks to make return
             i_tasks = 0
@@ -3304,7 +3331,8 @@ class TaskComplexModule(BaseModule):
                     time_limit,
                     target_tasks,
                 )
-                if to_skip_task:
+                if to_skip_task or orig_task_spec is None:
+                    # the task spec is None only when the helper tells the caller to skip
                     continue
                 # count the number of files for avalanche, check username, and get the number of samples for HPO tasks
                 to_skip_task, num_avalanche, num_hpo_samples = self._check_task_with_unprocessed_inputs(
@@ -3441,7 +3469,7 @@ class TaskComplexModule(BaseModule):
                                     return_map[jediTaskID].append((task_spec, cloudName, input_chunk))
                                     i_ds_per_task += 1
                                 # reduce the number of jobs
-                                if maxNumJobs is not None and not input_chunk.isMerging:
+                                if maxNumJobs is not None and not input_chunk.isMerging and input_chunk.masterDataset is not None:
                                     maxNumJobs -= int(math.ceil(float(len(input_chunk.masterDataset.Files)) / float(typical_num_files_per_job)))
                             if i_ds_per_task > n_ds_per_task:
                                 tmp_log.debug(f"escape due to too many datasets to process")
@@ -4765,8 +4793,9 @@ class TaskComplexModule(BaseModule):
                     fileID = int(val)
                 else:
                     fileID = 0
-                # change placeholder in filename
-                newLFN = fileSpec.lfn.replace("$JEDIFILEID", str(fileID))
+                # change placeholder in filename. lfn was copied from the job's file spec
+                # by convertFromJobFileSpec() above, which never yields None
+                newLFN = fileSpec.lfn.replace("$JEDIFILEID", str(fileID))  # type: ignore[union-attr]
                 varMap = {}
                 varMap[":jediTaskID"] = fileSpec.jediTaskID
                 varMap[":datasetID"] = datasetID
@@ -5967,8 +5996,9 @@ class TaskComplexModule(BaseModule):
             indexFileID = 0
             fetched_serial_ids = 0
             maxSerialNr = None
-            output_map_for_bulk_fetch = [{} for _ in range(n_files_per_chunk)]
-            parallel_out_map_for_bulk_fetch = [{} for _ in range(n_files_per_chunk)]
+            output_map_for_bulk_fetch: list[dict[str, Any]] = [{} for _ in range(n_files_per_chunk)]
+            # keyed by fileID, not by stream name like output_map_for_bulk_fetch
+            parallel_out_map_for_bulk_fetch: list[dict[Any, Any]] = [{} for _ in range(n_files_per_chunk)]
             max_serial_numbers_for_bulk_fetch = [None] * n_files_per_chunk
             # sql to get dataset
             sqlD = "SELECT "
@@ -6092,7 +6122,8 @@ class TaskComplexModule(BaseModule):
                             cDatasetSpec = JediDatasetSpec()
                             cDatasetSpec.pack(resT1)
                             # instantiate template dataset
-                            cDatasetSpec.type = re.sub("^tmpl_", "", cDatasetSpec.type)
+                            if cDatasetSpec.type is not None:
+                                cDatasetSpec.type = re.sub("^tmpl_", "", cDatasetSpec.type)
                             cDatasetSpec.templateID = datasetID
                             cDatasetSpec.creationTime = timeNow
                             cDatasetSpec.modificationTime = timeNow
