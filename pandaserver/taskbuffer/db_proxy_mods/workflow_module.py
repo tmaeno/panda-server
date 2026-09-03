@@ -867,8 +867,9 @@ class WorkflowModule(BaseModule):
             n_steps_upserted = 0
             n_data_upserted = 0
             with self.transaction(tmp_log=tmp_log) as (cur, _):
-                # action for data
-                if action_of_data == "insert":
+                # action for data. Each action was only set above when the matching
+                # specs were given, which is what the second test says
+                if action_of_data == "insert" and data_specs:
                     for data_spec in data_specs:
                         data_spec.creation_time = naive_utcnow()
                         sql_insert = (
@@ -883,7 +884,7 @@ class WorkflowModule(BaseModule):
                         data_spec.data_id = data_id
                         n_data_upserted += 1
                         tmp_log.debug(f"inserted a data workflow_id={workflow_id} data_id={data_id}")
-                elif action_of_data == "update":
+                elif action_of_data == "update" and data_specs:
                     for data_spec in data_specs:
                         data_spec.modification_time = naive_utcnow()
                         sql_update = (
@@ -895,7 +896,7 @@ class WorkflowModule(BaseModule):
                         n_data_upserted += 1
                         tmp_log.debug(f"updated a data workflow_id={workflow_id} data_id={data_spec.data_id}")
                 # action for steps
-                if action_of_steps == "insert":
+                if action_of_steps == "insert" and step_specs:
                     for step_spec in step_specs:
                         step_spec.creation_time = naive_utcnow()
                         sql_insert = (
@@ -910,7 +911,7 @@ class WorkflowModule(BaseModule):
                         step_spec.step_id = step_id
                         n_steps_upserted += 1
                         tmp_log.debug(f"inserted a step workflow_id={workflow_id} step_id={step_id}")
-                elif action_of_steps == "update":
+                elif action_of_steps == "update" and step_specs:
                     for step_spec in step_specs:
                         step_spec.modification_time = naive_utcnow()
                         sql_update = (
@@ -922,7 +923,7 @@ class WorkflowModule(BaseModule):
                         n_steps_upserted += 1
                         tmp_log.debug(f"updated a step workflow_id={workflow_id} step_id={step_spec.step_id}")
                 # action for workflow
-                if action_of_workflow == "insert":
+                if action_of_workflow == "insert" and workflow_spec:
                     workflow_spec.creation_time = naive_utcnow()
                     sql_insert = (
                         f"INSERT INTO {panda_config.schemaJEDI}.workflows ({workflow_spec.columnNames()}) "
@@ -935,7 +936,7 @@ class WorkflowModule(BaseModule):
                     workflow_id = int(self.getvalue_corrector(self.cur.getvalue(var_map[":new_workflow_id"])))
                     workflow_spec.workflow_id = workflow_id
                     tmp_log.debug(f"inserted a workflow workflow_id={workflow_id}")
-                elif action_of_workflow == "update":
+                elif action_of_workflow == "update" and workflow_spec:
                     workflow_spec.modification_time = naive_utcnow()
                     sql_update = (
                         f"UPDATE {panda_config.schemaJEDI}.workflows " f"SET {workflow_spec.bindUpdateChangesExpression()} " "WHERE workflow_id=:workflow_id "

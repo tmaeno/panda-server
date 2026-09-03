@@ -5,7 +5,7 @@ EventLookupClientEI is a class for looking up events in the EventIndex.
 import os
 import subprocess
 import tempfile
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 class EventLookupClientEI:
@@ -15,7 +15,7 @@ class EventLookupClientEI:
 
     def do_lookup(
         self, event_run_list: List[Tuple[int, int]], stream: str | None = None, tokens: str | None = None, ami_tag: str | None = None
-    ) -> Tuple[List[str], str, str, str]:
+    ) -> Tuple[Dict[Any, Any], str, str, str]:
         """
         Performs a lookup in the EventIndex for the given parameters.
 
@@ -26,7 +26,7 @@ class EventLookupClientEI:
             ami_tag (str): The AMI tag.
 
         Returns:
-            Tuple[List[str], str, str, str]: A tuple containing the list of GUIDs, the command, the output, and the error.
+            Tuple[Dict[Any, Any], str, str, str]: A tuple mapping each (run, event) to its set of GUIDs, plus the command, the output, and the error.
         """
         command = os.path.join(
             os.getenv(

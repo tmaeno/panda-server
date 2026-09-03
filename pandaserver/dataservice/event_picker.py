@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import traceback
+from typing import Any, TextIO
 
 from pandacommon.pandalogger.LogWrapper import LogWrapper
 from pandacommon.pandalogger.PandaLogger import PandaLogger
@@ -54,11 +55,12 @@ class EventPicker:
         self.creation_time = ""
         self.params = ""
         self.locked_by = ""
-        self.event_picking_file = None
+        # opened by run() for the lifetime of the pick, and read by the methods it calls
+        self.event_picking_file: TextIO | None = None
         self.user_task_name = ""
         self.user_dn = ""
         # JEDI
-        self.jedi_task_id = None
+        self.jedi_task_id: int | None = None
 
     # end with error
     def end_with_error(self, message: str):
@@ -75,8 +77,9 @@ class EventPicker:
         self.logger.error(message)
         # unlock evp file
         try:
-            fcntl.flock(self.event_picking_file.fileno(), fcntl.LOCK_UN)
-            self.event_picking_file.close()
+            if self.event_picking_file is not None:
+                fcntl.flock(self.event_picking_file.fileno(), fcntl.LOCK_UN)
+                self.event_picking_file.close()
             if not self.ignore_error:
                 # remove evp file
                 os.remove(self.event_picking_file_name)
@@ -126,7 +129,7 @@ class EventPicker:
         Returns:
             dict: A dictionary containing the options extracted from the event picking file.
         """
-        options = {
+        options: dict[str, Any] = {
             "runEvent": [],
             "eventPickDataType": "",
             "eventPickStreamName": "",
@@ -147,6 +150,9 @@ class EventPicker:
             "params": "",
         }
 
+        if self.event_picking_file is None:
+            # run() opens the file before every call to this method
+            raise RuntimeError("get_options_from_file() called without an open event picking file")
         for tmp_line in self.event_picking_file:
             # regular expression to parse lines where a key and value are separated by an equal sign
             tmp_match = re.search("^([^=]+)=(.+)$", tmp_line)

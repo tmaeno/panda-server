@@ -57,7 +57,7 @@ class DynDataDistributer:
         tmp_log.debug(f"get_replica_locations {input_ds}")
 
         # return for failure
-        res_for_failure = False, {"": {"": ([], [], [], 0, False, False, 0, 0, [])}}
+        res_for_failure: Tuple[bool, Dict] = False, {"": {"": ([], [], [], 0, False, False, 0, 0, [])}}
 
         # get replica locations
         if input_ds.endswith("/"):
@@ -237,7 +237,7 @@ class DynDataDistributer:
         tmp_log.debug(f"get_list_dataset_replicas_in_container {container}")
 
         # response for failure
-        res_for_failure = False, {}
+        res_for_failure: Tuple[bool, Dict] = False, {}
 
         # get datasets in container
         for attempt in range(max_attempts):
@@ -268,7 +268,7 @@ class DynDataDistributer:
         tmp_log.debug("end")
         return True, all_rep_map
 
-    def get_used_datasets(self, dataset_map: Dict, max_attempts: int = 3) -> Tuple[bool, Dict]:
+    def get_used_datasets(self, dataset_map: Dict, max_attempts: int = 3) -> Tuple[bool, List]:
         """
         Get the datasets that are used by jobs.
 
@@ -282,7 +282,7 @@ class DynDataDistributer:
         tmp_log = LogWrapper(_logger, f"get_used_datasets-{naive_utcnow().isoformat('/')}")
         tmp_log.debug(f"get_used_datasets {str(dataset_map)}")
 
-        res_for_failure = (False, [])
+        res_for_failure: Tuple[bool, List] = (False, [])
         used_ds_list = []
 
         # loop over all datasets
@@ -326,7 +326,7 @@ class DynDataDistributer:
         tmp_log.debug("end")
         return True, used_ds_list
 
-    def get_file_from_dataset(self, dataset_name: str, guid: str, max_attempts: int = 3) -> Tuple[bool, Dict]:
+    def get_file_from_dataset(self, dataset_name: str, guid: str, max_attempts: int = 3) -> Tuple[bool, Dict | None]:
         """
         Get file information from a dataset.
 
@@ -341,7 +341,7 @@ class DynDataDistributer:
         tmp_log = LogWrapper(_logger, f"get_file_from_dataset-{naive_utcnow().isoformat('/')}")
         tmp_log.debug(f"get_file_from_dataset {dataset_name} {guid}")
 
-        res_for_failure = (False, None)
+        res_for_failure: Tuple[bool, Dict | None] = (False, None)
 
         # get files in datasets
         global g_files_in_ds_map
@@ -381,7 +381,7 @@ class DynDataDistributer:
 
     def register_dataset_container_with_datasets(
         self, container_name: str, files: List, replica_map: Dict, n_sites: int = 1, owner: str | None = None, max_attempts: int = 3
-    ) -> Tuple[bool, Dict]:
+    ) -> bool:
         """
         Register a new dataset container with datasets.
 
@@ -534,14 +534,14 @@ class DynDataDistributer:
                 status = True
             except Exception:
                 err_type, err_value = sys.exc_info()[:2]
-                out = f"failed to freeze : {err_type} {err_value}"
+                freeze_error = f"failed to freeze : {err_type} {err_value}"
                 status = False
             if not status:
                 time.sleep(10)
             else:
                 break
         if not status:
-            tmp_logger.error(out)
+            tmp_logger.error(freeze_error)
             tmp_logger.error(f"bad DDM response to freeze {dataset_name}")
             tmp_logger.debug("end")
             return res_for_failure
@@ -551,8 +551,8 @@ class DynDataDistributer:
             for attempt in range(max_attempts):
                 try:
                     tmp_logger.debug(f"{attempt}/{max_attempts} registerDatasetLocation {dataset_name} {tmp_location}")
-                    out = rucioAPI.register_dataset_location(dataset_name, [tmp_location], self.dataset_lifetime, owner)
-                    tmp_logger.debug(out)
+                    location_out = rucioAPI.register_dataset_location(dataset_name, [tmp_location], self.dataset_lifetime, owner)
+                    tmp_logger.debug(location_out)
                     status = True
                     break
 
@@ -567,7 +567,7 @@ class DynDataDistributer:
                     time.sleep(10)
 
             if not status:
-                tmp_logger.error(out)
+                tmp_logger.error(location_out)
                 tmp_logger.error(f"bad DDM response to register location {dataset_name}")
                 tmp_logger.debug("end")
                 return res_for_failure
@@ -650,8 +650,8 @@ class DynDataDistributer:
         tmp_logger = LogWrapper(_logger, f"list_datasets_by_guids-{naive_utcnow().isoformat('/')}")
         tmp_logger.debug(f"list_datasets_by_guids {str(guids)}")
 
-        res_for_failure = (False, {})
-        res_for_fatal = (False, {"isFatal": True})
+        res_for_failure: Tuple[bool, Dict] = (False, {})
+        res_for_fatal: Tuple[bool, Dict] = (False, {"isFatal": True})
 
         # get size of datasets
         for attempt in range(max_attempts):
@@ -662,14 +662,14 @@ class DynDataDistributer:
                 break
             except Exception:
                 err_type, err_value = sys.exc_info()[:2]
-                out = f"failed to get datasets with GUIDs : {err_type} {err_value}"
+                lookup_error = f"failed to get datasets with GUIDs : {err_type} {err_value}"
                 status = False
                 time.sleep(10)
 
         if not status:
-            tmp_logger.error(out)
+            tmp_logger.error(lookup_error)
             tmp_logger.error(f"bad DDM response to get size of {str(guids)}")
-            if "DataIdentifierNotFound" in out:
+            if "DataIdentifierNotFound" in lookup_error:
                 tmp_logger.error("DataIdentifierNotFound in listDatasetsByGUIDs")
                 tmp_logger.debug("end")
                 return res_for_fatal
@@ -708,8 +708,8 @@ class DynDataDistributer:
         tmp_logger.debug(f"convert_evt_run_to_datasets type={dataset_type} stream={stream_name} dsPatt={str(dataset_filters)} amitag={ami_tag}")
 
         # check data type
-        failed_ret = False, {}, []
-        fatal_ret = False, {"isFatal": True}, []
+        failed_ret: Tuple[bool, Dict, List] = False, {}, []
+        fatal_ret: Tuple[bool, Dict, List] = False, {"isFatal": True}, []
         stream_ref = "Stream" + dataset_type
         # import event lookup client
         if run_evt_guid_map == {}:
