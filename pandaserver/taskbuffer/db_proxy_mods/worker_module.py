@@ -1471,7 +1471,7 @@ class WorkerModule(BaseModule):
 
             self.cur.execute(sql + comment, var_map)
             results = self.cur.fetchall()
-            results_dict = {}
+            results_dict: dict[str, Any] = {}
             for entry in results:
                 host_name, timestamp, key, statistics = entry
                 results_dict.setdefault(host_name, {}).setdefault(key, []).append((timestamp, statistics))
