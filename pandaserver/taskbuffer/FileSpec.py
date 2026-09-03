@@ -5,6 +5,8 @@ file specification
 
 import datetime
 
+from pandaserver.taskbuffer.spec_column import SpecColumn
+
 reserveChangedState = False
 
 
@@ -41,31 +43,32 @@ class FileSpec(object):
     # class uses __slots__ built from an expression, and a value here would raise at
     # import time.
     #
-    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
-    # for a column that is still None, so a read genuinely yields either the column type
-    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
-    row_ID: int | str
-    PandaID: int | str
-    GUID: str
-    lfn: str
-    type: str
-    dataset: str
-    status: str
-    prodDBlock: str
-    prodDBlockToken: str
-    dispatchDBlock: str
-    dispatchDBlockToken: str
-    destinationDBlock: str
-    destinationDBlockToken: str
-    destinationSE: str
-    fsize: int | str
-    md5sum: str
-    checksum: str
-    scope: str
-    jediTaskID: int | str
-    datasetID: int | str
-    fileID: int | str
-    attemptNr: int | str
+    # SpecColumn is not decoration. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read yields either the column type or that
+    # sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError -- while a
+    # write takes the column type or None. See spec_column.py.
+    row_ID: SpecColumn[int]
+    PandaID: SpecColumn[int]
+    GUID: SpecColumn[str]
+    lfn: SpecColumn[str]
+    type: SpecColumn[str]
+    dataset: SpecColumn[str]
+    status: SpecColumn[str]
+    prodDBlock: SpecColumn[str]
+    prodDBlockToken: SpecColumn[str]
+    dispatchDBlock: SpecColumn[str]
+    dispatchDBlockToken: SpecColumn[str]
+    destinationDBlock: SpecColumn[str]
+    destinationDBlockToken: SpecColumn[str]
+    destinationSE: SpecColumn[str]
+    fsize: SpecColumn[int]
+    md5sum: SpecColumn[str]
+    checksum: SpecColumn[str]
+    scope: SpecColumn[str]
+    jediTaskID: SpecColumn[int]
+    datasetID: SpecColumn[int]
+    fileID: SpecColumn[int]
+    attemptNr: SpecColumn[int]
     # slots
     __slots__ = _attributes + (
         "_owner",

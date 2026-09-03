@@ -5,6 +5,8 @@ dataset specification
 
 import datetime
 
+from pandaserver.taskbuffer.spec_column import SpecColumn
+
 
 class DatasetSpec(object):
     # attributes
@@ -28,21 +30,22 @@ class DatasetSpec(object):
     # checker sees none of them without these declarations. They carry no value, so
     # nothing is created at class level.
     #
-    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
-    # for a column that is still None, so a read genuinely yields either the column type
-    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
-    vuid: str
-    name: str
-    version: str
-    type: str
-    status: str
-    numberfiles: int | str
-    currentfiles: int | str
-    creationdate: datetime.datetime | str
-    modificationdate: datetime.datetime | str
-    MoverID: int | str
-    transferStatus: int | str
-    subType: str
+    # SpecColumn is not decoration. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read yields either the column type or that
+    # sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError -- while a
+    # write takes the column type or None. See spec_column.py.
+    vuid: SpecColumn[str]
+    name: SpecColumn[str]
+    version: SpecColumn[str]
+    type: SpecColumn[str]
+    status: SpecColumn[str]
+    numberfiles: SpecColumn[int]
+    currentfiles: SpecColumn[int]
+    creationdate: SpecColumn[datetime.datetime]
+    modificationdate: SpecColumn[datetime.datetime]
+    MoverID: SpecColumn[int]
+    transferStatus: SpecColumn[int]
+    subType: SpecColumn[str]
 
     # attributes which have 0 by default
     _zeroAttrs = ("MoverID", "transferStatus")

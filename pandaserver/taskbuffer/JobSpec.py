@@ -11,6 +11,7 @@ from typing import Any
 from pandacommon.pandautils.PandaUtils import naive_utcnow
 
 from pandaserver.taskbuffer.FileSpec import FileSpec
+from pandaserver.taskbuffer.spec_column import SpecColumn
 
 reserveChangedState = False
 
@@ -152,135 +153,136 @@ class JobSpec(object):
     # class uses __slots__ built from an expression, and a value here would raise at
     # import time.
     #
-    # `| str` is not sloppiness. __getattribute__ below substitutes the string "NULL"
-    # for a column that is still None, so a read genuinely yields either the column type
-    # or that sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError.
-    PandaID: int | str
-    jobDefinitionID: int | str
-    schedulerID: str
-    pilotID: str
-    creationTime: datetime.datetime | str
-    creationHost: str
-    modificationTime: datetime.datetime | str
-    modificationHost: str
-    AtlasRelease: str
-    transformation: str
-    homepackage: str
-    prodSeriesLabel: str
-    prodSourceLabel: str
-    prodUserID: str
-    assignedPriority: int | str
-    currentPriority: int | str
-    attemptNr: int | str
-    maxAttempt: int | str
-    jobStatus: str
-    jobName: str
-    maxCpuCount: int | str
-    maxCpuUnit: str
-    maxDiskCount: int | str
-    maxDiskUnit: str
-    ipConnectivity: str
-    minRamCount: int | str
-    minRamUnit: str
-    startTime: datetime.datetime | str
-    endTime: datetime.datetime | str
-    cpuConsumptionTime: int | str
-    cpuConsumptionUnit: str
-    commandToPilot: str
-    transExitCode: str
-    pilotErrorCode: int | str
-    pilotErrorDiag: str
-    exeErrorCode: int | str
-    exeErrorDiag: str
-    supErrorCode: int | str
-    supErrorDiag: str
-    ddmErrorCode: int | str
-    ddmErrorDiag: str
-    brokerageErrorCode: int | str
-    brokerageErrorDiag: str
-    jobDispatcherErrorCode: int | str
-    jobDispatcherErrorDiag: str
-    taskBufferErrorCode: int | str
-    taskBufferErrorDiag: str
-    computingSite: str
-    computingElement: str
-    jobParameters: str
-    metadata: str
-    prodDBlock: str
-    dispatchDBlock: str
-    destinationDBlock: str
-    destinationSE: str
-    nEvents: int | str
-    grid: str
-    cloud: str
-    cpuConversion: float | str
-    sourceSite: str
-    destinationSite: str
-    transferType: str
-    taskID: int | str
-    cmtConfig: str
-    stateChangeTime: datetime.datetime | str
-    prodDBUpdateTime: datetime.datetime | str
-    lockedby: str
-    relocationFlag: int | str
-    jobExecutionID: int | str
-    VO: str
-    pilotTiming: str
-    workingGroup: str
-    processingType: str
-    prodUserName: str
-    nInputFiles: int | str
-    countryGroup: str
-    batchID: str
-    parentID: int | str
-    specialHandling: str
-    jobsetID: int | str
-    coreCount: int | str
-    nInputDataFiles: int | str
-    inputFileType: str
-    inputFileProject: str
-    inputFileBytes: int | str
-    nOutputDataFiles: int | str
-    outputFileBytes: int | str
-    jobMetrics: str
-    workQueue_ID: int | str
-    jediTaskID: int | str
-    jobSubStatus: str
-    actualCoreCount: int | str
-    reqID: int | str
-    maxRSS: int | str
-    maxVMEM: int | str
-    maxSWAP: int | str
-    maxPSS: int | str
-    avgRSS: int | str
-    avgVMEM: int | str
-    avgSWAP: int | str
-    avgPSS: int | str
-    maxWalltime: int | str
-    nucleus: str
-    eventService: int | str
-    failedAttempt: int | str
-    hs06sec: int | str
-    gshare: str
-    hs06: int | str
-    totRCHAR: int | str
-    totWCHAR: int | str
-    totRBYTES: int | str
-    totWBYTES: int | str
-    rateRCHAR: int | str
-    rateWCHAR: int | str
-    rateRBYTES: int | str
-    rateWBYTES: int | str
-    resource_type: str
-    diskIO: int | str
-    memory_leak: int | str
-    memory_leak_x2: float | str
-    container_name: str
-    job_label: str
-    gco2_regional: float | str
-    gco2_global: float | str
-    cpu_architecture_level: str
-    outputFileType: str
+    # SpecColumn is not decoration. __getattribute__ below substitutes the string "NULL"
+    # for a column that is still None, so a read yields either the column type or that
+    # sentinel -- which is what makes `spec.numberfiles + 1` a latent TypeError -- while a
+    # write takes the column type or None. See spec_column.py.
+    PandaID: SpecColumn[int]
+    jobDefinitionID: SpecColumn[int]
+    schedulerID: SpecColumn[str]
+    pilotID: SpecColumn[str]
+    creationTime: SpecColumn[datetime.datetime]
+    creationHost: SpecColumn[str]
+    modificationTime: SpecColumn[datetime.datetime]
+    modificationHost: SpecColumn[str]
+    AtlasRelease: SpecColumn[str]
+    transformation: SpecColumn[str]
+    homepackage: SpecColumn[str]
+    prodSeriesLabel: SpecColumn[str]
+    prodSourceLabel: SpecColumn[str]
+    prodUserID: SpecColumn[str]
+    assignedPriority: SpecColumn[int]
+    currentPriority: SpecColumn[int]
+    attemptNr: SpecColumn[int]
+    maxAttempt: SpecColumn[int]
+    jobStatus: SpecColumn[str]
+    jobName: SpecColumn[str]
+    maxCpuCount: SpecColumn[int]
+    maxCpuUnit: SpecColumn[str]
+    maxDiskCount: SpecColumn[int]
+    maxDiskUnit: SpecColumn[str]
+    ipConnectivity: SpecColumn[str]
+    minRamCount: SpecColumn[int]
+    minRamUnit: SpecColumn[str]
+    startTime: SpecColumn[datetime.datetime]
+    endTime: SpecColumn[datetime.datetime]
+    cpuConsumptionTime: SpecColumn[int]
+    cpuConsumptionUnit: SpecColumn[str]
+    commandToPilot: SpecColumn[str]
+    transExitCode: SpecColumn[str]
+    pilotErrorCode: SpecColumn[int]
+    pilotErrorDiag: SpecColumn[str]
+    exeErrorCode: SpecColumn[int]
+    exeErrorDiag: SpecColumn[str]
+    supErrorCode: SpecColumn[int]
+    supErrorDiag: SpecColumn[str]
+    ddmErrorCode: SpecColumn[int]
+    ddmErrorDiag: SpecColumn[str]
+    brokerageErrorCode: SpecColumn[int]
+    brokerageErrorDiag: SpecColumn[str]
+    jobDispatcherErrorCode: SpecColumn[int]
+    jobDispatcherErrorDiag: SpecColumn[str]
+    taskBufferErrorCode: SpecColumn[int]
+    taskBufferErrorDiag: SpecColumn[str]
+    computingSite: SpecColumn[str]
+    computingElement: SpecColumn[str]
+    jobParameters: SpecColumn[str]
+    metadata: SpecColumn[str]
+    prodDBlock: SpecColumn[str]
+    dispatchDBlock: SpecColumn[str]
+    destinationDBlock: SpecColumn[str]
+    destinationSE: SpecColumn[str]
+    nEvents: SpecColumn[int]
+    grid: SpecColumn[str]
+    cloud: SpecColumn[str]
+    cpuConversion: SpecColumn[float]
+    sourceSite: SpecColumn[str]
+    destinationSite: SpecColumn[str]
+    transferType: SpecColumn[str]
+    taskID: SpecColumn[int]
+    cmtConfig: SpecColumn[str]
+    stateChangeTime: SpecColumn[datetime.datetime]
+    prodDBUpdateTime: SpecColumn[datetime.datetime]
+    lockedby: SpecColumn[str]
+    relocationFlag: SpecColumn[int]
+    jobExecutionID: SpecColumn[int]
+    VO: SpecColumn[str]
+    pilotTiming: SpecColumn[str]
+    workingGroup: SpecColumn[str]
+    processingType: SpecColumn[str]
+    prodUserName: SpecColumn[str]
+    nInputFiles: SpecColumn[int]
+    countryGroup: SpecColumn[str]
+    batchID: SpecColumn[str]
+    parentID: SpecColumn[int]
+    specialHandling: SpecColumn[str]
+    jobsetID: SpecColumn[int]
+    coreCount: SpecColumn[int]
+    nInputDataFiles: SpecColumn[int]
+    inputFileType: SpecColumn[str]
+    inputFileProject: SpecColumn[str]
+    inputFileBytes: SpecColumn[int]
+    nOutputDataFiles: SpecColumn[int]
+    outputFileBytes: SpecColumn[int]
+    jobMetrics: SpecColumn[str]
+    workQueue_ID: SpecColumn[int]
+    jediTaskID: SpecColumn[int]
+    jobSubStatus: SpecColumn[str]
+    actualCoreCount: SpecColumn[int]
+    reqID: SpecColumn[int]
+    maxRSS: SpecColumn[int]
+    maxVMEM: SpecColumn[int]
+    maxSWAP: SpecColumn[int]
+    maxPSS: SpecColumn[int]
+    avgRSS: SpecColumn[int]
+    avgVMEM: SpecColumn[int]
+    avgSWAP: SpecColumn[int]
+    avgPSS: SpecColumn[int]
+    maxWalltime: SpecColumn[int]
+    nucleus: SpecColumn[str]
+    eventService: SpecColumn[int]
+    failedAttempt: SpecColumn[int]
+    hs06sec: SpecColumn[int]
+    gshare: SpecColumn[str]
+    hs06: SpecColumn[int]
+    totRCHAR: SpecColumn[int]
+    totWCHAR: SpecColumn[int]
+    totRBYTES: SpecColumn[int]
+    totWBYTES: SpecColumn[int]
+    rateRCHAR: SpecColumn[int]
+    rateWCHAR: SpecColumn[int]
+    rateRBYTES: SpecColumn[int]
+    rateWBYTES: SpecColumn[int]
+    resource_type: SpecColumn[str]
+    diskIO: SpecColumn[int]
+    memory_leak: SpecColumn[int]
+    memory_leak_x2: SpecColumn[float]
+    container_name: SpecColumn[str]
+    job_label: SpecColumn[str]
+    gco2_regional: SpecColumn[float]
+    gco2_global: SpecColumn[float]
+    cpu_architecture_level: SpecColumn[str]
+    outputFileType: SpecColumn[str]
     # the file list this spec carries. Declared here rather than only in __slots__
     # below, since __slots__ is built from an expression and type checkers cannot
     # see the names it adds
