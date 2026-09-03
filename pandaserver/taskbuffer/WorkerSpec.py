@@ -104,7 +104,6 @@ class WorkerSpec(object):
 
     # reset changed attribute list
     def resetChangedList(self):
-        self._oldPandaID = self.PandaID
         object.__setattr__(self, "_changedAttrs", {})
 
     # return map of values
