@@ -176,7 +176,6 @@ class WorkflowInterface(object):
         Set the message broker proxy for workflow manager messaging
         """
         try:
-            jedi_config = None
             try:
                 jedi_config = importlib.import_module("pandajedi.jediconfig.jedi_config")
             except Exception:
@@ -1396,7 +1395,8 @@ class WorkflowInterface(object):
         tmp_log = LogWrapper(logger, f"process_datas <workflow_id={data_specs[0].workflow_id}> by={by}")
         n_data = len(data_specs)
         tmp_log.debug(f"Start, processing {n_data} data specs")
-        data_status_stats = {"n_data": n_data, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
+        # counters keyed by status name alongside plain totals, so the values are not uniform
+        data_status_stats: dict[str, Any] = {"n_data": n_data, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
         for data_spec in data_specs:
             orig_status = data_spec.status
             tmp_res, data_spec = self.process_data(data_spec, by=by)
@@ -1517,7 +1517,8 @@ class WorkflowInterface(object):
         # Process
         try:
             # Decide whether to run the step: True = must run, False = can skip, None = undecided yet and must check later
-            to_run_step = False
+            # None means "cannot decide yet", distinct from a decided True/False
+            to_run_step: bool | None = False
             # scatter_child steps are pure orchestration: they submit one grandchild workflow per
             # scatter iteration and own no output datasets themselves (instantiate_scatter_workflow
             # never sets output_data_list in their definition). The output-checking logic below
@@ -2031,7 +2032,8 @@ class WorkflowInterface(object):
         tmp_log = LogWrapper(logger, f"process_steps <workflow_id={step_specs[0].workflow_id}> by={by}")
         n_steps = len(step_specs)
         tmp_log.debug(f"Start, processing {n_steps} steps")
-        steps_status_stats = {"n_steps": n_steps, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
+        # counters keyed by status name alongside plain totals, so the values are not uniform
+        steps_status_stats: dict[str, Any] = {"n_steps": n_steps, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
         for step_spec in step_specs:
             orig_status = step_spec.status
             tmp_res, step_spec = self.process_step(step_spec, data_spec_map=data_spec_map, by=by)
@@ -2703,7 +2705,8 @@ class WorkflowInterface(object):
         tmp_log = LogWrapper(logger, "process_active_workflows")
         # tmp_log.debug("Start")
         # Initialize
-        workflows_status_stats = {"n_workflows": 0, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
+        # counters keyed by status name alongside plain totals, so the values are not uniform
+        workflows_status_stats: dict[str, Any] = {"n_workflows": 0, "changed": {}, "unchanged": {}, "processed": {}, "n_processed": 0}
         try:
             # Query active workflows to process
             workflow_specs = self.tbif.query_workflows(status_filter_list=WorkflowStatus.active_statuses, check_interval_sec=WORKFLOW_CHECK_INTERVAL_SEC)

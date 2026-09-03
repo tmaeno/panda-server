@@ -409,12 +409,13 @@ class WFDataProcessResult:
 
     Fields:
         success (bool | None): Indicates if the processing was successful.
-        new_status (WFDataStatus | None): The new status of the data after processing, None if no change.
+        new_status (str | None): The new status of the data after processing, one of the
+            WFDataStatus constants, None if no change.
         message (str): A message providing additional information about the processing result.
     """
 
     success: bool | None = None
-    new_status: WFDataStatus | None = None
+    new_status: str | None = None
     message: str = ""
 
 
@@ -425,12 +426,13 @@ class WFStepProcessResult:
 
     Fields:
         success (bool | None): Indicates if the processing was successful.
-        new_status (WFStepStatus | None): The new status of the step after processing, None if no change.
+        new_status (str | None): The new status of the step after processing, one of the
+            WFStepStatus constants, None if no change.
         message (str): A message providing additional information about the processing result.
     """
 
     success: bool | None = None
-    new_status: WFStepStatus | None = None
+    new_status: str | None = None
     message: str = ""
 
 
@@ -441,13 +443,14 @@ class WorkflowProcessResult:
 
     Fields:
         success (bool | None): Indicates if the processing was successful.
-        new_status (WorkflowStatus | None): The new status of the workflow after processing, None if no change.
+        new_status (str | None): The new status of the workflow after processing, one of the
+            WorkflowStatus constants, None if no change.
         message (str): A message providing additional information about the processing result.
         immediate_recheck (bool): Indicates if an immediate re-check is requested.
     """
 
     success: bool | None = None
-    new_status: WorkflowStatus | None = None
+    new_status: str | None = None
     message: str = ""
     immediate_recheck: bool = False
 
@@ -478,7 +481,7 @@ class WFStepTargetCheckResult:
 
     Fields:
         success (bool | None): Indicates if the status check was successful.
-        status (WFStepStatus | None): The status of the step to move to.
+        status (str | None): The status of the step to move to, one of the WFStepStatus constants.
         native_status (str | None): The native status string from the target system.
         message (str): A message providing additional information about the status check result.
         output_ids (dict): Maps parent output data name to a list of raw target_id strings collected
@@ -487,7 +490,7 @@ class WFStepTargetCheckResult:
     """
 
     success: bool | None = None
-    step_status: WFStepStatus | None = None
+    step_status: str | None = None
     native_status: str | None = None
     message: str = ""
     output_ids: dict = field(default_factory=dict)
@@ -530,13 +533,14 @@ class WFDataTargetCheckResult:
 
     Fields:
         success (bool | None): Indicates if the status check was successful.
-        check_status (WFDataTargetCheckStatus | None): The status of the data target.
+        check_status (str | None): The status of the data target, one of the
+            WFDataTargetCheckStatus constants.
         metadata (dict | None): The native metadata from the target system.
         message (str): A message providing additional information about the status check result.
     """
 
     success: bool | None = None
-    check_status: WFDataTargetCheckStatus | None = None
+    check_status: str | None = None
     metadata: dict | None = None
     message: str = ""
 
