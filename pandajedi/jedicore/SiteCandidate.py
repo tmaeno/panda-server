@@ -26,8 +26,9 @@ class SiteCandidate(object):
         self.nQueuedJobs = None
         # number of assigned jobs
         self.nAssignedJobs = None
-        # cap on running jobs
-        self.nRunningJobsCap = None
+        # cap on running jobs. The brokers install a number here; None means no cap was
+        # worked out for this candidate, which can_accept_jobs below reads as no cap.
+        self.nRunningJobsCap: int | None = None
         # overridden attributes
         self.overriddenAttrs = {}
 

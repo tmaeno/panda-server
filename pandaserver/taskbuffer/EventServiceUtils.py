@@ -135,8 +135,13 @@ def decodeFileInfo(specialHandling):
                     if esItem == "":
                         continue
                     esItems = esItem.split("/")
-                    maxAttempt = 10
-                    esOffset = 0
+                    # each of these is either a field of the split token or a default or a
+                    # count derived from two of them, so a name holds text in one branch
+                    # and a number in another. int() below takes either.
+                    maxAttempt: str | int = 10
+                    esOffset: str | int = 0
+                    esEvents: str | int
+                    esStartEvent: str | int
                     if len(esItems) == 3:
                         esLFN, esEvents, esRange = esItems
                         esStartEvent = 0

@@ -749,7 +749,9 @@ class JobComplexModule(BaseModule):
             # begin transaction
             self.conn.begin()
             # get jobs
-            varMap = {}
+            # the per-task map below binds a task ID to this same name, so the type is not
+            # the one this first use implies
+            varMap: dict[str, Any] = {}
             varMap[":eventService"] = EventServiceUtils.jumboJobFlagNumber
             self.cur.execute(sql + comment, varMap)
             resF = self.cur.fetchall()

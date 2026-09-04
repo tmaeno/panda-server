@@ -479,7 +479,10 @@ class TaskEventModule(BaseModule):
                 isOK = True
                 # get job attributes
                 if pandaID not in jobAttrs:
-                    varMap = {}
+                    # the first bind map in this method fixes the type every later one
+                    # reuses, and the later ones carry spec columns and timestamps rather
+                    # than only IDs
+                    varMap: dict[str, Any] = {}
                     varMap[":pandaID"] = pandaID
                     self.cur.execute(sqlE + comment, varMap)
                     resE = self.cur.fetchone()
@@ -2003,7 +2006,9 @@ class TaskEventModule(BaseModule):
             self.conn.begin()
             # get current split rule
             sql_check = f"SELECT splitRule FROM {panda_config.schemaJEDI}.JEDI_Tasks WHERE jediTaskID=:jediTaskID "
-            var_map = {":jediTaskID": jedi_task_id}
+            # the update below binds the split rule to this same name, so the map holds
+            # more than the ID its first use suggests
+            var_map: dict[str, Any] = {":jediTaskID": jedi_task_id}
             self.cur.execute(sql_check + comment, var_map)
             res = self.cur.fetchone()
             if not res:
@@ -3573,7 +3578,9 @@ class TaskEventModule(BaseModule):
             # check duplication
             goForward = True
             retFlag = False
-            retVal = None
+            # a message on every path but one: without properErrorCode the caller gets the
+            # new jediTaskID itself rather than a sentence about it
+            retVal: str | int | None = None
             errorCode = 0
             if taskParamsJson["taskType"] == "anal" and (("uniqueTaskName" in taskParamsJson and taskParamsJson["uniqueTaskName"] is True) or allowActiveTask):
                 if "official" in taskParamsJson and taskParamsJson["official"] is True:
@@ -4262,7 +4269,9 @@ class TaskEventModule(BaseModule):
         comment = " /* DBProxy.getJediTaskDigest */"
         tmp_log = self.create_tagged_logger(comment, f"jediTaskID={jediTaskID}")
         try:
-            retDict = {
+            # a digest holds strings, ID lists and a status that may be absent, so the
+            # value type is the union of all three rather than any one of them
+            retDict: dict[str, Any] = {
                 "inDS": "",
                 "outDS": "",
                 "statistics": "",

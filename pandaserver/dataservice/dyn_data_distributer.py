@@ -20,8 +20,9 @@ from pandaserver.taskbuffer import JobUtils
 
 _logger = PandaLogger().getLogger("dyn_data_distributer")
 
-# files in datasets
-g_files_in_ds_map = {}
+# files in datasets: dataset name -> LFN -> the file attributes rucio reported, which
+# get_file_from_dataset adds "lfn" and "dataset" to before returning them
+g_files_in_ds_map: dict[str, dict[str, dict[str, Any]]] = {}
 
 
 class DynDataDistributer:
