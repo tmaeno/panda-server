@@ -62,5 +62,5 @@ jobs:
     # When upgrading either, fix what the new version reports in the same PR.
     - name: Type check
       run: |
-        pip install 'mypy==1.13.0' 'types-requests==2.33.0.20260712' 'types-PyYAML==6.0.12.20260815'
+        pip install 'mypy==2.3.1' 'types-requests==2.33.0.20260712' 'types-PyYAML==6.0.12.20260815'
         mypy
