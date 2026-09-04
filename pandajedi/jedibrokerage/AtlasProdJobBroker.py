@@ -1991,7 +1991,15 @@ class AtlasProdJobBroker(JobBrokerBase):
                 ngMsg = f"  skip site={tmpPseudoSiteName} due to locked by another brokerage criteria=-lock"
             elif skipRemoteData:
                 ngMsg = f"  skip site={tmpPseudoSiteName} due to non-local data criteria=-non_local"
-            elif not inputChunk.isExpress() and tmpSiteSpec.capability != "ucore" and siteCandidateSpec.nQueuedJobs > siteCandidateSpec.nRunningJobsCap:
+            # the cap is only worked out for a non-express chunk above, so the first
+            # condition already implies it is set; SiteCandidate.can_accept_jobs reads an
+            # absent cap as no cap, and saying so here keeps the comparison off None
+            elif (
+                not inputChunk.isExpress()
+                and tmpSiteSpec.capability != "ucore"
+                and siteCandidateSpec.nRunningJobsCap is not None
+                and siteCandidateSpec.nQueuedJobs > siteCandidateSpec.nRunningJobsCap
+            ):
                 if not useAssigned:
                     ngMsg = f"  skip site={tmpPseudoSiteName} weight={weight} due to nDefined+nActivated+nStarting={siteCandidateSpec.nQueuedJobs} "
                     ngMsg += "(nAssigned ignored due to data locally available) "

@@ -46,6 +46,7 @@ class SiteSpec(object):
         "memory",
         "maxtime",
         "status",
+        "space",
         "setokens_input",
         "setokens_output",
         "defaulttoken",
@@ -95,7 +96,9 @@ class SiteSpec(object):
     # and getSiteInfo() leaves a column None whenever CRIC has no value for it; the ones
     # declared non-Optional are those getSiteInfo() always assigns unconditionally.
     sitename: str
-    nickname: str
+    # assigned unconditionally, but from a lookup with no default, so CRIC omitting it
+    # leaves None here like the columns below
+    nickname: str | None
     dq2url: str | None
     cloud: str
     ddm: str
@@ -107,6 +110,11 @@ class SiteSpec(object):
     memory: int | None
     maxtime: int | None
     status: str | None
+    # free space in the SE, in GB. Declared here and listed in _attributes above because
+    # getSiteInfo() was the only thing installing it: a SiteSpec built any other way -- the
+    # DEFAULT_SITE that SiteMapper.getSite() returns for an unknown site, among others --
+    # had no such attribute at all, and GenJobBroker reads it on whatever getSite() returns.
+    space: int | None
     # scope -> {space token -> endpoint name}
     setokens_input: dict[str, dict[str, str]]
     setokens_output: dict[str, dict[str, str]]

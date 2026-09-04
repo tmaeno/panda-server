@@ -1745,7 +1745,9 @@ class TaskUtilsModule(BaseModule):
                 fileSpec.type = datasetSpec.type
                 fileSpec.status = "ready"
                 fileSpec.proc_status = "ready"
-                fileSpec.lfn = baseLFN + i
+                # the LFN of these records is a sequence number, but the column is text and
+                # the bind was leaving the conversion to the database
+                fileSpec.lfn = str(baseLFN + i)
                 fileSpec.scope = None
                 fileSpec.fsize = 0
                 fileSpec.checksum = None

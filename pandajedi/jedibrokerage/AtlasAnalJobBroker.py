@@ -107,13 +107,16 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 includeList = taskParamMap["includedSite"]
                 # str to list for task retry
                 if includeList == "":
+                    # nothing was pre-assigned. The split below cannot run on None, and
+                    # the AttributeError it raised into the handler was doing this check
                     includeList = None
-                try:
-                    if not isinstance(includeList, list):
-                        includeList = includeList.split(",")
-                    siteListPreAssigned = True
-                except Exception:
-                    pass
+                else:
+                    try:
+                        if not isinstance(includeList, list):
+                            includeList = includeList.split(",")
+                        siteListPreAssigned = True
+                    except Exception:
+                        pass
         # loop over all sites
         for siteName, tmpSiteSpec in self.siteMapper.siteSpecList.items():
             if tmpSiteSpec.type == "analysis" or tmpSiteSpec.is_grandly_unified():

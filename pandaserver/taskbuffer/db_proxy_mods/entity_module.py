@@ -96,9 +96,11 @@ class EntityModule(BaseModule):
 
         # get the hs distribution data into a dictionary structure
         hs_distribution_dict: dict[str, Any] = {}
-        hs_queued_total = 0
-        hs_executing_total = 0
-        hs_ignore_total = 0
+        # the rows are accumulated as floats and hs_executing_total goes into a share
+        # calculation that divides, so these are float totals that happen to start at zero
+        hs_queued_total = 0.0
+        hs_executing_total = 0.0
+        hs_ignore_total = 0.0
         for hs_entry in hs_distribution_raw:
             gshare, status_group, hs = hs_entry
             if hs is None:
@@ -1868,10 +1870,9 @@ class EntityModule(BaseModule):
 
                         ret.iscvmfs = queue_data.get("is_cvmfs") is True
 
-                        if queue_data.get("corepower") is None:
-                            ret.corepower = 0
-                        else:
-                            ret.corepower = queue_data.get("corepower")
+                        # read once: the check and the value have to be the same lookup
+                        corepower = queue_data.get("corepower")
+                        ret.corepower = 0 if corepower is None else corepower
 
                         ret.wnconnectivity = queue_data.get("wnconnectivity")
                         if ret.wnconnectivity == "":

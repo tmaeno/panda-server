@@ -58,31 +58,28 @@ class dom_job:
         """Converts this job to a dom tree branch"""
         x = xml.dom.minidom.Document()
         job = x.createElement("job")
+        # appendChild returns the element it appended, so each new node is named rather
+        # than reached back through childNodes[-1]: a child list holds text and comments
+        # as well as elements, so the last entry of one is not an element to a reader
         for inds in s.infiles.keys():
-            job.appendChild(x.createElement("inds"))
-            job.childNodes[-1].appendChild(x.createElement("name"))
-            job.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(inds))
+            inds_node = job.appendChild(x.createElement("inds"))
+            name_node = inds_node.appendChild(x.createElement("name"))
+            name_node.appendChild(x.createTextNode(inds))
             for file in s.infiles[inds]:
-                job.childNodes[-1].appendChild(x.createElement("file"))
-                job.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(file))
+                file_node = inds_node.appendChild(x.createElement("file"))
+                file_node.appendChild(x.createTextNode(file))
         for outfile in s.outfiles:
-            job.appendChild(x.createElement("output"))
-            job.childNodes[-1].appendChild(x.createTextNode(outfile))
+            output_node = job.appendChild(x.createElement("output"))
+            output_node.appendChild(x.createTextNode(outfile))
         if s.command:
-            job.appendChild(x.createElement("command"))
-            job.childNodes[-1].appendChild(x.createTextNode(s.command))
+            command_node = job.appendChild(x.createElement("command"))
+            command_node.appendChild(x.createTextNode(s.command))
         for option in s.prepend + list(set(s.prepend + s.forward) - set(s.prepend)):
-            job.appendChild(x.createElement("option"))
-            job.childNodes[-1].setAttribute("name", str(option[0]))
-            if option in s.forward:
-                job.childNodes[-1].setAttribute("forward", "true")
-            else:
-                job.childNodes[-1].setAttribute("forward", "false")
-            if option in s.prepend:
-                job.childNodes[-1].setAttribute("prepend", "true")
-            else:
-                job.childNodes[-1].setAttribute("prepend", "false")
-            job.childNodes[-1].appendChild(x.createTextNode(str(option[1])))
+            option_node = job.appendChild(x.createElement("option"))
+            option_node.setAttribute("name", str(option[0]))
+            option_node.setAttribute("forward", "true" if option in s.forward else "false")
+            option_node.setAttribute("prepend", "true" if option in s.prepend else "false")
+            option_node.appendChild(x.createTextNode(str(option[1])))
         return job
 
     def files_in_DS(s, DS):
@@ -202,7 +199,9 @@ class dom_parser:
             # declaration of all input datasets
             primarydss = []
             for elm in s.dom.getElementsByTagName("submission")[0].childNodes:
-                if elm.nodeName != "inds":
+                # a child list holds text and comments too, and only an element has
+                # attributes or elements of its own; the name check alone does not say so
+                if not isinstance(elm, xml.dom.minidom.Element) or elm.nodeName != "inds":
                     continue
                 if "primary" in elm.attributes.keys() and dom_parser.true(elm.attributes["primary"].value):
                     primary = True
@@ -228,31 +227,30 @@ class dom_parser:
         """Converts this submission to a dom tree branch"""
         x = xml.dom.minidom.Document()
         submission = x.createElement("submission")
+        # named rather than reached back through childNodes[-1], for the reason given in
+        # dom_job.to_dom above
         if s.title:
-            submission.appendChild(x.createElement("title"))
-            submission.childNodes[-1].appendChild(x.createTextNode(s.title))
+            title_node = submission.appendChild(x.createElement("title"))
+            title_node.appendChild(x.createTextNode(s.title))
         if s.tag:
-            submission.appendChild(x.createElement("tag"))
-            submission.childNodes[-1].appendChild(x.createTextNode(s.tag))
+            tag_node = submission.appendChild(x.createElement("tag"))
+            tag_node.appendChild(x.createTextNode(s.tag))
         for name, stream in s.inds.items():
-            submission.appendChild(x.createElement("inds"))
-            if name == s.primaryds:
-                submission.childNodes[-1].setAttribute("primary", "true")
-            else:
-                submission.childNodes[-1].setAttribute("primary", "false")
-            submission.childNodes[-1].appendChild(x.createElement("stream"))
-            submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(stream))
-            submission.childNodes[-1].appendChild(x.createElement("name"))
-            submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(name))
+            inds_node = submission.appendChild(x.createElement("inds"))
+            inds_node.setAttribute("primary", "true" if name == s.primaryds else "false")
+            stream_node = inds_node.appendChild(x.createElement("stream"))
+            stream_node.appendChild(x.createTextNode(stream))
+            name_node = inds_node.appendChild(x.createElement("name"))
+            name_node.appendChild(x.createTextNode(name))
         if s.command:
-            submission.appendChild(x.createElement("command"))
-            submission.childNodes[-1].appendChild(x.createTextNode(s.command))
+            command_node = submission.appendChild(x.createElement("command"))
+            command_node.appendChild(x.createTextNode(s.command))
         for outfile in s.global_outfiles:
-            submission.appendChild(x.createElement("output"))
-            submission.childNodes[-1].appendChild(x.createTextNode(outfile))
-        submission.appendChild(x.createElement("outds"))
+            output_node = submission.appendChild(x.createElement("output"))
+            output_node.appendChild(x.createTextNode(outfile))
+        outds_node = submission.appendChild(x.createElement("outds"))
         # parse() always sets outds, from the document or from the default
-        submission.childNodes[-1].appendChild(x.createTextNode(s.outds or ""))
+        outds_node.appendChild(x.createTextNode(s.outds or ""))
         for job in s.jobs:
             submission.appendChild(job.to_dom())
         return submission

@@ -394,6 +394,10 @@ class RucioAPI:
         dict: A dictionary containing file attributes
         """
         lfn = tmp_file.get("name", tmp_file.get("lfn"))
+        if lfn is None:
+            # the next line searches and splits it, so a file with neither key raised
+            # "argument of type NoneType is not iterable" from there instead
+            raise KeyError("file attributes have neither name nor lfn")
         file_scope, lfn = lfn.split(":") if ":" in lfn else (scope, lfn)
         # set metadata
         meta_keys = ["guid", "events", "lumiblocknr", "panda_id", "campaign", "task_id"] + DataServiceUtils.JOB_LEVEL_METADATA_KEYS

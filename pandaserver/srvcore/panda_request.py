@@ -21,7 +21,9 @@ cache_dict = CacheDict()
 def decode_token(serialized_token, env, tmp_log):
     authenticated = False
     message_str = None
-    subprocess_env = {}
+    # every entry becomes an environment variable for the subprocess, so the values are
+    # strings even where the name they came from could have been None
+    subprocess_env: dict[str, str] = {}
     try:
         vo = None
         role = None
@@ -32,6 +34,11 @@ def decode_token(serialized_token, env, tmp_log):
                 # only vo.role for auth filename which is a key of auth_vo_dict
             else:
                 vo = None
+            if vo is None:
+                # every check below keys auth_vo_dict or auth_policies by the VO, so there
+                # is nothing to authenticate against without one. Said here rather than
+                # reaching the caller as an AttributeError from the first use of it.
+                raise ValueError("no HTTP_ORIGIN to identify the VO")
             # only vo.role for auth filename which is a key of auth_vo_dict
             vo_role = vo.replace(":", ".")
             token = token_decoder.deserialize_token(serialized_token, panda_config.auth_config, vo, tmp_log, panda_config.legacy_token_issuers)
