@@ -2402,10 +2402,6 @@ class AtlasAnalJobBroker(JobBrokerBase):
             self.dump_summary(tmpLog)
             tmpLog.error("no candidates")
             taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
-            if candidateSpecList and len(below_min_weight) == len(candidateSpecList) and not sitePreAssigned:
-                # every surviving candidate was dropped only for being below the minimum weight,
-                # which says nothing about the task itself
-                return retWaiting
             return retTmpError
         self.dump_summary(tmpLog, scanSiteList)
         # return
