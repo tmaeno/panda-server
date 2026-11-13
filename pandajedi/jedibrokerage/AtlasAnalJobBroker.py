@@ -553,38 +553,49 @@ class AtlasAnalJobBroker(JobBrokerBase):
         for tmp_dataset_name, tmp_ok in can_be_remote_source.items():
             is_distributed = is_distributed_map.get(tmp_dataset_name, None)
             if not tmp_ok and is_distributed is not True:
-                remote_source_msg = f"data locality cannot be ignored since {tmp_dataset_name} is unreadable over WAN"
+                remote_source_msg = f"no second loop WITHOUT data locality check since {tmp_dataset_name} is unreadable over WAN"
                 remote_source_available = False
                 break
 
-        # two loops with/without data locality check
+        # two loops with/without data locality check. The second loop WITHOUT data locality check is
+        # added unless some input is unreadable over WAN, and the first loop moves on to it
+        # (a) for any task, when no candidate with input data can run the task due to hard problems,
+        #     i.e. excluded by any other check, e.g. offline, excluded by the user, or not satisfying
+        #     memory, walltime, or architecture requirements
+        # (b) only when wait_for_sites_to_recover is False, when all candidates with input data have
+        #     temporary problems, i.e. they are in problematic_sites_dict since e.g. all of them are capped
+        #     with gshare+resource_type, nRunning=0 with queued jobs, too many failures, or the user queues
+        #     too much. Otherwise the task waits for those candidates to recover until the check timeout
         scan_site_list_loops = [(copy.copy(scanSiteList), True)]
-        to_ignore_data_loc = False
+        wait_for_sites_to_recover = True
         if len(inputChunk.getDatasets()) > 0:
-            nRealDS = 0
-            for datasetSpec in inputChunk.getDatasets():
-                if not datasetSpec.isPseudo():
-                    nRealDS += 1
             task_prio_cutoff_for_input_data_motion = 2000
-            tmp_msg = "ignoring input data locality in the second loop due to "
-            if taskSpec.taskPriority >= task_prio_cutoff_for_input_data_motion:
-                to_ignore_data_loc = True
-                tmp_msg += f"high taskPriority {taskSpec.taskPriority} is larger than or equal to {task_prio_cutoff_for_input_data_motion}"
+            tmp_msg = "do not wait for candidates with input data to recover from temporary problems due to "
+            if max(taskSpec.taskPriority, taskSpec.currentPriority) >= task_prio_cutoff_for_input_data_motion:
+                wait_for_sites_to_recover = False
+                tmp_msg += f"taskPriority or currentPriority ({max(taskSpec.taskPriority, taskSpec.currentPriority)}) is larger than or equal to {task_prio_cutoff_for_input_data_motion}"
             elif io_intensity_cutoff and taskSpec.ioIntensity and io_intensity_cutoff >= taskSpec.ioIntensity:
-                to_ignore_data_loc = True
+                wait_for_sites_to_recover = False
                 tmp_msg += f"low ioIntensity {taskSpec.ioIntensity} is less than or equal to {io_intensity_key} ({io_intensity_cutoff})"
             elif loc_check_timeout_val and taskSpec.frozenTime and naive_utcnow() - taskSpec.frozenTime > datetime.timedelta(hours=loc_check_timeout_val):
-                to_ignore_data_loc = True
+                wait_for_sites_to_recover = False
                 tmp_msg += "check timeout (last successful cycle at {} was more than {} ({}hrs) ago)".format(
                     taskSpec.frozenTime, loc_check_timeout_key, loc_check_timeout_val
                 )
             if not remote_source_available:
                 tmpLog.info(remote_source_msg)
-            elif to_ignore_data_loc:
-                tmpLog.info(tmp_msg)
-                scan_site_list_loops.append((copy.copy(scanSiteList), False))
-            elif taskSpec.taskPriority > 1000 or nRealDS > 1 or taskSpec.getNumSitesPerJob() > 0:
-                # add a loop without data locality check for high priority tasks, tasks with multiple input datasets, or tasks with job cloning
+            else:
+                if not wait_for_sites_to_recover:
+                    tmpLog.info(tmp_msg)
+                else:
+                    if loc_check_timeout_val:
+                        wait_limit_str = f"until {loc_check_timeout_key} ({loc_check_timeout_val}hrs)"
+                    else:
+                        wait_limit_str = f"without time limit since {loc_check_timeout_key} is not set"
+                    tmpLog.info(
+                        f"wait for candidates with input data to recover from temporary problems {wait_limit_str}; "
+                        "the second loop WITHOUT data locality check is used only when no candidates with input data can run the task due to hard problems"
+                    )
                 scan_site_list_loops.append((copy.copy(scanSiteList), False))
             # element map
             for datasetSpec in inputChunk.getDatasets():
@@ -599,6 +610,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
         site_list_with_data: set[str] = set()
         overall_site_list: set[str] = set()
         for i_loop, (scanSiteList, checkDataLocality) in enumerate(scan_site_list_loops):
+            # true only in the first loop WITH data locality check when the second loop is available
+            has_next_loop = i_loop + 1 < len(scan_site_list_loops)
             useUnionLocality = False
             self.init_summary_list("Job brokerage summary", f"data locality check: {checkDataLocality}", self.get_unified_sites(scanSiteList))
             if checkDataLocality:
@@ -1587,6 +1600,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 newScanSiteList = []
                 oldScanSiteList = copy.copy(scanSiteList)
                 msg_map = {}
+                capped_reasons = {}
                 RT_Cap = 2
                 for tmpSiteName in self.get_unified_sites(scanSiteList):
                     tmpSiteSpec = self.siteMapper.getSite(tmpSiteName)
@@ -1599,20 +1613,22 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         tmpRTqueue += tmpSiteStatMap.get("activated", 0)
                         tmpRTqueue += tmpSiteStatMap.get("starting", 0)
                         if tmpRTqueue > max(20, tmpRTrunning * RT_Cap):
-                            tmpMsg = f"  skip site={tmpSiteName} "
-                            tmpMsg += "since nQueue > max(20, nRun*cap) with gshare+resource_type: "
-                            tmpMsg += f"{tmpRTqueue} > max(20, {tmpRTrunning}*{RT_Cap}) "
-                            tmpMsg += "criteria=-cap_rt"
-                            msg_map[tmpSiteName] = tmpMsg
+                            capped_reason = f"nQueue > max(20, nRun*cap) with gshare+resource_type: {tmpRTqueue} > max(20, {tmpRTrunning}*{RT_Cap})"
+                            capped_reasons[tmpSiteName] = capped_reason
+                            msg_map[tmpSiteName] = f"  skip site={tmpSiteName} since {capped_reason} criteria=-cap_rt"
                             continue
                     newScanSiteList.append(tmpSiteName)
-                scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
-                self.add_summary_message(oldScanSiteList, scanSiteList, "cap with gshare+resource_type check", tmpLog, msg_map)
-                if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
-                    taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
-                    return retTmpError
+                if newScanSiteList:
+                    scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
+                    self.add_summary_message(oldScanSiteList, scanSiteList, "cap with gshare+resource_type check", tmpLog, msg_map)
+                else:
+                    # all candidates are capped. The cap is a temporary problem, so they are kept as problematic sites,
+                    # which are skipped in the final check. The check for temporary problems at the loop end decides
+                    # whether to move on to the second loop without waiting for them to recover
+                    for tmpSiteName, capped_reason in capped_reasons.items():
+                        problematic_sites_dict.setdefault(tmpSiteName, set())
+                        problematic_sites_dict[tmpSiteName].add(capped_reason)
+                    tmpLog.info(f"all {len(capped_reasons)} candidates are capped with gshare+resource_type; keep them as problematic sites")
             ######################################
             # selection for un-overloaded sites
             if not inputChunk.isMerging:
@@ -1810,11 +1826,9 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         if not inputChunk.isMerging and (nFailed + nClosed) > max(2 * nFinished, minBadJobsToSkipPQ):
                             problematic_sites_dict.setdefault(tmpSiteName, set())
                             problematic_sites_dict[tmpSiteName].add("too many failed or closed jobs for last 6h")
-            # check if good sites are still available after removing problematic sites when
-            # * the brokerage has two loops
-            # * it is doing the first loop with data locality check
-            # * data locality check is disabled in the second loop due to low IO, special task priority, or timeout
-            if len(scan_site_list_loops) > 1 and i_loop == 0 and to_ignore_data_loc:
+            # move on to the second loop when all candidates with input data have temporary problems
+            # and the task does not wait for them to recover. Problematic sites are dropped in the final check
+            if has_next_loop and not wait_for_sites_to_recover:
                 candidates_with_problems = []
                 for tmpPseudoSiteName in scanSiteList:
                     tmpSiteSpec = self.siteMapper.getSite(tmpPseudoSiteName)
@@ -1826,12 +1840,15 @@ class AtlasAnalJobBroker(JobBrokerBase):
                     for tmpPseudoSiteName, error_diag in candidates_with_problems:
                         tmpSiteSpec = self.siteMapper.getSite(tmpPseudoSiteName)
                         msg_map[tmpSiteSpec.get_unified_name()] = (
-                            f"  skip site={tmpSiteSpec.get_unified_name()} due to a temporary user-specific problem: {error_diag} criteria=-tmp_user_problem"
+                            f"  skip site={tmpSiteSpec.get_unified_name()} due to a temporary problem: {error_diag} criteria=-tmp_user_problem"
                         )
-                    self.add_summary_message(scanSiteList, [], "temp user problem check", tmpLog, msg_map)
+                    self.add_summary_message(scanSiteList, [], "temporary problem check", tmpLog, msg_map)
                     self.dump_summary(tmpLog)
                     tmpLog.error("no candidates")
                     retVal = retTmpError
+                    tmpLog.info(
+                        "all candidates with input data have temporary problems; try the second loop WITHOUT data locality check without waiting for them to recover"
+                    )
                     continue
 
             ############
@@ -1842,6 +1859,20 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 site_list_with_data = set(scanSiteList)
             if len(overall_site_list) >= taskSpec.getNumSitesPerJob():
                 retVal = None
+                if has_next_loop:
+                    unified_candidates = self.get_unified_sites(scanSiteList)
+                    n_with_problems = len([s for s in unified_candidates if s in problematic_sites_dict])
+                    if n_with_problems == len(unified_candidates):
+                        # only when waiting for candidates to recover, since otherwise the loop moved on above
+                        tmpLog.info(
+                            f"skip the second loop WITHOUT data locality check to wait for all {len(unified_candidates)} candidates with input data "
+                            "to recover from temporary problems; they will be skipped as problematic sites in the final check"
+                        )
+                    else:
+                        tmpLog.info(
+                            f"skip the second loop WITHOUT data locality check since {len(unified_candidates)} candidates with input data were found "
+                            f"({n_with_problems} of them have temporary problems)"
+                        )
                 break
         # failed
         if retVal is not None:
