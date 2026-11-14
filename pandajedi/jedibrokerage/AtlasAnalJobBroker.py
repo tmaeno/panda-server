@@ -626,6 +626,8 @@ class AtlasAnalJobBroker(JobBrokerBase):
         overall_site_list: set[str] = set()
         # why the 2nd loop is used, set when the 1st loop moves on to it
         second_loop_reason = "no candidates in the 1st loop due to hard problems (see the summary of the 1st loop above)"
+        # concluding lines of the final brokerage summary, e.g. why the 2nd loop is skipped
+        summary_footer: list[str] = []
         for i_loop, (scanSiteList, checkDataLocality) in enumerate(scan_site_list_loops):
             # true only in the 1st loop WITH data locality check when the 2nd loop is available
             has_next_loop = i_loop + 1 < len(scan_site_list_loops)
@@ -1635,7 +1637,9 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         problematic_sites_dict[tmpSiteName].add(capped_reason)
                     n_capped = len(capped_reasons)
                     tmpLog.info(f"all candidates ({n_capped}) are capped with gshare+resource_type; keep them as candidates with temporary problems")
-                    self.summaryList.append(f"{n_capped:>5} -> {n_capped:>3} candidates, kept with temporary problems : cap with gshare+resource_type check")
+                    self.summaryList.append(
+                        f"{n_capped:>5} -> {n_capped:>3} candidates, {0:>3}% cut : cap with gshare+resource_type check (all {n_capped} kept with temporary problems)"
+                    )
             ######################################
             # selection for un-overloaded sites
             if not inputChunk.isMerging:
@@ -1876,13 +1880,13 @@ class AtlasAnalJobBroker(JobBrokerBase):
                             f"skip the 2nd loop WITHOUT data locality check since all candidates ({n_with_problems}) in the 1st loop "
                             "have only temporary problems; the task waits for them to recover and they are cut in the final check"
                         )
-                        self.summaryList.append("2nd loop WITHOUT data locality check: skipped to wait for candidates with temporary problems to recover")
+                        summary_footer = ["2nd loop WITHOUT data locality check: skipped to wait for candidates with temporary problems to recover"]
                     else:
                         tmpLog.info(
                             f"skip the 2nd loop WITHOUT data locality check since {len(unified_candidates) - n_with_problems} candidates "
                             f"without temporary problems were found in the 1st loop ({n_with_problems} with temporary problems are cut in the final check)"
                         )
-                        self.summaryList.append("2nd loop WITHOUT data locality check: skipped since candidates were found in the 1st loop")
+                        summary_footer = ["2nd loop WITHOUT data locality check: skipped since candidates were found in the 1st loop"]
                 break
             # job cloning needs more sites than the 1st loop found
             if has_next_loop:
@@ -2509,13 +2513,17 @@ class AtlasAnalJobBroker(JobBrokerBase):
         for tmpMsg in msgList:
             tmpLog.info(tmpMsg)
         scanSiteList = newScanSiteList
-        self.add_summary_message(oldScanSiteList, scanSiteList, "final check", tmpLog, {})
+        # show how many of the cut candidates had temporary problems
+        final_unified_sites = set(self.get_unified_sites(scanSiteList))
+        n_cut_with_problems = len([s for s in self.get_unified_sites(oldScanSiteList) if s in problematic_sites_dict and s not in final_unified_sites])
+        final_check_msg = f"final check ({n_cut_with_problems} with temporary problems)" if n_cut_with_problems else "final check"
+        self.add_summary_message(oldScanSiteList, scanSiteList, final_check_msg, tmpLog, {})
         if not scanSiteList:
-            self.dump_summary(tmpLog)
+            self.dump_summary(tmpLog, footer=summary_footer)
             tmpLog.error("no candidates")
             taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
             return retTmpError
-        self.dump_summary(tmpLog, scanSiteList)
+        self.dump_summary(tmpLog, scanSiteList, footer=summary_footer)
         # return
         tmpLog.debug("done")
         return self.SC_SUCCEEDED, inputChunk
