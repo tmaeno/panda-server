@@ -96,6 +96,14 @@ class AtlasAnalJobBroker(JobBrokerBase):
             tmpLog.info(f"workflow_id={workflow_id} has no anchor yet")
         return weights
 
+    # dump the summary when no candidates are left in a loop. Not an error in the 1st loop when the 2nd loop follows
+    def dump_summary_with_no_candidates(self, tmp_log: MsgWrapper, has_next_loop: bool, reason: str = "due to hard problems") -> None:
+        self.dump_summary(tmp_log)
+        if has_next_loop:
+            tmp_log.info(f"no candidates in the 1st loop {reason}; go to the 2nd loop WITHOUT data locality check")
+        else:
+            tmp_log.error("no candidates")
+
     # main
     def doBrokerage(
         self, taskSpec: JediTaskSpec, cloudName: str | None, inputChunk: InputChunk, taskParamMap: dict[str, Any] | None
@@ -553,24 +561,26 @@ class AtlasAnalJobBroker(JobBrokerBase):
         for tmp_dataset_name, tmp_ok in can_be_remote_source.items():
             is_distributed = is_distributed_map.get(tmp_dataset_name, None)
             if not tmp_ok and is_distributed is not True:
-                remote_source_msg = f"no second loop WITHOUT data locality check since {tmp_dataset_name} is unreadable over WAN"
+                remote_source_msg = f"only the 1st loop WITH data locality check since {tmp_dataset_name} is unreadable over WAN"
                 remote_source_available = False
                 break
 
-        # two loops with/without data locality check. The second loop WITHOUT data locality check is
-        # added unless some input is unreadable over WAN, and the first loop moves on to it
-        # (a) for any task, when no candidate with input data can run the task due to hard problems,
-        #     i.e. excluded by any other check, e.g. offline, excluded by the user, or not satisfying
-        #     memory, walltime, or architecture requirements
-        # (b) only when wait_for_sites_to_recover is False, when all candidates with input data have
+        # two loops: the 1st loop WITH data locality check and the 2nd loop WITHOUT data locality check.
+        # The 2nd loop is added unless some input is unreadable over WAN, and the 1st loop moves on to it
+        # (a) for any task, when all candidates in the 1st loop are excluded due to hard problems, i.e.
+        #     excluded by any other check, e.g. offline, excluded by the user, or not satisfying memory,
+        #     walltime, or architecture requirements
+        # (b) only when wait_for_sites_to_recover is False, when all candidates in the 1st loop have only
         #     temporary problems, i.e. they are in problematic_sites_dict since e.g. all of them are capped
         #     with gshare+resource_type, nRunning=0 with queued jobs, too many failures, or the user queues
-        #     too much. Otherwise the task waits for those candidates to recover until the check timeout
+        #     too much. Otherwise the task waits for those candidates to recover until the check timeout.
+        #     The overload check is an exception: when all candidates are overloaded and have the input data
+        #     only as VP replicas, the 1st loop moves on to the 2nd loop for any task
         scan_site_list_loops = [(copy.copy(scanSiteList), True)]
         wait_for_sites_to_recover = True
         if len(inputChunk.getDatasets()) > 0:
             task_prio_cutoff_for_input_data_motion = 2000
-            tmp_msg = "do not wait for candidates with input data to recover from temporary problems due to "
+            tmp_msg = "even if all candidates in the 1st loop have only temporary problems, the 2nd loop is used without waiting for them to recover due to "
             if max(taskSpec.taskPriority, taskSpec.currentPriority) >= task_prio_cutoff_for_input_data_motion:
                 wait_for_sites_to_recover = False
                 tmp_msg += f"taskPriority or currentPriority ({max(taskSpec.taskPriority, taskSpec.currentPriority)}) is larger than or equal to {task_prio_cutoff_for_input_data_motion}"
@@ -585,16 +595,21 @@ class AtlasAnalJobBroker(JobBrokerBase):
             if not remote_source_available:
                 tmpLog.info(remote_source_msg)
             else:
+                tmpLog.info(
+                    "brokerage in two loops: the 1st loop WITH data locality check, and the 2nd loop WITHOUT data locality check "
+                    "if all candidates in the 1st loop are excluded due to hard problems"
+                )
                 if not wait_for_sites_to_recover:
                     tmpLog.info(tmp_msg)
                 else:
                     if loc_check_timeout_val:
-                        wait_limit_str = f"until {loc_check_timeout_key} ({loc_check_timeout_val}hrs)"
+                        failing_str = f"failing since {taskSpec.frozenTime}" if taskSpec.frozenTime else "not failing so far"
+                        wait_limit_str = f"for up to {loc_check_timeout_key}={loc_check_timeout_val}hrs since the brokerage started failing ({failing_str})"
                     else:
                         wait_limit_str = f"without time limit since {loc_check_timeout_key} is not set"
                     tmpLog.info(
-                        f"wait for candidates with input data to recover from temporary problems {wait_limit_str}; "
-                        "the second loop WITHOUT data locality check is used only when no candidates with input data can run the task due to hard problems"
+                        "if all candidates in the 1st loop have only temporary problems, "
+                        f"the 2nd loop is skipped and the task waits for them to recover {wait_limit_str}"
                     )
                 scan_site_list_loops.append((copy.copy(scanSiteList), False))
             # element map
@@ -609,15 +624,23 @@ class AtlasAnalJobBroker(JobBrokerBase):
         # the sites that had the data in the first loop pass, kept for the ranking below
         site_list_with_data: set[str] = set()
         overall_site_list: set[str] = set()
+        # why the 2nd loop is used, set when the 1st loop moves on to it
+        second_loop_reason = "no candidates in the 1st loop due to hard problems (see the summary of the 1st loop above)"
         for i_loop, (scanSiteList, checkDataLocality) in enumerate(scan_site_list_loops):
-            # true only in the first loop WITH data locality check when the second loop is available
+            # true only in the 1st loop WITH data locality check when the 2nd loop is available
             has_next_loop = i_loop + 1 < len(scan_site_list_loops)
             useUnionLocality = False
-            self.init_summary_list("Job brokerage summary", f"data locality check: {checkDataLocality}", self.get_unified_sites(scanSiteList))
-            if checkDataLocality:
-                tmpLog.info("!!! look for candidates WITH data locality check")
+            if len(scan_site_list_loops) == 1:
+                loop_label = f"data locality check: {checkDataLocality}"
+                loop_header = f"!!! look for candidates {'WITH' if checkDataLocality else 'WITHOUT'} data locality check"
+            elif i_loop == 0:
+                loop_label = "1st loop WITH data locality check"
+                loop_header = "!!! 1st loop: look for candidates WITH data locality check"
             else:
-                tmpLog.info("!!! look for candidates WITHOUT data locality check")
+                loop_label = f"2nd loop WITHOUT data locality check since {second_loop_reason}"
+                loop_header = f"!!! 2nd loop: look for candidates WITHOUT data locality check since {second_loop_reason}"
+            self.init_summary_list("Job brokerage summary", loop_label, self.get_unified_sites(scanSiteList))
+            tmpLog.info(loop_header)
             ######################################
             # selection for data availability
             hasDDS = False
@@ -739,8 +762,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 sites_in_nucleus = copy.copy(scanSiteList)
                 self.add_summary_message(oldScanSiteList, scanSiteList, "input data check", tmpLog, {})
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
 
@@ -773,8 +795,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = newScanSiteList
             self.add_summary_message(oldScanSiteList, scanSiteList, "status check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
 
@@ -794,8 +815,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 scanSiteList = newScanSiteList
                 self.add_summary_message(oldScanSiteList, scanSiteList, "zero share check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
 
@@ -854,8 +874,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
 
             self.add_summary_message(oldScanSiteList, scanSiteList, "diskIO check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
                 retVal = retTmpError
                 continue
@@ -887,8 +906,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 scanSiteList = newScanSiteList
                 self.add_summary_message(oldScanSiteList, scanSiteList, "max IO intensity check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
 
@@ -907,8 +925,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 scanSiteList = newScanSiteList
                 self.add_summary_message(oldScanSiteList, scanSiteList, "avoid VP queue check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
             ######################################
@@ -937,8 +954,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = newScanSiteList
             self.add_summary_message(oldScanSiteList, scanSiteList, "CPU core check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
             ######################################
@@ -968,8 +984,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = newScanSiteList
             self.add_summary_message(oldScanSiteList, scanSiteList, "architecture check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
             ######################################
@@ -1133,8 +1148,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 self.add_summary_message(oldScanSiteList, scanSiteList, "SW/HW check", tmpLog, msg_map)
                 tmpLog.info(f"   {len(sitesAuto)} with AUTO, {len(sitesAny)} with ANY")
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
             ######################################
@@ -1178,8 +1192,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                     ramUnit = "MB"
                 self.add_summary_message(oldScanSiteList, scanSiteList, "memory check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
             ######################################
@@ -1252,8 +1265,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
             self.add_summary_message(oldScanSiteList, scanSiteList, "scratch disk check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
             ######################################
@@ -1315,8 +1327,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
             self.add_summary_message(oldScanSiteList, scanSiteList, "storage space check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
             ######################################
@@ -1398,8 +1409,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                     tmpLog.info(f"walltime check with {strMinWalltime}({taskSpec.cpuTimeUnit}*nEventsPerJob)")
                 self.add_summary_message(oldScanSiteList, scanSiteList, "walltime check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
 
@@ -1452,8 +1462,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 scanSiteList = newScanSiteList
                 self.add_summary_message(oldScanSiteList, scanSiteList, "minimum walltime capacity check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
 
@@ -1478,8 +1487,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
             self.add_summary_message(oldScanSiteList, scanSiteList, "pilot activity check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
 
@@ -1522,8 +1530,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
             self.add_summary_message(oldScanSiteList, scanSiteList, "include/exclude check", tmpLog, msg_map)
             if not scanSiteList:
-                self.dump_summary(tmpLog)
-                tmpLog.error("no candidates")
+                self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                 retVal = retTmpError
                 continue
             ######################################
@@ -1552,8 +1559,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 if preassignedSite not in scanSiteList and preassignedSite not in self.get_unified_sites(scanSiteList):
                     tmpLog.info(f"preassigned site {preassignedSite} did not pass all tests")
                     self.add_summary_message(oldScanSiteList, [], "preassign check", tmpLog, {})
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retFatal
                     continue
                 else:
@@ -1588,8 +1594,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 scanSiteList = self.get_pseudo_sites(newScanSiteList, scanSiteList)
                 self.add_summary_message(oldScanSiteList, scanSiteList, "hospital check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop)
                     retVal = retTmpError
                     continue
             ######################################
@@ -1624,11 +1629,13 @@ class AtlasAnalJobBroker(JobBrokerBase):
                 else:
                     # all candidates are capped. The cap is a temporary problem, so they are kept as problematic sites,
                     # which are skipped in the final check. The check for temporary problems at the loop end decides
-                    # whether to move on to the second loop without waiting for them to recover
+                    # whether to move on to the 2nd loop without waiting for them to recover
                     for tmpSiteName, capped_reason in capped_reasons.items():
                         problematic_sites_dict.setdefault(tmpSiteName, set())
                         problematic_sites_dict[tmpSiteName].add(capped_reason)
-                    tmpLog.info(f"all {len(capped_reasons)} candidates are capped with gshare+resource_type; keep them as problematic sites")
+                    n_capped = len(capped_reasons)
+                    tmpLog.info(f"all candidates ({n_capped}) are capped with gshare+resource_type; keep them as candidates with temporary problems")
+                    self.summaryList.append(f"{n_capped:>5} -> {n_capped:>3} candidates, kept with temporary problems : cap with gshare+resource_type check")
             ######################################
             # selection for un-overloaded sites
             if not inputChunk.isMerging:
@@ -1695,8 +1702,11 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         msg_map[tmpSiteSpec.get_unified_name()] = tmpMsg
                 self.add_summary_message(oldScanSiteList, scanSiteList, "overload check", tmpLog, msg_map)
                 if not scanSiteList:
-                    self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
+                    # overloaded sites are kept as a fallback unless they have the input data only as VP replicas
+                    overload_reason = "since all of them are overloaded and have the input data only as VP replicas"
+                    if has_next_loop:
+                        second_loop_reason = f"no candidates in the 1st loop {overload_reason}"
+                    self.dump_summary_with_no_candidates(tmpLog, has_next_loop, overload_reason)
                     retVal = retTmpError
                     continue
             ######################################
@@ -1826,7 +1836,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         if not inputChunk.isMerging and (nFailed + nClosed) > max(2 * nFinished, minBadJobsToSkipPQ):
                             problematic_sites_dict.setdefault(tmpSiteName, set())
                             problematic_sites_dict[tmpSiteName].add("too many failed or closed jobs for last 6h")
-            # move on to the second loop when all candidates with input data have temporary problems
+            # move on to the 2nd loop when all candidates in the 1st loop have only temporary problems
             # and the task does not wait for them to recover. Problematic sites are dropped in the final check
             if has_next_loop and not wait_for_sites_to_recover:
                 candidates_with_problems = []
@@ -1844,11 +1854,9 @@ class AtlasAnalJobBroker(JobBrokerBase):
                         )
                     self.add_summary_message(scanSiteList, [], "temporary problem check", tmpLog, msg_map)
                     self.dump_summary(tmpLog)
-                    tmpLog.error("no candidates")
                     retVal = retTmpError
-                    tmpLog.info(
-                        "all candidates with input data have temporary problems; try the second loop WITHOUT data locality check without waiting for them to recover"
-                    )
+                    second_loop_reason = "all candidates in the 1st loop have only temporary problems and the task does not wait for them to recover"
+                    tmpLog.info(f"{second_loop_reason}; go to the 2nd loop WITHOUT data locality check")
                     continue
 
             ############
@@ -1865,15 +1873,20 @@ class AtlasAnalJobBroker(JobBrokerBase):
                     if n_with_problems == len(unified_candidates):
                         # only when waiting for candidates to recover, since otherwise the loop moved on above
                         tmpLog.info(
-                            f"skip the second loop WITHOUT data locality check to wait for all {len(unified_candidates)} candidates with input data "
-                            "to recover from temporary problems; they will be skipped as problematic sites in the final check"
+                            f"skip the 2nd loop WITHOUT data locality check since all candidates ({n_with_problems}) in the 1st loop "
+                            "have only temporary problems; the task waits for them to recover and they are cut in the final check"
                         )
+                        self.summaryList.append("2nd loop WITHOUT data locality check: skipped to wait for candidates with temporary problems to recover")
                     else:
                         tmpLog.info(
-                            f"skip the second loop WITHOUT data locality check since {len(unified_candidates)} candidates with input data were found "
-                            f"({n_with_problems} of them have temporary problems)"
+                            f"skip the 2nd loop WITHOUT data locality check since {len(unified_candidates) - n_with_problems} candidates "
+                            f"without temporary problems were found in the 1st loop ({n_with_problems} with temporary problems are cut in the final check)"
                         )
+                        self.summaryList.append("2nd loop WITHOUT data locality check: skipped since candidates were found in the 1st loop")
                 break
+            # job cloning needs more sites than the 1st loop found
+            if has_next_loop:
+                second_loop_reason = f"only {len(overall_site_list)} sites were found in the 1st loop while nSitesPerJob={taskSpec.getNumSitesPerJob()}"
         # failed
         if retVal is not None:
             taskSpec.setErrDiag(tmpLog.uploadLog(taskSpec.jediTaskID))
@@ -2487,7 +2500,7 @@ class AtlasAnalJobBroker(JobBrokerBase):
             if tmpWeightStr is not None:
                 if tmpSiteName in problematic_sites_dict:
                     bad_reasons = " ; ".join(list(problematic_sites_dict[tmpSiteName]))
-                    tmpMsg = f"  skip site={tmpPseudoSiteName} {bad_reasons} ; with {tmpWeightStr} criteria=-badsite"
+                    tmpMsg = f"  skip site={tmpPseudoSiteName} due to temporary problems: {bad_reasons} ; with {tmpWeightStr} criteria=-badsite"
                 elif tmpSiteName in below_min_weight:
                     tmpMsg = f"  skip site={tmpPseudoSiteName} due to weight below the minimum {min_weight_param}={min_weight} with {tmpWeightStr} criteria=-below_min_weight"
                 else:
