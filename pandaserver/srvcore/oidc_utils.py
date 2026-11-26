@@ -74,9 +74,18 @@ class TokenDecoder:
             audience = None
             if "aud" in unverified:
                 audience = unverified["aud"]
-                # client ID from aud of ID token
-                if audience in auth_config:
-                    client_id = audience
+                # client ID from aud of ID token. aud is a string, or a list of strings when the
+                # token has several audiences (RFC 7519 4.1.3)
+                if isinstance(audience, str):
+                    aud_candidates = [audience]
+                elif isinstance(audience, list):
+                    aud_candidates = [a for a in audience if isinstance(a, str)]
+                else:
+                    aud_candidates = []
+                for aud_candidate in aud_candidates:
+                    if aud_candidate in auth_config:
+                        client_id = aud_candidate
+                        break
             if not client_id:
                 # client ID from access token including ID info with device code flow
                 client_id = unverified.get("client_id")
