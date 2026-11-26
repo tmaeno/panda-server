@@ -37,6 +37,24 @@ def get_jwk(kid: str, jwks: dict[str, Any]) -> dict[str, Any]:
     raise InvalidTokenError(f"JWK not found for kid={kid}")
 
 
+def get_expected_audiences(client_config: dict[str, Any], default_audience: str | None) -> list[str]:
+    """
+    Get the audiences an access token for a client is expected to carry
+
+    :param client_config: auth config of the client
+    :param default_audience: audience used when the client config has none
+
+    :return: list of audiences, empty when nothing is configured
+    """
+    value = client_config.get("audience") or default_audience
+    if isinstance(value, str):
+        # space separated string of audiences, as clients send it in token requests
+        return value.split()
+    if isinstance(value, list):
+        return [v for v in value if isinstance(v, str)]
+    return []
+
+
 # token decoder
 class TokenDecoder:
     # constructor
@@ -65,13 +83,22 @@ class TokenDecoder:
 
     # decode and verify JWT token
     def deserialize_token(
-        self, token: str, auth_config: dict[str, Any], vo: str | None, log_stream: Any, legacy_token_issuers: list[str] | None
+        self,
+        token: str,
+        auth_config: dict[str, Any],
+        vo: str | None,
+        log_stream: Any,
+        legacy_token_issuers: list[str] | None,
+        default_audience: str | None = None,
     ) -> dict[str, Any]:
         try:
             # check audience
             unverified = jwt.decode(token, verify=False, options={"verify_signature": False})
             client_id = None
+            # claim the client ID was taken from
+            client_id_source = None
             audience = None
+            aud_candidates: list[str] = []
             if "aud" in unverified:
                 audience = unverified["aud"]
                 # client ID from aud of ID token. aud is a string, or a list of strings when the
@@ -80,22 +107,25 @@ class TokenDecoder:
                     aud_candidates = [audience]
                 elif isinstance(audience, list):
                     aud_candidates = [a for a in audience if isinstance(a, str)]
-                else:
-                    aud_candidates = []
                 for aud_candidate in aud_candidates:
                     if aud_candidate in auth_config:
                         client_id = aud_candidate
+                        client_id_source = "aud"
                         break
             if not client_id:
                 # client ID from access token including ID info with device code flow
                 client_id = unverified.get("client_id")
                 if client_id and client_id not in auth_config:
                     client_id = None
+                if client_id:
+                    client_id_source = "client_id"
             if not client_id:
                 # client ID from sub of access token with client_credentials flow
                 client_id = unverified["sub"]
                 if client_id and client_id not in auth_config:
                     client_id = None
+                if client_id:
+                    client_id_source = "sub"
             if not client_id:
                 raise jwt.exceptions.InvalidTokenError("cannot extract client_id from token")
             discovery_endpoint = auth_config[client_id]["oidc_config_url"]
@@ -138,6 +168,16 @@ class TokenDecoder:
                     err_msg = str(e)
             if not decoded:
                 raise jwt.exceptions.InvalidTokenError(f"failed to decode: {err_msg}")
+            # warn, without refusing the token, when an access token lacks the audience PanDA
+            # expects. An ID token is skipped since its aud carries the client ID itself
+            if client_id_source != "aud":
+                expected_audiences = get_expected_audiences(auth_config[client_id], default_audience)
+                if expected_audiences:
+                    token_owner = f"client_id={client_id} from {client_id_source} iss={decoded.get('iss')} sub={decoded.get('sub')}"
+                    if audience is None:
+                        log_stream.warning(f"aud missing: expected one of {expected_audiences} : {token_owner}")
+                    elif not set(aud_candidates) & set(expected_audiences):
+                        log_stream.warning(f"aud mismatch: {audience} has none of {expected_audiences} : {token_owner}")
             if vo is not None:
                 decoded["vo"] = vo
             else:
