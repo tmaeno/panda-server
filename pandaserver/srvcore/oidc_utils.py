@@ -95,8 +95,7 @@ class TokenDecoder:
             # check audience
             unverified = jwt.decode(token, verify=False, options={"verify_signature": False})
             client_id = None
-            # claim the client ID was taken from
-            client_id_source = None
+            client_id_from_aud = False
             audience = None
             aud_candidates: list[str] = []
             if "aud" in unverified:
@@ -110,22 +109,18 @@ class TokenDecoder:
                 for aud_candidate in aud_candidates:
                     if aud_candidate in auth_config:
                         client_id = aud_candidate
-                        client_id_source = "aud"
+                        client_id_from_aud = True
                         break
             if not client_id:
                 # client ID from access token including ID info with device code flow
                 client_id = unverified.get("client_id")
                 if client_id and client_id not in auth_config:
                     client_id = None
-                if client_id:
-                    client_id_source = "client_id"
             if not client_id:
                 # client ID from sub of access token with client_credentials flow
                 client_id = unverified["sub"]
                 if client_id and client_id not in auth_config:
                     client_id = None
-                if client_id:
-                    client_id_source = "sub"
             if not client_id:
                 raise jwt.exceptions.InvalidTokenError("cannot extract client_id from token")
             discovery_endpoint = auth_config[client_id]["oidc_config_url"]
@@ -170,10 +165,14 @@ class TokenDecoder:
                 raise jwt.exceptions.InvalidTokenError(f"failed to decode: {err_msg}")
             # warn, without refusing the token, when an access token lacks the audience PanDA
             # expects. An ID token is skipped since its aud carries the client ID itself
-            if client_id_source != "aud":
+            if not client_id_from_aud:
                 expected_audiences = get_expected_audiences(auth_config[client_id], default_audience)
                 if expected_audiences:
-                    token_owner = f"client_id={client_id} from {client_id_source} iss={decoded.get('iss')} sub={decoded.get('sub')}"
+                    # a client_credentials token has the client itself as sub, while a token on
+                    # behalf of a user has the user. This holds for INDIGO IAM but not for every
+                    # IdP, e.g. Keycloak gives the UUID of a service account
+                    token_kind = "client_credentials" if decoded.get("sub") == client_id else "user"
+                    token_owner = f"client_id={client_id} token={token_kind} iss={decoded.get('iss')} sub={decoded.get('sub')}"
                     if audience is None:
                         log_stream.warning(f"aud missing: expected one of {expected_audiences} : {token_owner}")
                     elif not set(aud_candidates) & set(expected_audiences):

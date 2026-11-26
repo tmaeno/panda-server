@@ -108,7 +108,7 @@ class TestDeserializeTokenAudienceWarning(_DecoderTestCase):
         warnings = self._warnings()
         self.assertEqual(len(warnings), 1)
         self.assertTrue(warnings[0].startswith("aud mismatch:"), warnings[0])
-        self.assertIn(f"client_id={CLIENT_ID} from client_id", warnings[0])
+        self.assertIn(f"client_id={CLIENT_ID} token=user", warnings[0])
 
     def test_missing_aud_warns_but_is_accepted(self) -> None:
         decoded = self._decode(_make_token(sub=CLIENT_ID))
@@ -116,7 +116,15 @@ class TestDeserializeTokenAudienceWarning(_DecoderTestCase):
         warnings = self._warnings()
         self.assertEqual(len(warnings), 1)
         self.assertTrue(warnings[0].startswith("aud missing:"), warnings[0])
-        self.assertIn(f"client_id={CLIENT_ID} from sub", warnings[0])
+        self.assertIn(f"client_id={CLIENT_ID} token=client_credentials", warnings[0])
+
+    def test_iam_client_credentials_token(self) -> None:
+        # as INDIGO IAM issues it: client_id claim, sub is the client, aud defaults to the WLCG "any" value
+        self._decode(_make_token(aud="https://wlcg.cern.ch/jwt/v1/any", client_id=CLIENT_ID, sub=CLIENT_ID))
+        warnings = self._warnings()
+        self.assertEqual(len(warnings), 1)
+        self.assertTrue(warnings[0].startswith("aud mismatch:"), warnings[0])
+        self.assertIn(f"client_id={CLIENT_ID} token=client_credentials", warnings[0])
 
     def test_default_audience_when_config_has_none(self) -> None:
         self._decode(_make_token(aud=DEFAULT_AUDIENCE, client_id=BARE_CLIENT_ID), default_audience=DEFAULT_AUDIENCE)
