@@ -663,8 +663,8 @@ class TaskComplexModule(BaseModule):
                 elif not (
                     taskStatus in JediTaskSpec.statusToUpdateContents()
                     or (
-                        taskStatus in ["running", "ready", "scouting", "assigning", "pending"]
-                        and taskSpec.oldStatus not in ["defined"]
+                        (taskStatus in ["running", "ready", "scouting", "assigning"] or 
+                         (taskStatus == "pending" and taskSpec.oldStatus != "defined"))
                         and (datasetState == "mutable" or datasetSpec.state == "mutable" or datasetSpec.isSeqNumber())
                     )
                 ):
