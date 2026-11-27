@@ -971,7 +971,11 @@ class TaskComplexModule(BaseModule):
                                             maxSizePerJob += InputChunk.defaultOutputSize
                                             maxSizePerJob += taskSpec.getWorkDiskSize()
                                         else:
-                                            if useScout:
+                                            if useScout and taskSpec.useLocalIO():
+                                                # JobSplitter cuts scouts that copy their inputs to scratch at the site's
+                                                # scratch disk, so maxInputSizeScouts would activate files for more of them
+                                                maxSizePerJob = InputChunk.get_max_size_local_io(taskSpec) * 1024 * 1024
+                                            elif useScout:
                                                 maxSizePerJob = InputChunk.maxInputSizeScouts * 1024 * 1024
                                             else:
                                                 maxSizePerJob = InputChunk.maxInputSizeAvalanche * 1024 * 1024
