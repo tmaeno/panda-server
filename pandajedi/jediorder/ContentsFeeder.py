@@ -172,6 +172,7 @@ class ContentsFeederThread(WorkerThread):
             except Exception:
                 gshare = "Undefined"
             tmpLog = MsgWrapper(self.logger, f"<jediTaskID={jediTaskID} gshare={gshare}>")
+            tmpLog.debug(f"taskStatus={taskSpec.status} oldStatus={taskSpec.oldStatus}")
 
             try:
                 # get task parameters
