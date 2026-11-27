@@ -662,9 +662,7 @@ class TaskComplexModule(BaseModule):
                     tmpLog.debug(f"task is locked by {taskLockedBy}")
                 elif not (
                     taskStatus in JediTaskSpec.statusToUpdateContents()
-                    or (
-                        (taskStatus in ["running", "ready", "scouting", "assigning"] or 
-                         (taskStatus == "pending" and taskSpec.oldStatus != "defined"))
+                    or (JediTaskSpec.can_update_contents_dynamic(taskStatus, taskSpec.oldStatus)
                         and (datasetState == "mutable" or datasetSpec.state == "mutable" or datasetSpec.isSeqNumber())
                     )
                 ):

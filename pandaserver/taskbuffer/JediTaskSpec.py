@@ -822,6 +822,13 @@ class JediTaskSpec(object):
     def statusToUpdateContents(cls) -> list[str]:
         return ["defined"]
 
+    # check if task is ready for dynamic contents update
+    @classmethod
+    def can_update_contents_dynamic(cls, status: str, oldStatus: str | None = None) -> bool:
+        if status in ["running", "ready", "scouting", "assigning"] or (status == "pending" and oldStatus != "defined"):
+            return True
+        return False
+
     # set task status on hold
     def setOnHold(self) -> None:
         # change status

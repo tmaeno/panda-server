@@ -174,6 +174,13 @@ class ContentsFeederThread(WorkerThread):
             tmpLog = MsgWrapper(self.logger, f"<jediTaskID={jediTaskID} gshare={gshare}>")
             tmpLog.debug(f"taskStatus={taskSpec.status} oldStatus={taskSpec.oldStatus}")
 
+            # check if task is applicable for contents update
+            if taskSpec.status not in JediTaskSpec.statusToUpdateContents() and not JediTaskSpec.can_update_contents_dynamic(taskSpec.status, taskSpec.oldStatus):
+                tmpLog.debug("task is not applicable for contents update")
+                tmpStat = self.taskBufferIF.unlockSingleTask_JEDI(jediTaskID, self.pid)
+                tmpLog.debug(f"unlocked with {tmpStat}")
+                continue
+
             try:
                 # get task parameters
                 taskParam = self.taskBufferIF.getTaskParamsWithID_JEDI(jediTaskID)
