@@ -592,7 +592,8 @@ class TaskUtilsModule(BaseModule):
         local_io_size_ratio = None
         if not mergeScout and task_spec and task_spec.useLocalIO() and pandaIDList and total_actual_input_size > 0:
             avg_scout_input_size = total_actual_input_size / 1024 / 1024 / len(pandaIDList)
-            max_size_local_io = InputChunk.get_max_size_local_io(task_spec)
+            # the size of the jobs after scouts, not the smaller cap used to size the scouts
+            max_size_local_io = InputChunk.get_max_size_local_io(task_spec, use_scout=False)
             local_io_size_ratio = min(1.0, avg_scout_input_size / max_size_local_io)
             tmpLog.debug(f"local_io_size_ratio={local_io_size_ratio:.3f} with avg input size {int(avg_scout_input_size)} MB per {max_size_local_io} MB")
         extraInfo["local_io_size_ratio"] = local_io_size_ratio

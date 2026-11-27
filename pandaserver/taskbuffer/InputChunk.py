@@ -45,14 +45,15 @@ class InputChunk:
         return self.__str__()
 
     @classmethod
-    def get_max_size_local_io(cls, task_spec: "JediTaskSpec") -> int:
+    def get_max_size_local_io(cls, task_spec: "JediTaskSpec", use_scout: bool) -> int:
         """Max size per job in MB assumed for a job of the task that copies its inputs to scratch.
 
         JobSplitter cuts such jobs, scouts and the jobs after them alike, at the scratch disk of the
         site, which the brokers scale to the task's cores: the site's maxwdir for a multi-core task,
         its share of one core for a single-core one. Where this is used the sites are not known yet,
-        so a typical size per core stands in for the site's. It is capped at maxInputSizeScouts, so
-        such a job is never taken to be larger than a scout that reads its inputs directly.
+        so a typical size per core stands in for the site's. It is capped at maxInputSizeScouts for a
+        scout and at maxInputSizeAvalanche for a job after scouts, so such a job is never taken to be
+        larger than one of the same kind that reads its inputs directly.
         """
         # the same test as the brokers' coreCount in [None, 0, 1] when they scale maxwdir to the task
         core_count = task_spec.coreCount
@@ -60,7 +61,8 @@ class InputChunk:
             n_cores = 1
         else:
             n_cores = core_count
-        return min(cls.maxInputSizeLocalIOPerCore * n_cores, cls.maxInputSizeScouts)
+        cap = cls.maxInputSizeScouts if use_scout else cls.maxInputSizeAvalanche
+        return min(cls.maxInputSizeLocalIOPerCore * n_cores, cap)
 
     # constructor
     def __init__(
