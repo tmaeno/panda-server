@@ -586,6 +586,16 @@ class TaskUtilsModule(BaseModule):
             total_actual_input_size += fsize
             if fType == "pseudo_input":
                 pseudoInput.add(pandaID)
+        # jobs that copy their inputs to scratch are cut at the site's scratch disk, scouts and the jobs
+        # after them alike, so the jobs after scouts are about that size and never smaller than the
+        # scouts. None keeps the sizes assumed for direct IO where this is used
+        local_io_size_ratio = None
+        if not mergeScout and task_spec and task_spec.useLocalIO() and pandaIDList and total_actual_input_size > 0:
+            avg_scout_input_size = total_actual_input_size / 1024 / 1024 / len(pandaIDList)
+            max_size_local_io = InputChunk.get_max_size_local_io(task_spec)
+            local_io_size_ratio = min(1.0, avg_scout_input_size / max_size_local_io)
+            tmpLog.debug(f"local_io_size_ratio={local_io_size_ratio:.3f} with avg input size {int(avg_scout_input_size)} MB per {max_size_local_io} MB")
+        extraInfo["local_io_size_ratio"] = local_io_size_ratio
 
         # get nFiles
         totalJobs = 0
@@ -613,11 +623,15 @@ class TaskUtilsModule(BaseModule):
                         and not task_spec.getMaxSizePerJob()
                         and not task_spec.getMaxNumFilesPerJob()
                     ):
-                        # average input size
-                        avg_actual_input_size = total_actual_input_size / 1024 / 1024 / len(pandaIDList)
                         # scale with actual size / allowed size
-                        nNewJobs = int(nNewJobs * avg_actual_input_size / InputChunk.maxInputSizeAvalanche)
-                        totalJobs = int(totalJobs * avg_actual_input_size / InputChunk.maxInputSizeAvalanche)
+                        if local_io_size_ratio is not None:
+                            nNewJobs = int(nNewJobs * local_io_size_ratio)
+                            totalJobs = int(totalJobs * local_io_size_ratio)
+                        else:
+                            # average input size
+                            avg_actual_input_size = total_actual_input_size / 1024 / 1024 / len(pandaIDList)
+                            nNewJobs = int(nNewJobs * avg_actual_input_size / InputChunk.maxInputSizeAvalanche)
+                            totalJobs = int(totalJobs * avg_actual_input_size / InputChunk.maxInputSizeAvalanche)
                     # estimate the number of new jobs with size
                     var_map: dict[str, Any] = dict()
                     var_map[":jediTaskID"] = jediTaskID
@@ -637,7 +651,10 @@ class TaskUtilsModule(BaseModule):
                                 and not task_spec.getMaxSizePerJob()
                                 and not task_spec.getMaxNumFilesPerJob()
                             ):
-                                total_jobs_with_event = int(total_jobs_with_event * InputChunk.maxInputSizeScouts / InputChunk.maxInputSizeAvalanche)
+                                if local_io_size_ratio is not None:
+                                    total_jobs_with_event = int(total_jobs_with_event * local_io_size_ratio)
+                                else:
+                                    total_jobs_with_event = int(total_jobs_with_event * InputChunk.maxInputSizeScouts / InputChunk.maxInputSizeAvalanche)
         extraInfo["expectedNumJobs"] = totalJobs
         extraInfo["numFinishedJobs"] = len(pandaIDList)
         extraInfo["nFiles"] = totFiles
@@ -1325,17 +1342,25 @@ class TaskUtilsModule(BaseModule):
                             scMsg = ""
                             if taskSpec.useScout():
                                 scaled_max_walltime = extraInfo["longestShortExecTime"]
-                                scaled_max_walltime *= InputChunk.maxInputSizeAvalanche / InputChunk.maxInputSizeScouts
+                                # set for jobs that copy their inputs to scratch, see getScoutJobData_JEDI
+                                local_io_size_ratio = extraInfo.get("local_io_size_ratio")
+                                if local_io_size_ratio is not None:
+                                    size_scale = 1 / local_io_size_ratio
+                                    size_scale_str = f"1/{local_io_size_ratio:.3f}"
+                                else:
+                                    size_scale = InputChunk.maxInputSizeAvalanche / InputChunk.maxInputSizeScouts
+                                    size_scale_str = f"{InputChunk.maxInputSizeAvalanche}/{InputChunk.maxInputSizeScouts}"
+                                scaled_max_walltime *= size_scale
                                 scaled_max_walltime = int(scaled_max_walltime / 60)
                                 if scaled_max_walltime > extraInfo["shortExecTime"]:
                                     tmpLog.debug(
-                                        "not to set exhausted since estimated execution time scaled with avalanced job size / scout job size ({} min) is longer "
-                                        "than {} min".format(scaled_max_walltime, extraInfo["shortExecTime"])
+                                        "not to set exhausted since estimated execution time scaled with avalanced job size / scout job size ({} min = walltime * {}) is longer "
+                                        "than {} min".format(scaled_max_walltime, size_scale_str, extraInfo["shortExecTime"])
                                     )
                                     toExhausted = False
                                 else:
-                                    scMsg = " and estimated execution time scaled with avalanced job size / scout job size ({} = walltime * {}/{}) less than {} min".format(
-                                        scaled_max_walltime, InputChunk.maxInputSizeAvalanche, InputChunk.maxInputSizeScouts, extraInfo["shortExecTime"]
+                                    scMsg = " and estimated execution time scaled with avalanced job size / scout job size ({} = walltime * {}) less than {} min".format(
+                                        scaled_max_walltime, size_scale_str, extraInfo["shortExecTime"]
                                     )
                         # check if copy-to-scratch was imposed
                         if toExhausted:
